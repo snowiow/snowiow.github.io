@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>snow-dev.com :: The power of Vim Plugins: Vundle</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+        <link rel="stylesheet" href="../css/fontawesome.min.css">
+        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
+        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">snow-dev.com</a>
+            </div>
+            <nav>
+                <a href="../" title="Home"><i class="fas fa-home"></i></a>
+                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
+                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+                <a href="mailto:marcel.patzwahl@posteo.de" title="Contact Me"><i class="fas fa-envelope"></i></a>
+            </nav>
+        </header>
+          <main role="main">
+              <h1>The power of Vim Plugins: Vundle</h1>
+              <article>
+    <section class="header">
+        Posted on September 29, 2015
+    </section>
+    <hr class="section-head">
+    <section>
+        <p>To start of this series properly, we need a plugin manager, to handle all our plugins and keep them up to date. <a href="https://github.com/VundleVim/Vundle.vim">Vundle</a> is one common option, but there are some more to choose from. Two more big players in this business are <a href="https://github.com/Shougo/neobundle.vim">NeoBundle</a> and <a href="https://github.com/tpope/vim-pathogen">Pathogen</a>. I didn’t looked too deep into the last two plugin managers. To be honest, I never tried out something else than Vundle and I think the reason is that I never felt uncomfortable or missed something. So I never felt in need of getting another plugin manager and in this post I want to show you why. First of all you need to have git installed. You can download git with the package manager of your distribution, if it isn’t installed already. You can easily check this by starting up your console and type in the following:</p>
+<pre><code>git --version </code></pre>
+<p>If git version &lt;some number&gt; appears you are good to go, but if something like unknown command pops up, you are in a lot of trouble… Not really. You just need to install git with your package manager and everything will be fine. For the most common Linux distributions, the command looks like one of these:</p>
+<pre><code>apt-get install git</code></pre>
+<pre><code>yum install git</code></pre>
+<pre><code>pacman -S git</code></pre>
+<p>When git is installed you download Vundle by executing the following command in your console:</p>
+<pre><code>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim</code></pre>
+<p>This command downloads the Vundle code into bundle in your personal vim directory. The bundle directory will be the place where all your plugins are saved. If you’re done, you should keep git on your computer, because vundle is working with git commands internally. If it doesn’t find git, you aren’t able to use Vundle at all. Now we need to add some stuff to the .vimrc. The .vimrc is a file, where all your configurations in relation to Vim are placed. If you didn’t edit anything there yet, have a look at your home directory (Make sure to also show invisible files). If there is no such file, you can create it now and it will be automatically loaded, when vim is starting the next time. Now we need to initialize Vundle. To do so we place a code snippet at the beginning of the .vimrc(It is very important to place the following snippet in front of your existing configuration, if you already have written down some configurations).</p>
+<pre class="viml"><code>set nocompatible              &quot; be iMproved, required
+filetype off                  &quot; required
+
+&quot; set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+&quot; let Vundle manage Vundle, required
+
+Plugin 'VundleVim/Vundle.vim'
+&quot;New plugins go here
+
+call vundle#end()</code></pre>
+<p>To test if Vundle is working, we add a new plugin. As an example we install NERDTree, which will be covered in the next post of this series. Under the comment _“New plugins go here_ the plugin will be added. Because it is hosted on GitHub we can write the following into the .vimrc</p>
+<pre><code>Plugin 'scrooloose/nerdtree'</code></pre>
+<p>To take this change into effect, you either need to restart Vim or re-source your .vimrc. I’ve got the following line saved into my .vimrc, which automatically re-sources my .vimrc everytime it is saved.</p>
+<pre><code>autocmd! bufwritepost .vimrc source %</code></pre>
+<p>After restarting/resourcing the .vimrc you enter the following command</p>
+<pre><code>:PluginInstall</code></pre>
+<p>A new split view is opened, which shows your plugins and either a dot or a star in front. The dot says that nothing was done, because the plugin is already installed and the star says that the new plugin was successfully installed. If anything goes wrong, you get the possibility to open up the log and look up the error. To remove a plugin, you need to remove the corresponding line out of your .vimrc. For example if we want to get rid of the NERDTree Plugin we remove the line, which we just added and save the .vimrc (Don’t forget to re-source/restart). Afterwards type in the following command into Vim:</p>
+<pre><code>:PluginClean</code></pre>
+<p>A new split view opens with the plugins which will be removed. You can accept it by typing <em>y</em> or abort by typing <em>n. </em> The final command I use on a regular basis is to update my existing plugins.</p>
+<pre><code>:PluginUpdate</code></pre>
+<p>Again a new split view opens and an arrow is moving through your installed plugins and marks them with a dot or a star, similar to the <em>:PluginInstall</em> command. The symbols also have the same meaning. Dots say that nothing needed to be done and the star tells you if a update was available and installed. If you want to search for new plugins you can use the <em>:PluginSearch</em> command like this:</p>
+<pre><code>:PluginSearch nerdtree</code></pre>
+<p>But I often got problems doing it this way. So the normal way I search for new plugins is using my search engine of trust. I also prefer downloading every plugin from Github to keep this clean overview of <em>Plugin ‘creator/plugin_name’</em> in my .vimrc. But maybe a plugin isn’t available on GitHub(which was never the case for me), the second best source would be <a href="http://vim-scripts.org">Vim Scripts</a>. To add a Vim Scripts link, you just need to add the name of the plugin, which is even cleaner:</p>
+<pre><code>Plugin 'nerdtree'</code></pre>
+<p>Another option is to include a plugin from a non GitHub Hoster, who also uses git, like Bitbucket. To add a plugin you need to start writing _git: _followed by the complete URL of the plugin. As an imaginary example, if NERDTree would be hosted on Bitbucket, it would look like this:</p>
+<pre><code>Plugin 'git:bitbucket.com/scrooloose/nerdtree'</code></pre>
+<p>I hope I could help with this brief overview of Vundle. If you need further information either head to the GitHub page of the <a href="https://github.com/VundleVim/Vundle.vim">Vundle project</a> or type the following command into Vim:</p>
+<pre><code>:h vundle</code></pre>
+    </section>
+</article>
+
+          </main>
+          <footer>
+            <nav>
+                <a href="../impressum.html" title="Impressum">Impressum</a>
+                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
+            </nav>
+          </footer>
+    </body>
+</html>

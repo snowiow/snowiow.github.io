@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant: Part 3</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+        <link rel="stylesheet" href="../css/fontawesome.min.css">
+        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
+        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">snow-dev.com</a>
+            </div>
+            <nav>
+                <a href="../" title="Home"><i class="fas fa-home"></i></a>
+                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
+                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+                <a href="mailto:marcel.patzwahl@posteo.de" title="Contact Me"><i class="fas fa-envelope"></i></a>
+            </nav>
+        </header>
+          <main role="main">
+              <h1>Creating your own PHP dev-env in Vagrant: Part 3</h1>
+              <article>
+    <section class="header">
+        Posted on June  3, 2016
+    </section>
+    <hr class="section-head">
+    <section>
+        <h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant.html">Part 1</a></li>
+<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
+<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html">Bonus 1</a></li>
+<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Bonus 2</a></li>
+<li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
+</ul>
+<p>In the previous post we’ve set up the apache web server successfully. Now it’s time to add MySQL and PHP to finish the LAMP stack. Let’s start with MySQL first and add a <em>mysql.sh</em> file to the <strong>sh</strong> directory. We write the following lines into that file.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password password my_pw&quot;</span>
+<span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password_again password my_pw&quot;</span>
+<span class="ex">apt-get</span> install -y mysql-server libapache2-mod-auth-mysql</code></pre></div>
+<p>The first two lines set values for the upcoming installation dialog of MySQL. The installation dialog will ask us for a password and to repeat it. Because we want to setup MySQL automatically without any interaction, we preset those fields with our password of choice. In this case <strong>my_pw</strong>. Afterwards we install MySQL and an extra package for apache. Afterwards we copy over the config file of MySQL onto the guest system.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/my.cnf<span class="bu"> ]</span>; <span class="kw">then</span>
+    <span class="fu">mv</span> /vagrant/tmp/my.cnf /etc/mysql/my.cnf
+<span class="kw">else</span>
+    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: my.cnf not found&quot;</span>
+<span class="kw">fi</span></code></pre></div>
+<p>We do it exactly the same way, as we did with the <em>apache.conf</em>. First we place the <em>my.cnf</em> in our <em>conf</em> directory. Afterwards we add a file provisioner to our <em>Vagrantfile</em>.</p>
+<div class="sourceCode"><pre class="sourceCode ruby"><code class="sourceCode ruby">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/my.cnf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/my.cnf&quot;</span></code></pre></div>
+<p>This time it’s important to replace a custom config file with the original, because in our modified version we switch the following line from:</p>
+<pre><code>bind-address = 127.0.0.1</code></pre>
+<p>to</p>
+<pre><code>bind-address = 0.0.0.0</code></pre>
+<p>Before it was only possible to access the database on the guest machine itself. We changed this, so we can connect from the host machine as well. Finally we need to restart the MySQL demon.</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">service</span> mysql restart</code></pre></div>
+<p>With which we end up in our final <em>mysql.sh</em> file, which looks like this:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/usr/bin/env bash</span>
+
+<span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password password my_pw&quot;</span>
+<span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password_again password my_pw&quot;</span>
+<span class="ex">apt-get</span> install -y mysql-server libapache2-mod-auth-mysql php5-mysql
+
+<span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/my.cnf<span class="bu"> ]</span>; <span class="kw">then</span>
+    <span class="fu">mv</span> /vagrant/tmp/my.cnf /etc/mysql/my.cnf
+<span class="kw">else</span>
+    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: my.cnf not found&quot;</span>
+<span class="kw">fi</span>
+
+<span class="ex">service</span> mysql restart</code></pre></div>
+<p>Final thing we need to do is adding the shell script as a shell provisioner to our <em>Vagrantfile</em>.</p>
+<div class="sourceCode"><pre class="sourceCode ruby"><code class="sourceCode ruby">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/mysql.sh&quot;</span></code></pre></div>
+<p>Now let’s install PHP as well. This is pretty straight forward. Our <em>php.sh</em> looks like this:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="co">#!/usr/bin/env bash</span>
+<span class="ex">apt-get</span> install -y php5 libapache2-mod-php5 php5-mcrypt php5-curl php5-mysql</code></pre></div>
+<p>Afterwards we also add it as a provisioner</p>
+<div class="sourceCode"><pre class="sourceCode ruby"><code class="sourceCode ruby">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/php.sh&quot;</span></code></pre></div>
+<p>Which results in the following <em>Vagrantfile</em></p>
+<div class="sourceCode"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|
+  config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span>
+
+  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/update.sh&quot;</span>
+  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/apache.sh&quot;</span>
+  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/mysql.sh&quot;</span>
+  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/php.sh&quot;</span>
+
+  config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/apache2.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/apache2.conf&quot;</span>
+  config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/my.cnf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/my.cnf&quot;</span>
+
+  config.vm.network <span class="st">&quot;private_network&quot;</span>, <span class="st">ip: &quot;192.168.33.10&quot;</span>
+
+  config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span>
+<span class="kw">end</span></code></pre></div>
+<p>This is it. Our LAMP stack is complete. Now we want to check out our environment. Switch into the directory of the <em>Vagrantfile</em> and execute the following command</p>
+<pre><code>vagrant up</code></pre>
+<p>A lot of stuff is happening now and for the first time it will take some time to fire up the vagrant machine. If vagrant booted up successfully, we add an <em>index.php</em> in the directory above our <em>Vagrantfile</em>. This is our project directory. I won’t show anything big here, just a proof of concept</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php"><span class="kw">&lt;?php</span>
+
+<span class="fu">phpinfo</span><span class="ot">();</span></code></pre></div>
+<p>If you browse to <strong>192.168.33.10</strong> on your host system, you should see an info page about the running PHP version, similar to this</p>
+<p><img src="../images/phpinfo.png" alt="phpinfo" title="phpinfo" /></p>
+<p>Congratulations! You’ve done it! To suspend your vagrant machine just type the following in the same spot, where you did the <em>vagrant up</em></p>
+<pre><code>vagrant suspend</code></pre>
+<p>This saves the state of your machine and will be the way to shut it down in daily business. If you want to completely reset your machine and install everything again, you execute</p>
+<pre><code>vagrant destroy</code></pre>
+<p>To start your vagrant machine, just do <em>vagrant up</em> again. You could start from here and put your own PHP project in the parent directory of the <em>Vagrantfile</em> and start programming. But if you want to know some nifty stuff, like how to access your website via an address like <em>mysite.dev</em> instead of 192.168.33.10 or how you can access your database with the <strong>mysql-workbench</strong> software on your host machine, you should definitely check out the next posts in this series. <a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html">Go to Bonus 1</a></p>
+    </section>
+</article>
+
+          </main>
+          <footer>
+            <nav>
+                <a href="../impressum.html" title="Impressum">Impressum</a>
+                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
+            </nav>
+          </footer>
+    </body>
+</html>

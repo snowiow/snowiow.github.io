@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https:snow-dev.com</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/build-your-own-git-server-with-a-raspberry-pi.html</loc>
+    <lastmod>June  3, 2017</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/increase-disk-space-of-a-vagrant-machine.html</loc>
+    <lastmod>October 26, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html</loc>
+    <lastmod>June  3, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html</loc>
+    <lastmod>June  3, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html</loc>
+    <lastmod>June  3, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html</loc>
+    <lastmod>June  3, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant.html</loc>
+    <lastmod>June  3, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/the-power-of-vim-plugins-vim-plug.html</loc>
+    <lastmod>April  3, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/the-power-of-vim-plugins-ctrlp.html</loc>
+    <lastmod>January 11, 2016</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/the-power-of-vim-plugins-netrw.html</loc>
+    <lastmod>November  3, 2015</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/the-power-of-vim-plugins-nerdtree.html</loc>
+    <lastmod>October 16, 2015</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/how-modern-routing-works-in-php.html</loc>
+    <lastmod>October  7, 2015</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/the-power-of-vim-plugins-vundle.html</loc>
+    <lastmod>September 29, 2015</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/the-power-of-vim-plugins.html</loc>
+    <lastmod>September 16, 2015</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/about.html</loc>
+    <lastmod></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/datenschutz.html</loc>
+    <lastmod></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/impressum.html</loc>
+    <lastmod></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>snow-dev.com :: A basic Routing approach with PHP</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+        <link rel="stylesheet" href="../css/fontawesome.min.css">
+        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
+        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">snow-dev.com</a>
+            </div>
+            <nav>
+                <a href="../" title="Home"><i class="fas fa-home"></i></a>
+                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
+                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+                <a href="mailto:marcel.patzwahl@posteo.de" title="Contact Me"><i class="fas fa-envelope"></i></a>
+            </nav>
+        </header>
+          <main role="main">
+              <h1>A basic Routing approach with PHP</h1>
+              <article>
+    <section class="header">
+        Posted on October  7, 2015
+    </section>
+    <hr class="section-head">
+    <section>
+        <p>Nice and readable URLs are the way to go in modern web applications. More and more people are abandoning the old style URLs, containing question marks and  equal signs, in favor of the slash separation for actions and parameters. Most frameworks are already supporting this new kind of URLs and encapsulate the logic inside of a routing class or module. Everyone is using it and everything is good so far. But even if these new URLs are all over the place, there is very little information on the net about how it is actually implemented. Because I’m currently working on a minimalistic PHP MVC Framework with a <a href="http://randy-schuett.de">friend</a>, I came across this problem. Beside of the source code of the big players in PHP Frameworks I found a small and easy to use snippet to get routes working pretty fast. In this post I want to present the key PHP feature, which allows us to realize it and how to build upon it. Everything starts of with the PHP super constant <a href="http://php.net/manual/en/reserved.variables.server.php">$_SERVER</a>. We are interested about the ‘REQUEST_URI’  key. If we type in the address of our webserver, followed by and <em>/index.php</em> and this file contains the following line of code.</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php"><span class="kw">&lt;?php</span>
+<span class="fu">echo</span> <span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">'REQUEST_URI'</span><span class="ot">];</span></code></pre></div>
+<p>we probably would get back <em>/index.php</em>. This is exactly what we wanted to archive, because now we are able to read what the user typed into the address bar of his browser and now we can react to it. But with this approach comes a problem. If we would build our Router upon this feature, we are forced to place a file at each possible path, which we want to cover, containing the request of the super constant and reroute to the appropriate controller and action. A good way to solve this problem would be, that whatever the user types into the address bar, it would open up the same file everytime, like our <em>index.php</em>. Sadly there is no way to solve this in PHP. So this has to be done on the webserver level itself. Most webservers (like Apache)  support configurations written down to a <em>.htaccess</em> file, which is placed in the root directory of the webserver. We write the following content to the file.</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php">RewriteEngine On
+RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span> - <span class="ot">[</span><span class="kw">E</span>=<span class="kw">BASE</span>:%<span class="dv">1</span><span class="ot">]</span>
+RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span>$ %{<span class="kw">ENV</span>:<span class="kw">BASE</span>}index.php <span class="ot">[</span><span class="kw">NC</span><span class="ot">,</span><span class="kw">L</span><span class="ot">]</span></code></pre></div>
+<p>The first directive tells the webserver to turn on the rewrite engine. Afterwards we give him the rules to link everything to the <em>index.php</em> in the root directory. Now we can type in <em>/test/dir/index</em> for example and the <em>index.php</em> in the root directory is called, but with this output instead: <em>/test/dir/index</em>. Based on this behavior we can build our Router. For a minimalistic example we create a <em>Router.php</em> file which contains the following class.</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php"><span class="kw">&lt;?php</span>
+
+<span class="kw">class</span> Router
+{
+    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span>
+    {
+        <span class="fu">echo</span> <span class="kw">$route</span><span class="ot">;</span>
+    }
+}</code></pre></div>
+<p>and we change our <em>index.php</em>.</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php"><span class="kw">&lt;?php</span>
+
+<span class="kw">require_once</span> <span class="st">'Router.php'</span><span class="ot">;</span>
+
+<span class="kw">$r</span> = <span class="kw">new</span> Router<span class="ot">();</span>
+<span class="kw">$r</span>-&gt;route<span class="ot">(</span><span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">'REQUEST_URI'</span><span class="ot">]);</span></code></pre></div>
+<p>So far we gained nothing except a new layer of abstraction. But now we are able to actually give our routing some behavior, similar to modern frameworks, which are based on controllers and actions. As an example we take the following path <em>/default/print_hello</em>. In theory this should instantiate a <em>DefaultController</em> class and call the <em>print_helloAction</em> method. As a place for our controllers we create a new directory called <em>controllers</em> and add a <em>DefaultController.php</em> file.</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php"><span class="kw">&lt;?php</span>
+
+<span class="kw">class</span> DefaultController
+{
+    <span class="kw">public</span> <span class="kw">function</span> indexAction<span class="ot">()</span>
+    {
+        <span class="fu">echo</span> <span class="st">'Index'</span><span class="ot">;</span>
+    }
+
+    <span class="kw">public</span> <span class="kw">function</span> print_helloAction<span class="ot">()</span>
+    {
+        <span class="fu">echo</span> <span class="st">'Hello'</span><span class="ot">;</span>
+    }
+}</code></pre></div>
+<p>The last part of this post will be about how our Router class can actually instantiate the <em>DefaultController</em> and call the method based on the given route. One way to do it is to cut down the string at the slashes. Afterwards we got the controller and action name which we are now able to instantiate and call. The code for the route function could look like this.</p>
+<div class="sourceCode"><pre class="sourceCode php"><code class="sourceCode php"><span class="kw">&lt;?php</span>
+
+<span class="kw">class</span> Router
+{
+    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span>
+    {
+        <span class="kw">$parts</span> = <span class="fu">explode</span><span class="ot">(</span><span class="st">'/'</span><span class="ot">,</span> <span class="kw">$route</span><span class="ot">);</span>
+        <span class="co">//Index 0 is empty because the routes</span>
+        <span class="co">//always start with a preceding /</span>
+        <span class="kw">$controller</span> = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">1</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">1</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">''</span><span class="ot">;</span>
+        <span class="kw">$action</span>     = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">2</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">2</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">''</span><span class="ot">;</span>
+
+        <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">))</span> {
+            <span class="co">//upper case the first letter of the controller name and</span>
+            <span class="co">//append the Controller string to it</span>
+            <span class="kw">$controller</span> = <span class="fu">ucfirst</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">)</span> . <span class="st">'Controller'</span><span class="ot">;</span>
+            <span class="co">//Include the PHP file for the Controller</span>
+            <span class="kw">require_once</span> <span class="st">'controllers/'</span> . <span class="kw">$controller</span> . <span class="st">'.php'</span><span class="ot">;</span>
+            <span class="co">//instantiate the controller</span>
+            <span class="kw">$object</span> = <span class="kw">new</span> <span class="kw">$controller</span><span class="ot">;</span>
+            <span class="co">//call the action</span>
+            <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$action</span><span class="ot">))</span> {
+                <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="kw">$action</span> . <span class="st">'Action'</span><span class="ot">]);</span>
+            }
+            <span class="co">//call indexAction if no action is given</span>
+            <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="st">'indexAction'</span><span class="ot">]);</span>
+        }
+    }
+}</code></pre></div>
+<p>If we type in <em>/default/print_hello</em> we get back <em>Hello</em>. If no action is given, we automatically try to route to the index action. So <em>/default</em> would print <em>Index</em>. <a href="http://php.net/manual/en/function.call-user-func.php">call_user_func</a> also supports parameters. So it is very easy to extend the given Router with parameter handling. Also there should be more handling of special cases, like if no controller is given in the URL. It’s also simple to extend the given model to use real view files for showing a page, instead of just doing an echo. Nevertheless serves this basic concept  as a starting point and it should be straightforward to build upon it.</p>
+    </section>
+</article>
+
+          </main>
+          <footer>
+            <nav>
+                <a href="../impressum.html" title="Impressum">Impressum</a>
+                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
+            </nav>
+          </footer>
+    </body>
+</html>
