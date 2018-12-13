@@ -10,7 +10,7 @@ root = "https:snow-dev.com"
 
 main :: IO ()
 main =
-  hakyll $ do
+  hakyllWith config $ do
     match "images/*" $ do
       route idRoute
       compile copyFileCompiler
@@ -73,3 +73,6 @@ postCtx :: Context String
 postCtx =
   constField "root" root `mappend` dateField "date" "%B %e, %Y" `mappend`
   defaultContext
+
+config :: Configuration
+config = defaultConfiguration {destinationDirectory = "docs"}
