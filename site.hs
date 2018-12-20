@@ -11,6 +11,9 @@ root = "https:snow-dev.com"
 main :: IO ()
 main =
   hakyllWith config $ do
+    match "CNAME" $ do
+      route idRoute
+      compile copyFileCompiler
     match "images/*" $ do
       route idRoute
       compile copyFileCompiler
