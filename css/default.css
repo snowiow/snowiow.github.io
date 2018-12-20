@@ -46,6 +46,7 @@ footer {
 
 img {
     max-width: 100%;
+    overflow: auto;
 }
 
 footer > nav {
