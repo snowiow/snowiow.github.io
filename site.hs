@@ -74,7 +74,7 @@ main =
 --------------------------------------------------------------------------------
 postCtx :: Context String
 postCtx =
-  constField "root" root `mappend` dateField "date" "%B %e, %Y" `mappend`
+  constField "root" root `mappend` dateField "date" "%Y-%m-%d" `mappend`
   defaultContext
 
 config :: Configuration
