@@ -6,7 +6,7 @@ import Hakyll
 
 --------------------------------------------------------------------------------
 root :: String
-root = "https:snow-dev.com"
+root = "https://snow-dev.com"
 
 main :: IO ()
 main =
