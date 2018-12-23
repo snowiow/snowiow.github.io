@@ -5,7 +5,7 @@ tags:
   - vagrant
 categories:
   - Vagrant
-date: 2016-10-26 10:02:27
+date: 2016-10-26
 ---
 
 Lately I came across a rather big problem of vagrant: Increasing the disk

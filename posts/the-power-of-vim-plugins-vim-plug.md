@@ -2,8 +2,7 @@
 title: 'The power of Vim Plugins: Vim-Plug'
 categories:
   - The Power of Vim Plugins
-date: 2016-04-03 11:47:56
-tags:
+date: 2016-04-03
 ---
 
 A few weeks after my

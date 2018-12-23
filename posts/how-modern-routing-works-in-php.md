@@ -7,7 +7,7 @@ tags:
   - routing
 categories:
   - PHP
-date: 2015-10-07 09:49:14
+date: 2015-10-07
 ---
 
 Nice and readable URLs are the way to go in modern web applications. More and

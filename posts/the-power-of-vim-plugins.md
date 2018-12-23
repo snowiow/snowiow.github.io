@@ -6,7 +6,7 @@ tags:
   - vim
 categories:
   - The Power of Vim Plugins
-date: 2015-09-16 19:26:57
+date: 2015-09-16
 ---
 
 In this post I want to introduce a new series, which will cover some of the

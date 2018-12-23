@@ -7,7 +7,7 @@ tags:
 categories:
   - Git
   - Raspberry Pi
-date: 2017-06-03 14:06:18
+date: 2017-06-03
 ---
 
 In this post I want to go into a topic, which I did a few months ago. My goal

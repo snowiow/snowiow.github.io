@@ -9,7 +9,7 @@ tags:
 categories:
   - PHP
   - Vagrant
-date: 2016-06-03 22:38:19
+date: 2016-06-03
 ---
 
 # Table of Contents 

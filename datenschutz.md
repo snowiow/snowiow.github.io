@@ -1,5 +1,6 @@
 ---
 title: Datenschutz
+date: 2018-12-13
 ---
 # Grundlegendes
 Diese Datenschutzerklärung soll Sie über die Art, den Umfang und den Zweck der

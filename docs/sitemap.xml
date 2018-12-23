@@ -21,14 +21,7 @@
   </url>
 
   <url>
-    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html</loc>
-    <lastmod>2016-06-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html</loc>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant.html</loc>
     <lastmod>2016-06-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -49,7 +42,14 @@
   </url>
 
   <url>
-    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant.html</loc>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html</loc>
+    <lastmod>2016-06-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https:snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html</loc>
     <lastmod>2016-06-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -106,21 +106,21 @@
 
   <url>
     <loc>https:snow-dev.com/about.html</loc>
-    <lastmod></lastmod>
+    <lastmod>2018-12-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https:snow-dev.com/datenschutz.html</loc>
-    <lastmod></lastmod>
+    <lastmod>2018-12-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
     <loc>https:snow-dev.com/impressum.html</loc>
-    <lastmod></lastmod>
+    <lastmod>2018-12-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

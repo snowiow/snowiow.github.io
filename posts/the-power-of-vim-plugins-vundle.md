@@ -4,7 +4,7 @@ tags:
   - plugins vim vundle
 categories:
   - The Power of Vim Plugins
-date: 2015-09-29 16:31:01
+date: 2015-09-29
 ---
 
 To start of this series properly, we need a

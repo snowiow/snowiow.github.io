@@ -6,7 +6,7 @@ tags:
   - vim
 categories:
   - The Power of Vim Plugins
-date: 2015-11-03 21:22:36
+date: 2015-11-03
 ---
 
 This time we look into an alternative for NERDTree, which is called netrw.
