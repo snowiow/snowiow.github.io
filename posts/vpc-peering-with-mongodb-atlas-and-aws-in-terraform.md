@@ -13,7 +13,7 @@ date: 2018-12-26
 ---
 
 Lately I was doing a lot of "Infrastructure as Code" (IaC) in terraform at
-work. There was one application, which needed a MongoDB in the background.
+work. There was one application, which needed a MongoDB as the primary database.
 Sadly there is no managed MongoDB service in AWS so far. So there were two
 initial options for me:
 
@@ -30,7 +30,7 @@ DynamoDB instance.
 
 Update 10.02.2019: Actually there is a real alternative now called AWS
 DocumentDB. I didn't look into it so far, so I don't feel qualified to give any
-opinion to DocumentDB. But based on the MongoDB CEO MongoDB [Atlas still has
+opinion on DocumentDB. But based on the MongoDB CEO MongoDB [Atlas still has
 it's right to
 exist](https://www.mongodb.com/blog/post/documents-are-everywhere).
 
@@ -81,7 +81,7 @@ basically this part:
 <img src="/images/aws_vpc.svg" alt="VPC Overview" title="AWS VPC" />  
 
 In my example project I have created a subfolder called `terraform` where all
-the infracstructure code can be found. First of all we load the AWS Provider.
+the infrastructure code can be found. First of all we load the AWS Provider.
 This is done in the `main.tf`:
 
 ```HCL
@@ -106,8 +106,8 @@ resource "aws_vpc" "this" {
 }
 ```
 
-As already stated in the beginning we use the 172.16.0.0/16 CIDR block for the
-AWS VPC. We also enable dns support and dns hostnames inside of the VPC. With
+As already stated in the beginning, we use the 172.16.0.0/16 CIDR block for the
+AWS VPC. We also enable DNS support and DNS hostnames inside of the VPC. With
 those two options we basically enable DNS discovery in the local VPC scope,
 which allows us to resolve the MongoDB cluster DNS to it's private IP.
 
@@ -131,7 +131,7 @@ resource "aws_subnet" "this" {
 
 Here we create one subnet, which takes all of the VPCs available addresses and
 is hosted in the availability zone eu-central-1a. Furthermore we want to give
-launched instances a public IP on startup, to be able to download updates for
+launched instances a public IP on startup to be able to download updates for
 the EC2 instance.
 
 Next we put the internet gateway in front of the VPC, which is straight
@@ -239,14 +239,14 @@ ln -s $GOPATH/bin/terraform-provider-mongodbatlas \
 If you do a `terraform init` again, you are able to initialize the mongodbatlas
 provider as well.
 
-Now that everything is set up, we can start creating the MongoDB Atlas cluster.
+With everything set up, we can start creating the MongoDB Atlas cluster.
 The first thing needed is a project (former known as groups). Projects are a
 sort of grouping to isolate different environments from each other or to
 configure different alert settings. For a full description head over to the
 [official
 documentation](https://docs.atlas.mongodb.com/tutorial/manage-projects/). We
 create a new file called `atlas.tf` for all our MongoDB Atlas resources. There
-we do this:
+we create a project first:
 
 ```hcl
 resource "mongodbatlas_project" "this" {
@@ -356,7 +356,7 @@ resource "aws_vpc_peering_connection_accepter" "this" {
 
 First we create the MongoDB Atlas peering connection. The connection needs most
 of the stuff, we created before, like the AWS VPC to peer to and the container
-of our MongoDB cluster. Here we use another variable for the aws account in
+of our MongoDB cluster. Here we use another variable for the AWS account in
 which the destination VPC for the peering lies. This variable will be created
 analogous to those, we created earlier. The second thing is an acceptor, which
 should auto accept the peering requests for peerings with the MongoDB VPC.
@@ -390,17 +390,18 @@ you can execute `terraform apply` to see the results.
 # Part 3: Deploying the app
 In the last part we keep it as simple as possible. We will create a single EC2
 instance, which will be provisioned to install a docker container with a small
-PHP application. The important part here, is that we now can give the DSN of
+PHP application. The important part here, is that we now can give the DSN (Data
+Source Name) of
 the MongoDB to the app as an environment variable and the app is able to work
-with the MongoDB, without any further manual interventions.
+with the MongoDB without any further manual interventions.
 
 In reality there is a lot more to running a scalable infrastructure, like load
 balancing, autoscaling groups, launch templates and logging to name a few. But
 covering these topics in this post would crush the scope of this article, which
-is already pretty long to this point.
+is already pretty long at this point.
 
 So without further ado let's get startet by creating a `ec2.tf` file. First of
-all we create an ami
+all we create an AMI
 
 ```hcl
 data "aws_ami" "amazon_linux" {
@@ -418,7 +419,7 @@ This defines an AMI (Amazon Machine Image) which is basically the operating
 system, the ec2 instance will be started with.
 
 In this EC2 instance we will run a docker container. I created a repository in
-amazons own ECR for my container image. So I add this as a data source:
+amazons own ECR for my container image. So I add the repository as a data source:
 
 ```hcl
 data "aws_ecr_repository" "example_app" {
@@ -454,8 +455,9 @@ Basically this installs docker, downloads the image from the container
 repository URL, where I uploaded it and executes it. As environment variables I
 give the container the DSN of the MongoDB cluster, the container repository URL
 and the database, which will always be called app, so it is hardcoded here. The
-DSN value is interpolated, so we need a way to fill in the actual value. We do
-this by creating a template file as a data source in terraform:
+DSN and repository URL values are interpolated, so we need a way to fill in the
+actual values. We do this by creating a template file as a data source in
+terraform:
 
 ```hcl
 data "template_file" "user_data" {
@@ -575,8 +577,8 @@ resource "aws_iam_instance_profile" "this" {
 Finally we create the EC2 instance itself and output the IP address, where it
 is reachable afterwards. We also need a security group for the instance, which
 basically tells who will be able to access the instance and to who the instance
-is allowed to respond to. In this example we allow traffic from any IP over the
-80 port, because this is the port where the website is hosted:
+is allowed to respond to. In this example we allow traffic from any IP over
+port 80, because this is the port where the website is hosted:
 
 ```hcl
 resource "aws_security_group" "this" {
@@ -660,5 +662,6 @@ infrastructure.
 So there you have it. A VPC peering connection between MongoDB Atlas and our
 own AWS VPC, which is applicable in a single command, thanks to terraform. I
 created this post because there are many useful resources scattered around
-about this topic, but there is no single resource which combines them all. So I
-hope this is of help for anybody who is trying to achieve something similar.
+about this topic, but there is no single resource which combines them all
+together. So I hope this is of help for anybody who is trying to achieve
+something similar.
