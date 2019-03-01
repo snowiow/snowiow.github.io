@@ -32,8 +32,9 @@ main =
     match "posts/*" $ do
       route $ setExtension "html"
       compile $
-        pandocCompiler >>= loadAndApplyTemplate "templates/post.html" postCtx >>=
-        loadAndApplyTemplate "templates/default.html" postCtx >>=
+        pandocCompiler >>= loadAndApplyTemplate "templates/post.html" postCtx 
+        >>= saveSnapshot "content"
+        >>= loadAndApplyTemplate "templates/default.html" postCtx >>=
         relativizeUrls
     create ["archive.html"] $ do
       route idRoute
@@ -70,6 +71,12 @@ main =
               listField "pages" postCtx (return pages)
         makeItem "" >>= loadAndApplyTemplate "templates/sitemap.xml" sitemapCtx >>=
           relativizeUrls
+    create ["rss.xml"] $ do
+      route idRoute
+      compile (feedCompiler renderRss)
+    create ["atom.xml"] $ do
+      route idRoute
+      compile (feedCompiler renderAtom)
 
 --------------------------------------------------------------------------------
 postCtx :: Context String
@@ -77,5 +84,30 @@ postCtx =
   constField "root" root `mappend` dateField "date" "%Y-%m-%d" `mappend`
   defaultContext
 
+feedCtx :: Context String
+feedCtx = postCtx `mappend` bodyField "description"
+
+
 config :: Configuration
 config = defaultConfiguration {destinationDirectory = "docs"}
+
+feedConfiguration :: FeedConfiguration
+feedConfiguration = FeedConfiguration
+  { feedTitle = "snow-dev.com"
+  , feedDescription = "A blog about linux, vim devops and various other tech topics"
+  , feedAuthorName = "Marcel Patzwahl"
+  , feedAuthorEmail = "marcel.patzwahl@posteo.de"
+  , feedRoot = root
+  }
+
+type FeedRenderer =
+    FeedConfiguration
+    -> Context String
+    -> [Item String]
+    -> Compiler (Item String)
+
+feedCompiler :: FeedRenderer -> Compiler (Item String)
+feedCompiler renderer =
+  renderer feedConfiguration feedCtx
+    =<< recentFirst
+    =<< loadAllSnapshots "posts/*" "content"
