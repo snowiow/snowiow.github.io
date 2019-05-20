@@ -68,31 +68,31 @@
 <p>Now we are the Git user and can do stuff in his name. First we need a place, where we want to place our repositories. A good place is the home directory of the Git user, but it can be anywhere else, where the Git user has write access. Now we create a new repository called <em>new-project</em>:</p>
 <pre><code>$ mkdir /home/git/new-project.git &amp;&amp; cd /home/git/new-project.git &amp;&amp; git init --bare</code></pre>
 <p>First we create a new directory with a <em>.git</em> ending. You don’t need the ending, but it’s a best practice, to let server side repositories end with <em>.git</em>. Afterwards we go into that directory and initiate it as a Git repository. The <em>bare</em> argument is somewhat optional again, but also a best practice. It just means this Git repository doesn’t have a working directory. The working directory is where you put your files. On the same level is a <em>.git</em> directory with the history and other things in it. The <em>bare</em> argument now says that you don’t need the working directory and the main directory can become the <em>.git</em> directory. So overall you can remember to use the <em>bare</em> argument on the server side of a repository and not on the client side. # Clone your repo Now we want to clone our newly created repository from the server. You should already  know the ip of your Raspberry, when you’ve set it up via ssh. If you don’t know the IP yet, you can run the command ifconfig as root, which should give you something like this as an output:</p>
-<div class="sourceCode"><pre class="sourceCode ini"><code class="sourceCode ini"><span class="co">#ifconfig</span>
-<span class="dt">eth0: flags</span><span class="ot">=</span><span class="dv">4099</span><span class="st">&lt;UP,BROADCAST,MULTICAST&gt;  mtu </span><span class="dv">1500</span>
-<span class="dt">        ether b8:27:eb:8c:97:af  txqueuelen 1000  (Ethernet)</span>
-<span class="dt">        RX packets 0  bytes 0 (0.0 B)</span>
-<span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span>
-<span class="dt">        TX packets 0  bytes 0 (0.0 B)</span>
-<span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span>
-
-<span class="dt">lo: flags</span><span class="ot">=</span><span class="dv">73</span><span class="st">&lt;UP,LOOPBACK,RUNNING&gt;  mtu </span><span class="dv">65536</span>
-<span class="dt">        inet 127.0.0.1  netmask 255.0.0.0</span>
-<span class="dt">        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;</span>
-<span class="dt">        loop  txqueuelen 1  (Local Loopback)</span>
-<span class="dt">        RX packets 1004803  bytes 352750188 (336.4 MiB)</span>
-<span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span>
-<span class="dt">        TX packets 1004803  bytes 352750188 (336.4 MiB)</span>
-<span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span>
-
-<span class="dt">wlan0: flags</span><span class="ot">=</span><span class="dv">4163</span><span class="st">&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu </span><span class="dv">1500</span>
-<span class="dt">        inet 192.168.178.48  netmask 255.255.255.0  broadcast 192.168.178.255</span>
-<span class="dt">        inet6 fe80::ba27:ebff:fed9:c2fa  prefixlen 64  scopeid 0x20&lt;link&gt;</span>
-<span class="dt">        ether b8:27:eb:d9:c2:fa  txqueuelen 1000  (Ethernet)</span>
-<span class="dt">        RX packets 1727438  bytes 275330489 (262.5 MiB)</span>
-<span class="dt">        RX errors 0  dropped 1561  overruns 0  frame 0</span>
-<span class="dt">        TX packets 4660814  bytes 2524959215 (2.3 GiB)</span>
-<span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#ifconfig</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="dt">eth0: flags</span><span class="ot">=</span><span class="dv">4099</span><span class="st">&lt;UP,BROADCAST,MULTICAST&gt;  mtu </span><span class="dv">1500</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="dt">        ether b8:27:eb:8c:97:af  txqueuelen 1000  (Ethernet)</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="dt">        RX packets 0  bytes 0 (0.0 B)</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="dt">        TX packets 0  bytes 0 (0.0 B)</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="dt">lo: flags</span><span class="ot">=</span><span class="dv">73</span><span class="st">&lt;UP,LOOPBACK,RUNNING&gt;  mtu </span><span class="dv">65536</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="dt">        inet 127.0.0.1  netmask 255.0.0.0</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="dt">        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="dt">        loop  txqueuelen 1  (Local Loopback)</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"><span class="dt">        RX packets 1004803  bytes 352750188 (336.4 MiB)</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15"><span class="dt">        TX packets 1004803  bytes 352750188 (336.4 MiB)</span></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb5-18" data-line-number="18"><span class="dt">wlan0: flags</span><span class="ot">=</span><span class="dv">4163</span><span class="st">&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu </span><span class="dv">1500</span></a>
+<a class="sourceLine" id="cb5-19" data-line-number="19"><span class="dt">        inet 192.168.178.48  netmask 255.255.255.0  broadcast 192.168.178.255</span></a>
+<a class="sourceLine" id="cb5-20" data-line-number="20"><span class="dt">        inet6 fe80::ba27:ebff:fed9:c2fa  prefixlen 64  scopeid 0x20&lt;link&gt;</span></a>
+<a class="sourceLine" id="cb5-21" data-line-number="21"><span class="dt">        ether b8:27:eb:d9:c2:fa  txqueuelen 1000  (Ethernet)</span></a>
+<a class="sourceLine" id="cb5-22" data-line-number="22"><span class="dt">        RX packets 1727438  bytes 275330489 (262.5 MiB)</span></a>
+<a class="sourceLine" id="cb5-23" data-line-number="23"><span class="dt">        RX errors 0  dropped 1561  overruns 0  frame 0</span></a>
+<a class="sourceLine" id="cb5-24" data-line-number="24"><span class="dt">        TX packets 4660814  bytes 2524959215 (2.3 GiB)</span></a>
+<a class="sourceLine" id="cb5-25" data-line-number="25"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a></code></pre></div>
 <p>As you can see in the output, I am connected via wifi. So the IP address of interest is under <em>inet</em> in the <em>wlan0</em> block. If you are connected via cable, there should be an <em>inet</em> entry in the <em>eth0</em> block. Now we know where to clone the repository from like this:</p>
 <pre><code>$ git clone git@&lt;your-inet-entry-here&gt;:/home/git/new-project.git</code></pre>
 <p>In my case the command would look like this:</p>
@@ -164,19 +164,19 @@
 <p>As you can see in the code snippet, you need to add the gitweb.cgi location into the server entity and tell nginx where to find the fastcgi_params and pass. You also need to override the default location to be gitweb.cgi. All changes you need to do, are highlighted in yellow. Now we need to install fcgiwrap. This is a cgi server, which runs our gitweb cgi app.</p>
 <pre><code># pacman -S fcgiwrap</code></pre>
 <p>Then we need to add a service config for fcgiwrap to be able to start it via systemctl. Create the following file _/usr/lib/systemd/system/fcgiwrap.service _with this content</p>
-<div class="sourceCode"><pre class="sourceCode ini"><code class="sourceCode ini"><span class="kw">[Unit]</span>
-<span class="dt">Description</span><span class="ot">=</span><span class="st">Simple server for running CGI applications over FastCGI</span>
-<span class="dt">After</span><span class="ot">=</span><span class="st">syslog.target network.target</span>
-
-<span class="kw">[Service]</span>
-<span class="dt">Type</span><span class="ot">=</span><span class="st">forking</span>
-<span class="dt">Restart</span><span class="ot">=</span><span class="kw">on</span><span class="st">-abort</span>
-<span class="dt">PIDFile</span><span class="ot">=</span><span class="st">/var/run/fcgiwrap.pid</span>
-<span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/spawn-fcgi -s /var/run/fcgiwrap.sock -P /var/run/fcgiwrap.pid -u http -g http -- /usr/sbin/fcgiwrap</span>
-<span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/bin/kill -</span><span class="dv">15</span><span class="st"> $MAINPID</span>
-
-<span class="kw">[Install]</span>
-<span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="kw">[Unit]</span></a>
+<a class="sourceLine" id="cb22-2" data-line-number="2"><span class="dt">Description</span><span class="ot">=</span><span class="st">Simple server for running CGI applications over FastCGI</span></a>
+<a class="sourceLine" id="cb22-3" data-line-number="3"><span class="dt">After</span><span class="ot">=</span><span class="st">syslog.target network.target</span></a>
+<a class="sourceLine" id="cb22-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb22-5" data-line-number="5"><span class="kw">[Service]</span></a>
+<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="dt">Type</span><span class="ot">=</span><span class="st">forking</span></a>
+<a class="sourceLine" id="cb22-7" data-line-number="7"><span class="dt">Restart</span><span class="ot">=</span><span class="kw">on</span><span class="st">-abort</span></a>
+<a class="sourceLine" id="cb22-8" data-line-number="8"><span class="dt">PIDFile</span><span class="ot">=</span><span class="st">/var/run/fcgiwrap.pid</span></a>
+<a class="sourceLine" id="cb22-9" data-line-number="9"><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/spawn-fcgi -s /var/run/fcgiwrap.sock -P /var/run/fcgiwrap.pid -u http -g http -- /usr/sbin/fcgiwrap</span></a>
+<a class="sourceLine" id="cb22-10" data-line-number="10"><span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/bin/kill </span><span class="dv">-15</span><span class="st"> $MAINPID</span></a>
+<a class="sourceLine" id="cb22-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb22-12" data-line-number="12"><span class="kw">[Install]</span></a>
+<a class="sourceLine" id="cb22-13" data-line-number="13"><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></a></code></pre></div>
 <p>Now we can enable and start the fcgiwrap server for nginx</p>
 <pre><code># systemctl enable nginx fcgiwrap
 # systemctl start nginx fcgiwrap</code></pre>

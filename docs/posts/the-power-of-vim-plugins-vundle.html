@@ -57,7 +57,7 @@ Plugin 'VundleVim/Vundle.vim'
 &quot;New plugins go here
 
 call vundle#end()</code></pre>
-<p>To test if Vundle is working, we add a new plugin. As an example we install NERDTree, which will be covered in the next post of this series. Under the comment _“New plugins go here_ the plugin will be added. Because it is hosted on GitHub we can write the following into the .vimrc</p>
+<p>To test if Vundle is working, we add a new plugin. As an example we install NERDTree, which will be covered in the next post of this series. Under the comment <em>&quot;New plugins go here</em> the plugin will be added. Because it is hosted on GitHub we can write the following into the .vimrc</p>
 <pre><code>Plugin 'scrooloose/nerdtree'</code></pre>
 <p>To take this change into effect, you either need to restart Vim or re-source your .vimrc. I’ve got the following line saved into my .vimrc, which automatically re-sources my .vimrc everytime it is saved.</p>
 <pre><code>autocmd! bufwritepost .vimrc source %</code></pre>

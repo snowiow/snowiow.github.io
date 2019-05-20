@@ -94,7 +94,7 @@ config = defaultConfiguration {destinationDirectory = "docs"}
 feedConfiguration :: FeedConfiguration
 feedConfiguration = FeedConfiguration
   { feedTitle = "snow-dev.com"
-  , feedDescription = "A blog about linux, vim devops and various other tech topics"
+  , feedDescription = "A blog about linux, vim, devops and various other tech topics"
   , feedAuthorName = "Marcel Patzwahl"
   , feedAuthorEmail = "marcel.patzwahl@posteo.de"
   , feedRoot = root

@@ -36,10 +36,10 @@
     <hr class="section-head">
     <section>
         <p>Lately I came across a rather big problem of vagrant: Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily. You can change it like this:</p>
-<div class="sourceCode"><pre class="sourceCode ruby"><code class="sourceCode ruby">config.vm.provider <span class="st">&quot;virtualbox&quot;</span> <span class="kw">do</span> |vb|
-    vb.memory = <span class="dv">4096</span>
-    vb.cpus = <span class="dv">4</span>
-<span class="kw">end</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" data-line-number="1">config.vm.provider <span class="st">&quot;virtualbox&quot;</span> <span class="kw">do</span> |vb|</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    vb.memory = <span class="dv">4096</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">    vb.cpus = <span class="dv">4</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">end</span></a></code></pre></div>
 <p>So my thoughts were, that there must be a similar option to disk space as well, but there wasn’t. After some research I found out, there was no easy solution to that. There are already some solutions though, but nothing worked for me completely. I’m currently mainly using <a href="https://atlas.hashicorp.com/kaorimatz/boxes/ubuntu-16.04-amd64">kaorimatz ubuntu 16.04 iso.</a> One point which wasn’t working for me is, that other machines used lvm2 as a volume manager. Second problem was, that some people’s new increased hdd’s got attached automagically to the vagrant machine, even though it should give an UUID conflict. So I had to go for my own solution, which is a combination of various solutions out there. I hope this is of any use for someone else out there, who was as frustrated as I was.</p>
 <h1 id="the-solution">The Solution</h1>
 <p>First things first: This solution is for machines, which use VirtualBox as their virtualisation platform. If you use VirtualBox, we can go on. The first thing you have to do is turn your running vagrant machine off (<em>vagrant halt</em> or <em>vagrant suspend</em>). Next we need to find the actual VMDK file, which represents the HDD of the machine. If you have installed VirtualBox with the standard procedure, your machine should be here:</p>
@@ -55,13 +55,13 @@
 <p>The next thing we need to do, is closing the SATA controller to the old disk</p>
 <pre><code>VBoxManage storageattach &lt;name-of-the-vm&gt; --storagectl &quot;IDE Controller&quot; --port 0 --device 0 --medium none</code></pre>
 <p>Here are two things, you need to take care of. First thing is <em><name-of-the-vm></em>. This is the same as the directory name, where the initial VMDK file is placed. The second thing is, that your storagectl could have another name. You can find it out by opening the _*.vbox_ file, which is in the same directory as the initial VMDK file. This should be a normal XML file. Now look out for this tag</p>
-<div class="sourceCode"><pre class="sourceCode xml"><code class="sourceCode xml"><span class="kw">&lt;StorageControllers&gt;</span>
-  <span class="kw">&lt;StorageController</span><span class="ot"> name=</span><span class="st">&quot;IDE Controller&quot;</span><span class="ot"> type=</span><span class="st">&quot;PIIX4&quot;</span><span class="ot"> PortCount=</span><span class="st">&quot;2&quot;</span><span class="ot"> useHostIOCache=</span><span class="st">&quot;true&quot;</span><span class="ot"> Bootable=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span>
-    <span class="kw">&lt;AttachedDevice</span><span class="ot"> type=</span><span class="st">&quot;HardDisk&quot;</span><span class="ot"> hotpluggable=</span><span class="st">&quot;false&quot;</span><span class="ot"> port=</span><span class="st">&quot;0&quot;</span><span class="ot"> device=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span>
-      <span class="kw">&lt;Image</span><span class="ot"> uuid=</span><span class="st">&quot;{42b28bc6-a130-45be-9603-ee16779459d5}&quot;</span><span class="kw">/&gt;</span>
-    <span class="kw">&lt;/AttachedDevice&gt;</span>
-  <span class="kw">&lt;/StorageController&gt;</span>
-<span class="kw">&lt;/StorageControllers&gt;</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">&lt;StorageControllers&gt;</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">  <span class="kw">&lt;StorageController</span><span class="ot"> name=</span><span class="st">&quot;IDE Controller&quot;</span><span class="ot"> type=</span><span class="st">&quot;PIIX4&quot;</span><span class="ot"> PortCount=</span><span class="st">&quot;2&quot;</span><span class="ot"> useHostIOCache=</span><span class="st">&quot;true&quot;</span><span class="ot"> Bootable=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">    <span class="kw">&lt;AttachedDevice</span><span class="ot"> type=</span><span class="st">&quot;HardDisk&quot;</span><span class="ot"> hotpluggable=</span><span class="st">&quot;false&quot;</span><span class="ot"> port=</span><span class="st">&quot;0&quot;</span><span class="ot"> device=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">      <span class="kw">&lt;Image</span><span class="ot"> uuid=</span><span class="st">&quot;{42b28bc6-a130-45be-9603-ee16779459d5}&quot;</span><span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">    <span class="kw">&lt;/AttachedDevice&gt;</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">  <span class="kw">&lt;/StorageController&gt;</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="kw">&lt;/StorageControllers&gt;</span></a></code></pre></div>
 <p>As you can see, we are interested in the name of the <em>StorageController</em> tag. If there is something else than “IDE Controller”, you need to use that name for the <em>–storagectl</em> flag instead. Now we need to close the old medium</p>
 <pre><code>VBoxManage closemedium disk &lt;name-of-the-disk&gt;.vmdk</code></pre>
 <p>When it is closed, we can attach our new resized VMDK</p>

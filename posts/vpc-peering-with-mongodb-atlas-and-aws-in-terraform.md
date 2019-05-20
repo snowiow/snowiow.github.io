@@ -93,7 +93,7 @@ provider "aws" {
 
 Next we create the actual VPC. This is done in the `vpc.tf` file:
 
-```hcl
+```terraform
 resource "aws_vpc" "this" {
   cidr_block = "172.16.0.0/16"
 
