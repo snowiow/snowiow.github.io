@@ -8,25 +8,47 @@
         <name>Marcel Patzwahl</name>
         <email>marcel.patzwahl@posteo.de</email>
     </author>
-    <updated>2019-05-01T00:00:00Z</updated>
+    <updated>2019-05-21T00:00:00Z</updated>
     <entry>
-    <title>ECS Blue Green Deployment with Terraform</title>
-    <link href="https://snow-dev.com/posts/ecs-blue-green-with-terraform.html" />
-    <id>https://snow-dev.com/posts/ecs-blue-green-with-terraform.html</id>
-    <published>2019-05-01T00:00:00Z</published>
-    <updated>2019-05-01T00:00:00Z</updated>
+    <title>ECS CD with CodePipeline in Terraform</title>
+    <link href="https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html" />
+    <id>https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html</id>
+    <published>2019-05-21T00:00:00Z</published>
+    <updated>2019-05-21T00:00:00Z</updated>
     <summary type="html"><![CDATA[<article>
     <section class="header">
-        Posted on 2019-05-01
+        Posted on 2019-05-21
     </section>
     <hr class="section-head">
     <section>
-        <p>Last week we came along a problem regarding the deployment of an ECS Service. We wanted to use the <a href="https://www.youtube.com/watch?v=5VPIzKDyLvo">newly announced</a> Blue/Green-Deployment powered by CodeDeploy, because for the time being we only needed one Fargate instance to run. The classic ECS Deployment destroyed one instance and started a new one in it’s place. With one instance this would mean, we would have some downtime.</p>
-<p>With Blue/Green Deployment a completely new group of instances will be started and can be tested. If everything looks fine, the load balancer forwards the traffic to the new group and the old gets shut down afterwards. Even with only one running instance, a second gets started before the first will be destroyed and if the second is working correctly, the traffic switches over and the old will be destroyed afterwards.</p>
-<p>In this post we will create a complete Continuous Delivery Pipeline with AWS Codepipeline, which consists of three stages. In the first stage (called source) the pipeline listens to master commits on the GitHub Repository of interest. The second stage (called build) builds a new docker image of the Dockerfile in the GitHub Repository and pushes the new image to AWS ECR. The last state (called deploy) does a blue green deployment to ECS with the new image.</p>
-<p>But before we can build the pipeline, we need to create the infrastructure for the ECS Service itself.</p>
+        <p>Last week I came along a problem regarding the deployment of an ECS Service. I wanted to use the <a href="https://www.youtube.com/watch?v=5VPIzKDyLvo">newly announced</a> Blue/Green-Deployment powered by CodeDeploy, because for the time being I only needed one Fargate instance to run. The classic ECS Deployment destroyed one instance and started a new one in it’s place. With one instance this would mean, we would have some downtime during the start of the new container.</p>
+<p>With Blue/Green Deployment a completely new group of instances will be started. If everything went fine, the load balancer forwards the traffic to the new group and the old gets shut down afterwards. Even with only one running instance, a second gets started before the first will be destroyed and if the second is working correctly, the traffic switches over and the old will be destroyed afterwards. The traffic switch is a minimal downtime, which isn’t recognizable in normal operation.</p>
+<p>In this post we will create a complete Continuous Delivery Pipeline with AWS CodePipeline, which consists of three stages. In the first stage (called source) the pipeline listens to master commits on the GitHub Repository of interest. The second stage (called build) builds a new docker image of the Dockerfile in the GitHub Repository and pushes the new image to AWS ECR. The last state (called deploy) does a blue/green deployment to ECS with the new image.</p>
+<p>The docker image is a simple HTML website with a message so we can see that the correct container is deployed.</p>
+<p>The complete codebase can be found in this <a href="https://github.com/snowiow/green-blue-ecs-example">GitHub Repository</a>.</p>
+<p>We start by creating the infrastructure for the ECS Service itself.</p>
 <p><img src="/images/ecs-green-blue.png" alt="ECS Green Blue Overview" title="ECS Green Blue Overview"></p>
-<p>As you can see we will build up a VPC, with three subnets where the ECS Services can be spawned in. The ECS Services have Access to the ECR to pull their images. In front of our network is the load balancer, which redirects the traffic to the services.</p>
+<p>As you can see we will build up a VPC with three subnets where the ECS Services can be spawned in. The ECS Services have access to the ECR to pull images. In front of our network is the load balancer, which redirects the traffic to the services.</p>
+<p>Before we go into the infrastructure, we create a <em>main.tf</em> and create some variables, we need later and create the AWS provider.</p>
+<pre class="terraform"><code>variable &quot;github_token&quot; {
+  description = &quot;The GitHub Token to be used for the CodePipeline&quot;
+  type        = &quot;string&quot;
+}
+
+variable &quot;account_id&quot; {
+  description = &quot;id of the active account&quot;
+  type        = &quot;string&quot;
+}
+
+variable &quot;region&quot; {
+  description = &quot;region to deploy to&quot;
+  type        = &quot;string&quot;
+}
+
+provider &quot;aws&quot; {
+  region  = &quot;${var.region}&quot;
+  version = &quot;2.7&quot;
+}</code></pre>
 <h1 id="part-1-the-vpc">Part 1: The VPC</h1>
 <p>We start with what is the basis of every AWS tutorial: The VPC.</p>
 <pre class="terraform"><code>locals {
@@ -88,7 +110,7 @@ resource &quot;aws_route_table_association&quot; &quot;this&quot; {
   route_table_id = &quot;${aws_route_table.this.id}&quot;
   subnet_id      = &quot;${element(aws_subnet.this.*.id, count.index)}&quot;
 }</code></pre>
-<p>Here we create a VPC with three subnets in the three AZs of the defined zone. The zone is a variable which is set in a <em>terraform.tfvars</em> file (at least for me. <a href="https://www.terraform.io/docs/configuration-0-11/variables.html">You can choose other sources for input variables as well</a>). We create a routing table with route associations to the three subnets and a route to an internet gateway. I won’t go into detail about the VPC. For more infos you can read <a href="/posts/vpc-peering-with-mongodb-atlas-and-aws-in-terraform.html">my previous post</a> in which I talk a bit more about VPCs. The difference this time is, that there are three subnets, which split up the whole CIDR space of the VPC. We are making three subnets, because we want to spawn instances randomly in different availability zones. If we increase the count of the running tasks, those will be split evenly over the different AZs. In the rare case of unavailability of one AZ, the app would still be available, because it’s also running in the other AZs.</p>
+<p>Here we create a VPC with three subnets in the three AZs of the defined region. The region is a variable which is set in a <em>terraform.tfvars</em> file (at least for me. <a href="https://www.terraform.io/docs/configuration-0-11/variables.html">You can choose other sources for input variables as well</a>). We create a routing table with route associations to the three subnets and a route to an internet gateway. I won’t go into detail about the VPC. For more infos you can read <a href="/posts/vpc-peering-with-mongodb-atlas-and-aws-in-terraform.html">my previous post</a> in which I talk a bit more about VPCs. The difference this time is, that there are three subnets, which split up the whole CIDR space of the VPC. We are making three subnets, because we want to spawn instances randomly in different availability zones. If we increase the count of the running tasks, those will be split evenly over the different AZs. In the rare case of unavailability of one AZ, the app would still be available, because it’s also running in the other AZs.</p>
 <h1 id="part-2-the-load-balancer">Part 2: The Load Balancer</h1>
 <p>Now we need a load balancer, which is the key part of our Green/Blue Deployment. The Load Balancer has two target groups. We need the two target groups for the green/blue deployment later. That’s why we call one target group green and the other blue. The blue group will stay empty for the time being and we spawn everything in the green one.</p>
 <p><img src="/images/ecs-green-blue-alb.png" alt="ECS Green Blue ALB" title="ECS Green Blue ALB"></p>
@@ -179,16 +201,19 @@ resource &quot;aws_lb_listener_rule&quot; &quot;this&quot; {
   }
 }</code></pre>
 <p>Beside of the before mentioned resources, we need a listener, which will listen on port 80 for this example and a security group. The security group allows incoming traffic via port 80 to the load balancer.</p>
-<p>One more thing to point out is the health check on the target groups. Those are important for the blue/green deployment later, because only if the health check succeeds, the group switch will be made.</p>
+<p>One more thing to point out is the health check on the target groups. Those are important for the blue/green deployment later, because only if the health check succeeds, the group switch will be made. By default the Load Balancer checks the health of the targets every 30 seconds. After 3 consecutive successful checks, the target is healthy and real traffic is forwarded to the target. If a service fails to answer with a 200 status code within 6 seconds three consecutive times, then the target is marked unhealthy and real traffic isn’t forwarded to this target.</p>
 <h1 id="part-3-the-ecs-service">Part 3: The ECS Service</h1>
-<p>Now we create the ECS Service. AWS has created some concepts on top of the docker container itself. The smallest unit on top of the container in AWS is the <em>task definition</em>. In the task definition, we define what information is passed to one or more containers when they are run. Basically everything that can be passed and some more options are set in the task definition. For example port mappings or environment variables etc..</p>
-<p>Task definitions are normally written in JSON, but there is <a href="https://registry.terraform.io/modules/cloudposse/ecs-container-definition/aws/0.10.0">a module by cloudposse</a> which allows you to write the task definition in terraform. This works similar to the <a href="https://www.terraform.io/docs/providers/aws/d/iam_policy_document.html">aws_iam_policy_document</a>. The advantage of writing those definitions in terraform is to get some more validation, before the resources get applied. Dump mistakes like missing mandatory attributes can be catched early this way. To use the cloudposses module and create a container definition document we do the following:</p>
-<pre class="terraform"><code>data &quot;aws_ecr_repository&quot; &quot;this&quot; {
-  name = &quot;snowiow/green-blue-ecs-example&quot;
+<p>Now we create the ECS Service. AWS has created some concepts on top of the docker container itself. The smallest unit on top of the container in AWS is the <em>task definition</em>. In the task definition, we define what information is passed to one or more containers when they are being run. Basically everything that can be passed as an argument to <em>docker run</em> and some more options can be set in the task definition. For example port mappings or environment variables etc..</p>
+<p>Task definitions are normally written in JSON, but there is <a href="https://registry.terraform.io/modules/cloudposse/ecs-container-definition/aws/0.10.0">a module by cloudposse</a> which allows you to write the task definition in terraform. This works similar to the <a href="https://www.terraform.io/docs/providers/aws/d/iam_policy_document.html">aws_iam_policy_document</a>. The advantage of writing those definitions in terraform is to get some more validation, before the resources get applied. Dump mistakes like missing mandatory attributes can be catched early this way.</p>
+<p>Here is the basic overview what we are trying to achieve in this part:</p>
+<p><img src="/images/ecs_service.png" alt="AWS ECS Service" title="AWS ECS Service"></p>
+<p>To use the cloudposses module and create a container definition document we need to import the module:</p>
+<pre class="terraform"><code>locals {
+  container_name = &quot;green-blue-ecs-example&quot;
 }
 
-locals {
-  container_name = &quot;green-blue-ecs-example&quot;
+data &quot;aws_ecr_repository&quot; &quot;this&quot; {
+  name = &quot;snowiow/${local.container_name}&quot;
 }
 
 resource &quot;aws_cloudwatch_log_group&quot; &quot;this&quot; {
@@ -303,7 +328,7 @@ resource &quot;aws_iam_role_policy&quot; &quot;task_role&quot; {
 <p>First of all we create the ECS Cluster, because we want to reference it as the only resource for the task role policy document later.</p>
 <p>Afterwards we need an assume role policy document, which can be assumed by ECS Tasks. This document will be attached to both the task role and execution role. So both can be assumed by our task, which will be created next.</p>
 <p>Now we define the permissions of the execution role and task role. It is important that we are able to download images from the ECR during the task execution, as well as writing logs, so we pass the needed permissions to the document and restrict the ECR download actions to the ECR Repository of the example app. The task role needs permissions to describe the cluster it can be run in.</p>
-<p>Lastly we create the execution role and task role and append the documents to those roles.</p>
+<p>Lastly we create the execution role and task role and append the policy documents to those roles.</p>
 <p>Now we have everything in place to create the task definition and service:</p>
 <pre class="terraform"><code>resource &quot;aws_ecs_task_definition&quot; &quot;this&quot; {
   family                   = &quot;green-blue-ecs-example&quot;
@@ -347,7 +372,7 @@ resource &quot;aws_ecs_service&quot; &quot;this&quot; {
   }
 
   launch_type   = &quot;FARGATE&quot;
-  desired_count = 1
+  desired_count = 3
 
   network_configuration {
     subnets         = [&quot;${aws_subnet.this.*.id}&quot;]
@@ -358,8 +383,9 @@ resource &quot;aws_ecs_service&quot; &quot;this&quot; {
 
   depends_on = [&quot;aws_lb_listener.this&quot;]
 }</code></pre>
-<p>For the task definition we don’t set anything special, except that we force the awsvpc network mode to spawn it in our earlier created VPC. In the service we define a load balancer block. This way any task started by this service will be spawned in the target group of our load balancer. Here we start to fill the green group initially. We also have to set the subnets, where the service spawns the tasks in. As the security group we use one with allowed ingress from port 80 to 443. The normal traffic from the load balancer comes from port 80, but we also need to be able to download the docker image from the ECR, which will be done via HTTPS. We also need to assign a public IP to the task to be able to download the image.</p>
-<p>It is important to note, that we need to explicitly name a dependency to the aws_lb_listener. Because we apply anything simultaneously, the service would otherwise just wait for the target group to be finished. But then the creation of the ECS Service would give us an error, because the created target group isn’t linked to a load balancer. That’s why we need to explicitly wait for the listener to be created before we start to create the ECS Service.</p>
+<p>For the task definition we don’t set anything special, except that we force the awsvpc network mode to spawn it in our earlier created VPC. In the service we define a load balancer block. This way any task started by this service will be spawned in the target group of our load balancer. Here we start to fill the green group initially. We also have to set the subnets, where the service spawns the tasks in. The service has a desired task count of three. AWS balances these three tasks in all of our subnets evenly, so we will have one task running in every subnet.</p>
+<p>As the security group we use one with allowed ingress from port 80 to 443. The normal traffic from the load balancer comes from port 80, but we also need to be able to download the docker image from the ECR, which will be done via HTTPS. We also need to assign a public IP to the task to be able to download the image.</p>
+<p>It is important to note, that we need to explicitly name a dependency to the <em>aws_lb_listener</em>. Because we apply anything simultaneously, the service would otherwise just wait for the target group to be finished. But then the creation of the ECS Service would give us an error, because the created target group isn’t linked to a load balancer. That’s why we need to explicitly wait for the listener to be created before we start to create the ECS Service.</p>
 <p>At this point we have a fully working infrastructure to host our dockerized application, which can be scaled by modifying the cpu and memory attributes and a new <em>terraform apply</em>. We can also add an Autoscaling Policy to scale our task count automatically when the traffic increases.</p>
 <h1 id="part-4-the-deployment">Part 4: The Deployment</h1>
 <p>Now that the application is up and running, we need some sort of automatic building and deploying. Therefore we use the AWS Codepipeline, which will consist of three steps:</p>
@@ -414,6 +440,7 @@ resource &quot;aws_iam_role_policy&quot; &quot;pipeline&quot; {
   policy = &quot;${data.aws_iam_policy_document.pipeline.json}&quot;
 }</code></pre>
 <p>For the moment we only give the pipeline the permissions to list, download and upload to the bucket, we created before.</p>
+<p>Now we can create the pipeline.</p>
 <pre class="terraform"><code>resource &quot;aws_codepipeline&quot; &quot;this&quot; {
   name     = &quot;example-pipeline&quot;
   role_arn = &quot;${aws_iam_role.pipeline.arn}&quot;
@@ -443,8 +470,8 @@ resource &quot;aws_iam_role_policy&quot; &quot;pipeline&quot; {
     }
   }
 }</code></pre>
-<p>Now we can create the pipeline. We define GitHub as the source and my repository’s master branch as the start trigger. You will need an OAuthToken as well. This way the pipeline will be notified when a new commit happened. The other way would be to let the pipeline pull information from GitHub every now and then. But with this option you will always have some time between the commit and the start of the pipeline. To generate a GitHub Token with the right scopes, you can follow <a href="https://docs.aws.amazon.com/codepipeline/latest/userguide/GitHub-rotate-personal-token-CLI.html">this guide from AWS</a>. If you copied the token you can use it for example as a variable in terraform. Another way is to set the <em>GITHUB_TOKEN</em> environment variable. This way you can leave the OAuthToken attribute unset.</p>
-<p>Now we will add the build stage. First of all, the CodeBuild needs it’s own set of permissions, so we do the usual stuff to create an IAM role for the codebuild:</p>
+<p>We define GitHub as the source and my repository’s master branch as the start trigger. You will need an OAuthToken as well. This way the pipeline will be notified when a new commit happened. The other way would be to let the pipeline pull information from GitHub every now and then. But with this option you will always have some time between the commit and the start of the pipeline. To generate a GitHub Token with the right scopes, you can follow <a href="https://docs.aws.amazon.com/codepipeline/latest/userguide/GitHub-rotate-personal-token-CLI.html">this guide from AWS</a>. If you copied the token you can use it for example as a variable in terraform. Another way is to set the <em>GITHUB_TOKEN</em> environment variable. This way you can leave the OAuthToken attribute unset.</p>
+<p>Now we will add the build stage. First of all, the CodeBuild needs it’s own set of permissions, so we do the usual stuff to create an IAM role for the CodeBuild:</p>
 <pre class="terraform"><code>data &quot;aws_iam_policy_document&quot; &quot;assume_by_codebuild&quot; {
   statement {
     sid     = &quot;AllowAssumeByCodebuild&quot;
@@ -529,7 +556,7 @@ resource &quot;aws_iam_role_policy&quot; &quot;codebuild&quot; {
   role   = &quot;${aws_iam_role.codebuild.name}&quot;
   policy = &quot;${data.aws_iam_policy_document.codebuild.json}&quot;
 }</code></pre>
-<p>Because our CodeBuild should be able to upload Images to the ECR, we give the according rights here. The CodeBuild also needs rights to access the S3 Bucket, to download the artifact from the Source (GitHub). Otherwise the Codebuild wouldn’t be able to access the downloaded source code of GitHub and therefeore couldn’t create the Docker Image.</p>
+<p>Because our CodeBuild should be able to upload Images to the ECR, we give the according permissions here. The CodeBuild also needs permissions to access the S3 Bucket, to download the artifact from the Source (GitHub). Otherwise the Codebuild wouldn’t be able to access the downloaded source code of GitHub and therefeore couldn’t create the Docker Image.</p>
 <p>Now we are able to create the Codebuild project like this:</p>
 <pre class="terraform"><code>resource &quot;aws_codebuild_project&quot; &quot;this&quot; {
   name         = &quot;example-codebuild&quot;
@@ -574,7 +601,7 @@ resource &quot;aws_iam_role_policy&quot; &quot;codebuild&quot; {
     }
   }
 }</code></pre>
-<p>Here you can see how we connect the artifact inputs and outputs of the different stages. In the source stage we created an <em>output_artifact</em>, which is used as an <em>input_artifact</em> in the build stage. The artifact names are subfolders of the S3 Bucket we defined earlier. In these folder the artifact is saved as a zip file with a specific hash identifying the build, it belongs to.</p>
+<p>Here you can see how we connect the artifact inputs and outputs of the different stages. In the source stage we created an <em>output_artifact</em>, which is used as an <em>input_artifact</em> in the build stage. The artifact names are subdirectories of the S3 Bucket we defined earlier. In these directories the artifact is saved as a zip file with a specific hash identifying the build, it belongs to.</p>
 <p>Because the CodeBuild will be triggered from the CodePipeline, we need to give it the corresponding permissions. Therefore we add the following statement to the CodePipeline Permissions:</p>
 <pre class="terraform"><code>statement {
   sid    = &quot;AllowCodeBuild&quot;
@@ -588,53 +615,55 @@ resource &quot;aws_iam_role_policy&quot; &quot;codebuild&quot; {
   resources = [&quot;${aws_codebuild_project.this.arn}&quot;]
 }</code></pre>
 <p>Now we have everything in place to run builds. But we haven’t yet defined what the build should actually do. CodeBuild works similar to other CI/CD Services like Travis and CircleCI. We need to place a file in the root directory, which describes the build steps. In CodeBuild this file is called <em>buildspec.yml</em> an is written in YAML. My <em>buildspec.yml</em> looks like this:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb13-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="fl">0.2</span></a>
-<a class="sourceLine" id="cb13-2" title="2"></a>
-<a class="sourceLine" id="cb13-3" title="3"><span class="fu">phases:</span></a>
-<a class="sourceLine" id="cb13-4" title="4">  <span class="fu">pre_build:</span></a>
-<a class="sourceLine" id="cb13-5" title="5">    <span class="fu">commands:</span></a>
-<a class="sourceLine" id="cb13-6" title="6">      <span class="kw">-</span> echo Logging in to Amazon ECR...</a>
-<a class="sourceLine" id="cb13-7" title="7">      <span class="kw">-</span> $(aws ecr get-login --region eu-central-1 --no-include-email)</a>
-<a class="sourceLine" id="cb13-8" title="8">      <span class="kw">-</span> IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)</a>
-<a class="sourceLine" id="cb13-9" title="9">  <span class="fu">build:</span></a>
-<a class="sourceLine" id="cb13-10" title="10">    <span class="fu">commands:</span></a>
-<a class="sourceLine" id="cb13-11" title="11">      <span class="kw">-</span> echo Build started on `date`</a>
-<a class="sourceLine" id="cb13-12" title="12">      <span class="kw">-</span> echo Building the Docker image...</a>
-<a class="sourceLine" id="cb13-13" title="13">      <span class="kw">-</span> docker build -t $REPOSITORY_URI:latest .</a>
-<a class="sourceLine" id="cb13-14" title="14">      <span class="kw">-</span> docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG</a>
-<a class="sourceLine" id="cb13-15" title="15">  <span class="fu">post_build:</span></a>
-<a class="sourceLine" id="cb13-16" title="16">    <span class="fu">commands:</span></a>
-<a class="sourceLine" id="cb13-17" title="17">      <span class="kw">-</span> echo Build completed on `date`</a>
-<a class="sourceLine" id="cb13-18" title="18">      <span class="kw">-</span> echo Pushing the Docker images...</a>
-<a class="sourceLine" id="cb13-19" title="19">      <span class="kw">-</span> docker push $REPOSITORY_URI:latest</a>
-<a class="sourceLine" id="cb13-20" title="20">      <span class="kw">-</span> docker push $REPOSITORY_URI:$IMAGE_TAG</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb14-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="fl">0.2</span></a>
+<a class="sourceLine" id="cb14-2" title="2"></a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="fu">phases:</span></a>
+<a class="sourceLine" id="cb14-4" title="4">  <span class="fu">pre_build:</span></a>
+<a class="sourceLine" id="cb14-5" title="5">    <span class="fu">commands:</span></a>
+<a class="sourceLine" id="cb14-6" title="6">      <span class="kw">-</span> echo Logging in to Amazon ECR...</a>
+<a class="sourceLine" id="cb14-7" title="7">      <span class="kw">-</span> $(aws ecr get-login --region eu-central-1 --no-include-email)</a>
+<a class="sourceLine" id="cb14-8" title="8">      <span class="kw">-</span> IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)</a>
+<a class="sourceLine" id="cb14-9" title="9">  <span class="fu">build:</span></a>
+<a class="sourceLine" id="cb14-10" title="10">    <span class="fu">commands:</span></a>
+<a class="sourceLine" id="cb14-11" title="11">      <span class="kw">-</span> echo Build started on `date`</a>
+<a class="sourceLine" id="cb14-12" title="12">      <span class="kw">-</span> echo Building the Docker image...</a>
+<a class="sourceLine" id="cb14-13" title="13">      <span class="kw">-</span> docker build -t $REPOSITORY_URI:latest .</a>
+<a class="sourceLine" id="cb14-14" title="14">      <span class="kw">-</span> docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG</a>
+<a class="sourceLine" id="cb14-15" title="15">  <span class="fu">post_build:</span></a>
+<a class="sourceLine" id="cb14-16" title="16">    <span class="fu">commands:</span></a>
+<a class="sourceLine" id="cb14-17" title="17">      <span class="kw">-</span> echo Build completed on `date`</a>
+<a class="sourceLine" id="cb14-18" title="18">      <span class="kw">-</span> echo Pushing the Docker images...</a>
+<a class="sourceLine" id="cb14-19" title="19">      <span class="kw">-</span> docker push $REPOSITORY_URI:latest</a>
+<a class="sourceLine" id="cb14-20" title="20">      <span class="kw">-</span> docker push $REPOSITORY_URI:$IMAGE_TAG</a></code></pre></div>
 <p>The build consists of three phases. In the <em>pre_build</em> the build container is logging into the ECR and I set some environment variables, which I use during the build. The build phase builds the docker image from the <em>Dockerfile</em> of the root directory. In the <em>post_build</em> the image is pushed to the ECR.</p>
+<p>This file will be placed in the project root. Because the source stage of the pipeline downloads the whole repository from github and set it as an input artifact for the build, CodeBuild looks automatically for a <em>buildspec.yml</em> there.</p>
 <p>Now we conclude with the CodeDeploy. Like the <em>buildspec.yml</em> for the CodeBuild, there is a <em>appspec.yaml</em> for CodeDeploy (Yes, here the suffix is yaml, not yml by default). This file will be placed in the directory root as well and holds some environment variables, which will be set during the build:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb14-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="fl">0.0</span></a>
-<a class="sourceLine" id="cb14-2" title="2"><span class="fu">Resources:</span></a>
-<a class="sourceLine" id="cb14-3" title="3">  <span class="kw">-</span> <span class="fu">TargetService:</span></a>
-<a class="sourceLine" id="cb14-4" title="4">      <span class="fu">Type:</span><span class="at"> AWS::ECS::Service</span></a>
-<a class="sourceLine" id="cb14-5" title="5">      <span class="fu">Properties:</span></a>
-<a class="sourceLine" id="cb14-6" title="6">        <span class="fu">TaskDefinition:</span><span class="at"> </span><span class="st">&quot;$TASK_DEFINITION&quot;</span></a>
-<a class="sourceLine" id="cb14-7" title="7">        <span class="fu">LoadBalancerInfo:</span></a>
-<a class="sourceLine" id="cb14-8" title="8">          <span class="fu">ContainerName:</span><span class="at"> </span><span class="st">&quot;$CONTAINER_NAME&quot;</span></a>
-<a class="sourceLine" id="cb14-9" title="9">          <span class="fu">ContainerPort:</span><span class="at"> </span><span class="st">&quot;80&quot;</span></a>
-<a class="sourceLine" id="cb14-10" title="10">        <span class="fu">PlatformVersion:</span><span class="at"> </span><span class="st">&quot;LATEST&quot;</span></a>
-<a class="sourceLine" id="cb14-11" title="11">        <span class="fu">NetworkConfiguration:</span></a>
-<a class="sourceLine" id="cb14-12" title="12">          <span class="fu">AwsvpcConfiguration:</span></a>
-<a class="sourceLine" id="cb14-13" title="13">            <span class="fu">Subnets:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;$SUBNET_1&quot;</span><span class="kw">,</span><span class="st">&quot;$SUBNET_2&quot;</span><span class="kw">,</span><span class="st">&quot;$SUBNET_3&quot;</span><span class="kw">]</span></a>
-<a class="sourceLine" id="cb14-14" title="14">            <span class="fu">SecurityGroups:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;$SECURITY_GROUP&quot;</span><span class="kw">]</span></a>
-<a class="sourceLine" id="cb14-15" title="15">            <span class="fu">AssignPublicIp:</span><span class="at"> </span><span class="st">&quot;ENABLED&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">version:</span><span class="at"> </span><span class="fl">0.0</span></a>
+<a class="sourceLine" id="cb15-2" title="2"><span class="fu">Resources:</span></a>
+<a class="sourceLine" id="cb15-3" title="3">  <span class="kw">-</span> <span class="fu">TargetService:</span></a>
+<a class="sourceLine" id="cb15-4" title="4">      <span class="fu">Type:</span><span class="at"> AWS::ECS::Service</span></a>
+<a class="sourceLine" id="cb15-5" title="5">      <span class="fu">Properties:</span></a>
+<a class="sourceLine" id="cb15-6" title="6">        <span class="fu">TaskDefinition:</span><span class="at"> </span><span class="st">&quot;$TASK_DEFINITION&quot;</span></a>
+<a class="sourceLine" id="cb15-7" title="7">        <span class="fu">LoadBalancerInfo:</span></a>
+<a class="sourceLine" id="cb15-8" title="8">          <span class="fu">ContainerName:</span><span class="at"> </span><span class="st">&quot;$CONTAINER_NAME&quot;</span></a>
+<a class="sourceLine" id="cb15-9" title="9">          <span class="fu">ContainerPort:</span><span class="at"> </span><span class="st">&quot;80&quot;</span></a>
+<a class="sourceLine" id="cb15-10" title="10">        <span class="fu">PlatformVersion:</span><span class="at"> </span><span class="st">&quot;LATEST&quot;</span></a>
+<a class="sourceLine" id="cb15-11" title="11">        <span class="fu">NetworkConfiguration:</span></a>
+<a class="sourceLine" id="cb15-12" title="12">          <span class="fu">AwsvpcConfiguration:</span></a>
+<a class="sourceLine" id="cb15-13" title="13">            <span class="fu">Subnets:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;$SUBNET_1&quot;</span><span class="kw">,</span><span class="st">&quot;$SUBNET_2&quot;</span><span class="kw">,</span><span class="st">&quot;$SUBNET_3&quot;</span><span class="kw">]</span></a>
+<a class="sourceLine" id="cb15-14" title="14">            <span class="fu">SecurityGroups:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;$SECURITY_GROUP&quot;</span><span class="kw">]</span></a>
+<a class="sourceLine" id="cb15-15" title="15">            <span class="fu">AssignPublicIp:</span><span class="at"> </span><span class="st">&quot;ENABLED&quot;</span></a></code></pre></div>
 <p>This file is saved as <em>appspec_template.yaml</em> in the directory root. In the <em>buildspec.yml</em> we add an install phase at the beginning, which installs jq:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb15-1" title="1"><span class="fu">install:</span></a>
-<a class="sourceLine" id="cb15-2" title="2">  <span class="fu">commands:</span></a>
-<a class="sourceLine" id="cb15-3" title="3">    <span class="kw">-</span> apt-get update</a>
-<a class="sourceLine" id="cb15-4" title="4">    <span class="kw">-</span> apt install jq</a></code></pre></div>
-<p>We need jq to get the current task definition and pass it to codedeploy. This is the second file which is needed by CodeDeploy next to the appspec.yml. In The post build section we save the most current task definition as a file, which will be passed as an artifact to CodeDeploy:</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">-</span> aws ecs describe-task-definition --task-definition green-blue-ecs-example | \</a>
-<a class="sourceLine" id="cb16-2" title="2">  jq <span class="st">&#39;.taskDefinition&#39;</span> &gt; taskdef.json</a></code></pre></div>
-<p>With jq we extract the actual task definition and write it to a file. Now we substitute every environment variable in the appspec_template.yaml with <em>envsubst</em> and write it to the actual <em>appspec.yml</em>:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">-</span> envsubst &lt; appspec_template.yaml &gt; appspec.yaml</a></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb16-1" title="1"><span class="fu">install:</span></a>
+<a class="sourceLine" id="cb16-2" title="2">  <span class="fu">commands:</span></a>
+<a class="sourceLine" id="cb16-3" title="3">    <span class="kw">-</span> apt-get update</a>
+<a class="sourceLine" id="cb16-4" title="4">    <span class="kw">-</span> apt install jq</a></code></pre></div>
+<p>We need jq to get the current task definition and pass it to codedeploy. This is the second file which is needed by CodeDeploy next to the appspec.yml. In the post build section we save the most current task definition as a file, which will be passed as an artifact to CodeDeploy:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">-</span> aws ecs describe-task-definition --task-definition green-blue-ecs-example | \</a>
+<a class="sourceLine" id="cb17-2" title="2">  jq <span class="st">&#39;.taskDefinition&#39;</span> &gt; taskdef.json</a></code></pre></div>
+<p>With jq we extract the actual task definition and write it to a file.</p>
+<p>Now we substitute every environment variable in the appspec_template.yaml with <em>envsubst</em> and write it to the actual <em>appspec.yml</em>:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb18-1" title="1"><span class="kw">-</span> envsubst &lt; appspec_template.yaml &gt; appspec.yaml</a></code></pre></div>
 <p>To actually make the substitution work, we need to set the needed environment variables. We set them in terraform in the <em>aws_codebuild_project</em> resource. So the final resource looks like this:</p>
 <pre class="terraform"><code>resource &quot;aws_codebuild_project&quot; &quot;this&quot; {
   name         = &quot;example-codebuild&quot;
@@ -691,12 +720,13 @@ resource &quot;aws_iam_role_policy&quot; &quot;codebuild&quot; {
     type = &quot;CODEPIPELINE&quot;
   }
 }</code></pre>
+<p>It is important to note, that we give the task definition arn wihtout it’s revision. This is how we always force, that the most current task definition revision is used.</p>
 <p>To pass these two files to CodeDeploy, we set them as artifacts of the CodeBuild in the <em>buildspec.yml</em>:</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb19-1" title="1"><span class="fu">artifacts:</span></a>
-<a class="sourceLine" id="cb19-2" title="2">  <span class="fu">files:</span></a>
-<a class="sourceLine" id="cb19-3" title="3">    <span class="kw">-</span> appspec.yaml</a>
-<a class="sourceLine" id="cb19-4" title="4">    <span class="kw">-</span> taskdef.json</a></code></pre></div>
-<p>Because we already set the output artifacts path in the <em>aws_codepipeline</em> resource, these files will be saved in the build directory in S3, which will be picked up by CodeDeploy.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode yaml"><code class="sourceCode yaml"><a class="sourceLine" id="cb20-1" title="1"><span class="fu">artifacts:</span></a>
+<a class="sourceLine" id="cb20-2" title="2">  <span class="fu">files:</span></a>
+<a class="sourceLine" id="cb20-3" title="3">    <span class="kw">-</span> appspec.yaml</a>
+<a class="sourceLine" id="cb20-4" title="4">    <span class="kw">-</span> taskdef.json</a></code></pre></div>
+<p>Because we already set the output artifacts path in the <em>aws_codepipeline</em> resource, these files will be saved in the build directory in S3, which will be picked up by CodeDeploy afterwards.</p>
 <p>Now we need the IAM Policy for CodeDeploy:</p>
 <pre class="terraform"><code>data &quot;aws_iam_policy_document&quot; &quot;assume_by_codedeploy&quot; {
   statement {
@@ -776,7 +806,7 @@ resource &quot;aws_iam_role_policy&quot; &quot;codedeploy&quot; {
     }
 
     terminate_blue_instances_on_deployment_success {
-      action                           = &quot;TERMINATE&quot;
+      action = &quot;TERMINATE&quot;
     }
   }
 
@@ -1279,31 +1309,31 @@ output &quot;example_app&quot; {
 <p>Now we are the Git user and can do stuff in his name. First we need a place, where we want to place our repositories. A good place is the home directory of the Git user, but it can be anywhere else, where the Git user has write access. Now we create a new repository called <em>new-project</em>:</p>
 <pre><code>$ mkdir /home/git/new-project.git &amp;&amp; cd /home/git/new-project.git &amp;&amp; git init --bare</code></pre>
 <p>First we create a new directory with a <em>.git</em> ending. You don’t need the ending, but it’s a best practice, to let server side repositories end with <em>.git</em>. Afterwards we go into that directory and initiate it as a Git repository. The <em>bare</em> argument is somewhat optional again, but also a best practice. It just means this Git repository doesn’t have a working directory. The working directory is where you put your files. On the same level is a <em>.git</em> directory with the history and other things in it. The <em>bare</em> argument now says that you don’t need the working directory and the main directory can become the <em>.git</em> directory. So overall you can remember to use the <em>bare</em> argument on the server side of a repository and not on the client side. # Clone your repo Now we want to clone our newly created repository from the server. You should already  know the ip of your Raspberry, when you’ve set it up via ssh. If you don’t know the IP yet, you can run the command ifconfig as root, which should give you something like this as an output:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb5-1" title="1"><span class="co">#ifconfig</span></a>
-<a class="sourceLine" id="cb5-2" title="2"><span class="dt">eth0: flags</span><span class="ot">=</span><span class="dv">4099</span><span class="st">&lt;UP,BROADCAST,MULTICAST&gt;  mtu </span><span class="dv">1500</span></a>
-<a class="sourceLine" id="cb5-3" title="3"><span class="dt">        ether b8:27:eb:8c:97:af  txqueuelen 1000  (Ethernet)</span></a>
-<a class="sourceLine" id="cb5-4" title="4"><span class="dt">        RX packets 0  bytes 0 (0.0 B)</span></a>
-<a class="sourceLine" id="cb5-5" title="5"><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></a>
-<a class="sourceLine" id="cb5-6" title="6"><span class="dt">        TX packets 0  bytes 0 (0.0 B)</span></a>
-<a class="sourceLine" id="cb5-7" title="7"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a>
-<a class="sourceLine" id="cb5-8" title="8"></a>
-<a class="sourceLine" id="cb5-9" title="9"><span class="dt">lo: flags</span><span class="ot">=</span><span class="dv">73</span><span class="st">&lt;UP,LOOPBACK,RUNNING&gt;  mtu </span><span class="dv">65536</span></a>
-<a class="sourceLine" id="cb5-10" title="10"><span class="dt">        inet 127.0.0.1  netmask 255.0.0.0</span></a>
-<a class="sourceLine" id="cb5-11" title="11"><span class="dt">        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;</span></a>
-<a class="sourceLine" id="cb5-12" title="12"><span class="dt">        loop  txqueuelen 1  (Local Loopback)</span></a>
-<a class="sourceLine" id="cb5-13" title="13"><span class="dt">        RX packets 1004803  bytes 352750188 (336.4 MiB)</span></a>
-<a class="sourceLine" id="cb5-14" title="14"><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></a>
-<a class="sourceLine" id="cb5-15" title="15"><span class="dt">        TX packets 1004803  bytes 352750188 (336.4 MiB)</span></a>
-<a class="sourceLine" id="cb5-16" title="16"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a>
-<a class="sourceLine" id="cb5-17" title="17"></a>
-<a class="sourceLine" id="cb5-18" title="18"><span class="dt">wlan0: flags</span><span class="ot">=</span><span class="dv">4163</span><span class="st">&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu </span><span class="dv">1500</span></a>
-<a class="sourceLine" id="cb5-19" title="19"><span class="dt">        inet 192.168.178.48  netmask 255.255.255.0  broadcast 192.168.178.255</span></a>
-<a class="sourceLine" id="cb5-20" title="20"><span class="dt">        inet6 fe80::ba27:ebff:fed9:c2fa  prefixlen 64  scopeid 0x20&lt;link&gt;</span></a>
-<a class="sourceLine" id="cb5-21" title="21"><span class="dt">        ether b8:27:eb:d9:c2:fa  txqueuelen 1000  (Ethernet)</span></a>
-<a class="sourceLine" id="cb5-22" title="22"><span class="dt">        RX packets 1727438  bytes 275330489 (262.5 MiB)</span></a>
-<a class="sourceLine" id="cb5-23" title="23"><span class="dt">        RX errors 0  dropped 1561  overruns 0  frame 0</span></a>
-<a class="sourceLine" id="cb5-24" title="24"><span class="dt">        TX packets 4660814  bytes 2524959215 (2.3 GiB)</span></a>
-<a class="sourceLine" id="cb5-25" title="25"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">#ifconfig</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="dt">eth0: flags</span><span class="ot">=</span><span class="dv">4099</span><span class="st">&lt;UP,BROADCAST,MULTICAST&gt;  mtu </span><span class="dv">1500</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="dt">        ether b8:27:eb:8c:97:af  txqueuelen 1000  (Ethernet)</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="dt">        RX packets 0  bytes 0 (0.0 B)</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="dt">        TX packets 0  bytes 0 (0.0 B)</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="dt">lo: flags</span><span class="ot">=</span><span class="dv">73</span><span class="st">&lt;UP,LOOPBACK,RUNNING&gt;  mtu </span><span class="dv">65536</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="dt">        inet 127.0.0.1  netmask 255.0.0.0</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="dt">        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="dt">        loop  txqueuelen 1  (Local Loopback)</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"><span class="dt">        RX packets 1004803  bytes 352750188 (336.4 MiB)</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></a>
+<a class="sourceLine" id="cb5-15" data-line-number="15"><span class="dt">        TX packets 1004803  bytes 352750188 (336.4 MiB)</span></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb5-18" data-line-number="18"><span class="dt">wlan0: flags</span><span class="ot">=</span><span class="dv">4163</span><span class="st">&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu </span><span class="dv">1500</span></a>
+<a class="sourceLine" id="cb5-19" data-line-number="19"><span class="dt">        inet 192.168.178.48  netmask 255.255.255.0  broadcast 192.168.178.255</span></a>
+<a class="sourceLine" id="cb5-20" data-line-number="20"><span class="dt">        inet6 fe80::ba27:ebff:fed9:c2fa  prefixlen 64  scopeid 0x20&lt;link&gt;</span></a>
+<a class="sourceLine" id="cb5-21" data-line-number="21"><span class="dt">        ether b8:27:eb:d9:c2:fa  txqueuelen 1000  (Ethernet)</span></a>
+<a class="sourceLine" id="cb5-22" data-line-number="22"><span class="dt">        RX packets 1727438  bytes 275330489 (262.5 MiB)</span></a>
+<a class="sourceLine" id="cb5-23" data-line-number="23"><span class="dt">        RX errors 0  dropped 1561  overruns 0  frame 0</span></a>
+<a class="sourceLine" id="cb5-24" data-line-number="24"><span class="dt">        TX packets 4660814  bytes 2524959215 (2.3 GiB)</span></a>
+<a class="sourceLine" id="cb5-25" data-line-number="25"><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></a></code></pre></div>
 <p>As you can see in the output, I am connected via wifi. So the IP address of interest is under <em>inet</em> in the <em>wlan0</em> block. If you are connected via cable, there should be an <em>inet</em> entry in the <em>eth0</em> block. Now we know where to clone the repository from like this:</p>
 <pre><code>$ git clone git@&lt;your-inet-entry-here&gt;:/home/git/new-project.git</code></pre>
 <p>In my case the command would look like this:</p>
@@ -1340,54 +1370,54 @@ output &quot;example_app&quot; {
 <p>Now we start the nginx service via systemd</p>
 <pre><code># systemctl start nginx</code></pre>
 <p>You can check if the nginx server is running by looking up the ip address of your Raspberry Pi in your browser. In my case this would be navigating to <em>192.168.178.48</em>. You should see a success message, that the nginx server is running. Because gitweb comes preinstalled with Git, we can directly go into activating the gitweb cgi script. Therefor we need to edit the <em>/etc/nginx/nginx.conf</em></p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode default"><code class="sourceCode default"><a class="sourceLine" id="cb20-1" title="1">server {</a>
-<a class="sourceLine" id="cb20-2" title="2">    listen       80;</a>
-<a class="sourceLine" id="cb20-3" title="3">    server_name  localhost;</a>
-<a class="sourceLine" id="cb20-4" title="4"></a>
-<a class="sourceLine" id="cb20-5" title="5">    #charset koi8-r;</a>
-<a class="sourceLine" id="cb20-6" title="6"></a>
-<a class="sourceLine" id="cb20-7" title="7">    #access_log  logs/host.access.log  main;</a>
-<a class="sourceLine" id="cb20-8" title="8"></a>
-<a class="sourceLine" id="cb20-9" title="9"></a>
-<a class="sourceLine" id="cb20-10" title="10">    #error_page  404              /404.html;</a>
-<a class="sourceLine" id="cb20-11" title="11"></a>
-<a class="sourceLine" id="cb20-12" title="12">    # redirect server error pages to the static page /50x.html</a>
-<a class="sourceLine" id="cb20-13" title="13">    #</a>
-<a class="sourceLine" id="cb20-14" title="14">    error_page   500 502 503 504  /50x.html;</a>
-<a class="sourceLine" id="cb20-15" title="15">    location = /50x.html {</a>
-<a class="sourceLine" id="cb20-16" title="16">        root   /usr/share/nginx/html;</a>
-<a class="sourceLine" id="cb20-17" title="17">    }</a>
-<a class="sourceLine" id="cb20-18" title="18"></a>
-<a class="sourceLine" id="cb20-19" title="19">    location /gitweb.cgi {</a>
-<a class="sourceLine" id="cb20-20" title="20">            include fastcgi_params;</a>
-<a class="sourceLine" id="cb20-21" title="21">            gzip off;</a>
-<a class="sourceLine" id="cb20-22" title="22">            fastcgi_param   SCRIPT_FILENAME  /usr/share/gitweb/gitweb.cgi;</a>
-<a class="sourceLine" id="cb20-23" title="23">            fastcgi_param   GITWEB_CONFIG  /etc/gitweb.conf;</a>
-<a class="sourceLine" id="cb20-24" title="24">            fastcgi_pass    unix:/var/run/fcgiwrap.sock;</a>
-<a class="sourceLine" id="cb20-25" title="25">    }</a>
-<a class="sourceLine" id="cb20-26" title="26"></a>
-<a class="sourceLine" id="cb20-27" title="27">    location / {</a>
-<a class="sourceLine" id="cb20-28" title="28">        root /usr/share/gitweb;</a>
-<a class="sourceLine" id="cb20-29" title="29">        index gitweb.cgi;</a>
-<a class="sourceLine" id="cb20-30" title="30">    }</a>
-<a class="sourceLine" id="cb20-31" title="31">    ...</a>
-<a class="sourceLine" id="cb20-32" title="32">}</a></code></pre></div>
+<pre class="default"><code>server {
+    listen       80;
+    server_name  localhost;
+
+    #charset koi8-r;
+
+    #access_log  logs/host.access.log  main;
+
+
+    #error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    location /gitweb.cgi {
+            include fastcgi_params;
+            gzip off;
+            fastcgi_param   SCRIPT_FILENAME  /usr/share/gitweb/gitweb.cgi;
+            fastcgi_param   GITWEB_CONFIG  /etc/gitweb.conf;
+            fastcgi_pass    unix:/var/run/fcgiwrap.sock;
+    }
+
+    location / {
+        root /usr/share/gitweb;
+        index gitweb.cgi;
+    }
+    ...
+}</code></pre>
 <p>As you can see in the code snippet, you need to add the gitweb.cgi location into the server entity and tell nginx where to find the fastcgi_params and pass. You also need to override the default location to be gitweb.cgi. All changes you need to do, are highlighted in yellow. Now we need to install fcgiwrap. This is a cgi server, which runs our gitweb cgi app.</p>
 <pre><code># pacman -S fcgiwrap</code></pre>
 <p>Then we need to add a service config for fcgiwrap to be able to start it via systemctl. Create the following file _/usr/lib/systemd/system/fcgiwrap.service _with this content</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">[Unit]</span></a>
-<a class="sourceLine" id="cb22-2" title="2"><span class="dt">Description</span><span class="ot">=</span><span class="st">Simple server for running CGI applications over FastCGI</span></a>
-<a class="sourceLine" id="cb22-3" title="3"><span class="dt">After</span><span class="ot">=</span><span class="st">syslog.target network.target</span></a>
-<a class="sourceLine" id="cb22-4" title="4"></a>
-<a class="sourceLine" id="cb22-5" title="5"><span class="kw">[Service]</span></a>
-<a class="sourceLine" id="cb22-6" title="6"><span class="dt">Type</span><span class="ot">=</span><span class="st">forking</span></a>
-<a class="sourceLine" id="cb22-7" title="7"><span class="dt">Restart</span><span class="ot">=</span><span class="kw">on</span><span class="st">-abort</span></a>
-<a class="sourceLine" id="cb22-8" title="8"><span class="dt">PIDFile</span><span class="ot">=</span><span class="st">/var/run/fcgiwrap.pid</span></a>
-<a class="sourceLine" id="cb22-9" title="9"><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/spawn-fcgi -s /var/run/fcgiwrap.sock -P /var/run/fcgiwrap.pid -u http -g http -- /usr/sbin/fcgiwrap</span></a>
-<a class="sourceLine" id="cb22-10" title="10"><span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/bin/kill </span><span class="dv">-15</span><span class="st"> $MAINPID</span></a>
-<a class="sourceLine" id="cb22-11" title="11"></a>
-<a class="sourceLine" id="cb22-12" title="12"><span class="kw">[Install]</span></a>
-<a class="sourceLine" id="cb22-13" title="13"><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="kw">[Unit]</span></a>
+<a class="sourceLine" id="cb22-2" data-line-number="2"><span class="dt">Description</span><span class="ot">=</span><span class="st">Simple server for running CGI applications over FastCGI</span></a>
+<a class="sourceLine" id="cb22-3" data-line-number="3"><span class="dt">After</span><span class="ot">=</span><span class="st">syslog.target network.target</span></a>
+<a class="sourceLine" id="cb22-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb22-5" data-line-number="5"><span class="kw">[Service]</span></a>
+<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="dt">Type</span><span class="ot">=</span><span class="st">forking</span></a>
+<a class="sourceLine" id="cb22-7" data-line-number="7"><span class="dt">Restart</span><span class="ot">=</span><span class="kw">on</span><span class="st">-abort</span></a>
+<a class="sourceLine" id="cb22-8" data-line-number="8"><span class="dt">PIDFile</span><span class="ot">=</span><span class="st">/var/run/fcgiwrap.pid</span></a>
+<a class="sourceLine" id="cb22-9" data-line-number="9"><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/spawn-fcgi -s /var/run/fcgiwrap.sock -P /var/run/fcgiwrap.pid -u http -g http -- /usr/sbin/fcgiwrap</span></a>
+<a class="sourceLine" id="cb22-10" data-line-number="10"><span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/bin/kill </span><span class="dv">-15</span><span class="st"> $MAINPID</span></a>
+<a class="sourceLine" id="cb22-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb22-12" data-line-number="12"><span class="kw">[Install]</span></a>
+<a class="sourceLine" id="cb22-13" data-line-number="13"><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></a></code></pre></div>
 <p>Now we can enable and start the fcgiwrap server for nginx</p>
 <pre><code># systemctl enable nginx fcgiwrap
 # systemctl start nginx fcgiwrap</code></pre>
@@ -1424,10 +1454,10 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
     <hr class="section-head">
     <section>
         <p>Lately I came across a rather big problem of vagrant: Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily. You can change it like this:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" title="1">config.vm.provider <span class="st">&quot;virtualbox&quot;</span> <span class="kw">do</span> |vb|</a>
-<a class="sourceLine" id="cb1-2" title="2">    vb.memory = <span class="dv">4096</span></a>
-<a class="sourceLine" id="cb1-3" title="3">    vb.cpus = <span class="dv">4</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="kw">end</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" data-line-number="1">config.vm.provider <span class="st">&quot;virtualbox&quot;</span> <span class="kw">do</span> |vb|</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    vb.memory = <span class="dv">4096</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">    vb.cpus = <span class="dv">4</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="kw">end</span></a></code></pre></div>
 <p>So my thoughts were, that there must be a similar option to disk space as well, but there wasn’t. After some research I found out, there was no easy solution to that. There are already some solutions though, but nothing worked for me completely. I’m currently mainly using <a href="https://atlas.hashicorp.com/kaorimatz/boxes/ubuntu-16.04-amd64">kaorimatz ubuntu 16.04 iso.</a> One point which wasn’t working for me is, that other machines used lvm2 as a volume manager. Second problem was, that some people’s new increased hdd’s got attached automagically to the vagrant machine, even though it should give an UUID conflict. So I had to go for my own solution, which is a combination of various solutions out there. I hope this is of any use for someone else out there, who was as frustrated as I was.</p>
 <h1 id="the-solution">The Solution</h1>
 <p>First things first: This solution is for machines, which use VirtualBox as their virtualisation platform. If you use VirtualBox, we can go on. The first thing you have to do is turn your running vagrant machine off (<em>vagrant halt</em> or <em>vagrant suspend</em>). Next we need to find the actual VMDK file, which represents the HDD of the machine. If you have installed VirtualBox with the standard procedure, your machine should be here:</p>
@@ -1443,13 +1473,13 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
 <p>The next thing we need to do, is closing the SATA controller to the old disk</p>
 <pre><code>VBoxManage storageattach &lt;name-of-the-vm&gt; --storagectl &quot;IDE Controller&quot; --port 0 --device 0 --medium none</code></pre>
 <p>Here are two things, you need to take care of. First thing is <em><name-of-the-vm></em>. This is the same as the directory name, where the initial VMDK file is placed. The second thing is, that your storagectl could have another name. You can find it out by opening the _*.vbox_ file, which is in the same directory as the initial VMDK file. This should be a normal XML file. Now look out for this tag</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">&lt;StorageControllers&gt;</span></a>
-<a class="sourceLine" id="cb8-2" title="2">  <span class="kw">&lt;StorageController</span><span class="ot"> name=</span><span class="st">&quot;IDE Controller&quot;</span><span class="ot"> type=</span><span class="st">&quot;PIIX4&quot;</span><span class="ot"> PortCount=</span><span class="st">&quot;2&quot;</span><span class="ot"> useHostIOCache=</span><span class="st">&quot;true&quot;</span><span class="ot"> Bootable=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb8-3" title="3">    <span class="kw">&lt;AttachedDevice</span><span class="ot"> type=</span><span class="st">&quot;HardDisk&quot;</span><span class="ot"> hotpluggable=</span><span class="st">&quot;false&quot;</span><span class="ot"> port=</span><span class="st">&quot;0&quot;</span><span class="ot"> device=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb8-4" title="4">      <span class="kw">&lt;Image</span><span class="ot"> uuid=</span><span class="st">&quot;{42b28bc6-a130-45be-9603-ee16779459d5}&quot;</span><span class="kw">/&gt;</span></a>
-<a class="sourceLine" id="cb8-5" title="5">    <span class="kw">&lt;/AttachedDevice&gt;</span></a>
-<a class="sourceLine" id="cb8-6" title="6">  <span class="kw">&lt;/StorageController&gt;</span></a>
-<a class="sourceLine" id="cb8-7" title="7"><span class="kw">&lt;/StorageControllers&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">&lt;StorageControllers&gt;</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">  <span class="kw">&lt;StorageController</span><span class="ot"> name=</span><span class="st">&quot;IDE Controller&quot;</span><span class="ot"> type=</span><span class="st">&quot;PIIX4&quot;</span><span class="ot"> PortCount=</span><span class="st">&quot;2&quot;</span><span class="ot"> useHostIOCache=</span><span class="st">&quot;true&quot;</span><span class="ot"> Bootable=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">    <span class="kw">&lt;AttachedDevice</span><span class="ot"> type=</span><span class="st">&quot;HardDisk&quot;</span><span class="ot"> hotpluggable=</span><span class="st">&quot;false&quot;</span><span class="ot"> port=</span><span class="st">&quot;0&quot;</span><span class="ot"> device=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">      <span class="kw">&lt;Image</span><span class="ot"> uuid=</span><span class="st">&quot;{42b28bc6-a130-45be-9603-ee16779459d5}&quot;</span><span class="kw">/&gt;</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">    <span class="kw">&lt;/AttachedDevice&gt;</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">  <span class="kw">&lt;/StorageController&gt;</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="kw">&lt;/StorageControllers&gt;</span></a></code></pre></div>
 <p>As you can see, we are interested in the name of the <em>StorageController</em> tag. If there is something else than “IDE Controller”, you need to use that name for the <em>–storagectl</em> flag instead. Now we need to close the old medium</p>
 <pre><code>VBoxManage closemedium disk &lt;name-of-the-disk&gt;.vmdk</code></pre>
 <p>When it is closed, we can attach our new resized VMDK</p>
@@ -1522,16 +1552,16 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
 <p>Afterwards we switch into that directory and initiate a new vagrant project.</p>
 <pre><code>cd vagrant &amp;&amp; vagrant init</code></pre>
 <p>This will create a file called <em>Vagrantfile</em> in your newly created directory. This is the configuration we talked about in the beginning of this post. If you open it, you see some ruby code, which consists of some assignments and many comments. We won’t cover anything in detail here, because we want to focus on our mission and get our goals done. If you want to know more about the other stuff in the <em>Vagrantfile</em>, you can head to the <a href="https://www.vagrantup.com/docs/getting-started/">official documentation</a> of vagrant, which is very well written. So let’s get into the first two lines of code.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" title="1"><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|</a>
-<a class="sourceLine" id="cb3-2" title="2">  config.vm.box = <span class="st">&quot;base&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">  config.vm.box = <span class="st">&quot;base&quot;</span></a></code></pre></div>
 <p>The first line stays as it is. It tells vagrant on which version this config is based. The second line says what operating system image should be used. These are called boxes in the vagrant domain. We will use a basic ubuntu 14.04 installation as our basis. That’s why we change the second line to this:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1">config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" data-line-number="1">config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a></code></pre></div>
 <p>For a full list of available boxes have a look into <a href="https://atlas.hashicorp.com/boxes/search">this</a>. Here you can find all different kinds of boxes. Starting off with very basic ones, up to fully configured environments. The next line we are interested in is the following:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" title="1"><span class="co"># config.vm.synced_folder &quot;../data&quot;, &quot;/vagrant_data&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co"># config.vm.synced_folder &quot;../data&quot;, &quot;/vagrant_data&quot;</span></a></code></pre></div>
 <p>This line tells vagrant which directory of the host system should be mapped to a directory inside the guest system. These are called synced folders, because any operation happening in this directory is instantly visible on both systems. As you may noticed, this will be the location, where our code base will be placed. For the moment, we will edit this line of code to the following:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" data-line-number="1">config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span></a></code></pre></div>
 <p>The first argument is the directory on the host system. The second argument is the path inside the guest system. It will be created automatically on startup of the vagrant machine. So we don’t need to do anything there for the moment. The last thing we uncomment for the moment is this one</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" title="1"><span class="co"># config.vm.network &quot;private_network&quot;, ip: &quot;192.168.33.10&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co"># config.vm.network &quot;private_network&quot;, ip: &quot;192.168.33.10&quot;</span></a></code></pre></div>
 <p>We don’t change anything except for deleting the hash tag at the beginning. As soon as this line is active, vagrant starts up a private network connection, which is only accessible by the host system. This will also be the IP address where our web application will be available later on. You can change the IP to anything you want, but remember to change the later occurrences, where we work with this particular IP as well. This is the end of our intro. In the following chapter we will write our first shell scripts to setup the apache webserver.<br />
 <a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Go to Part 2</a></p>
     </section>
@@ -1559,66 +1589,66 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
 <li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
 </ul>
 <p>In the previous post we’ve set up the apache web server successfully. Now it’s time to add MySQL and PHP to finish the LAMP stack. Let’s start with MySQL first and add a <em>mysql.sh</em> file to the <strong>sh</strong> directory. We write the following lines into that file.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password_again password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="ex">apt-get</span> install -y mysql-server libapache2-mod-auth-mysql</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password password my_pw&quot;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password_again password my_pw&quot;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="ex">apt-get</span> install -y mysql-server libapache2-mod-auth-mysql</a></code></pre></div>
 <p>The first two lines set values for the upcoming installation dialog of MySQL. The installation dialog will ask us for a password and to repeat it. Because we want to setup MySQL automatically without any interaction, we preset those fields with our password of choice. In this case <strong>my_pw</strong>. Afterwards we install MySQL and an extra package for apache. Afterwards we copy over the config file of MySQL onto the guest system.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/my.cnf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb2-2" title="2">    <span class="fu">mv</span> /vagrant/tmp/my.cnf /etc/mysql/my.cnf</a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb2-4" title="4">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: my.cnf not found&quot;</span></a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="kw">fi</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/my.cnf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="fu">mv</span> /vagrant/tmp/my.cnf /etc/mysql/my.cnf</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: my.cnf not found&quot;</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="kw">fi</span></a></code></pre></div>
 <p>We do it exactly the same way, as we did with the <em>apache.conf</em>. First we place the <em>my.cnf</em> in our <em>conf</em> directory. Afterwards we add a file provisioner to our <em>Vagrantfile</em>.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" title="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/my.cnf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/my.cnf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" data-line-number="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/my.cnf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/my.cnf&quot;</span></a></code></pre></div>
 <p>This time it’s important to replace a custom config file with the original, because in our modified version we switch the following line from:</p>
 <pre><code>bind-address = 127.0.0.1</code></pre>
 <p>to</p>
 <pre><code>bind-address = 0.0.0.0</code></pre>
 <p>Before it was only possible to access the database on the guest machine itself. We changed this, so we can connect from the host machine as well. Finally we need to restart the MySQL demon.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" title="1"><span class="ex">service</span> mysql restart</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ex">service</span> mysql restart</a></code></pre></div>
 <p>With which we end up in our final <em>mysql.sh</em> file, which looks like this:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb7-2" title="2"></a>
-<a class="sourceLine" id="cb7-3" title="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb7-4" title="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password_again password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb7-5" title="5"><span class="ex">apt-get</span> install -y mysql-server libapache2-mod-auth-mysql php5-mysql</a>
-<a class="sourceLine" id="cb7-6" title="6"></a>
-<a class="sourceLine" id="cb7-7" title="7"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/my.cnf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb7-8" title="8">    <span class="fu">mv</span> /vagrant/tmp/my.cnf /etc/mysql/my.cnf</a>
-<a class="sourceLine" id="cb7-9" title="9"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb7-10" title="10">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: my.cnf not found&quot;</span></a>
-<a class="sourceLine" id="cb7-11" title="11"><span class="kw">fi</span></a>
-<a class="sourceLine" id="cb7-12" title="12"></a>
-<a class="sourceLine" id="cb7-13" title="13"><span class="ex">service</span> mysql restart</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password password my_pw&quot;</span></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;mysql-server mysql-server/root_password_again password my_pw&quot;</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="ex">apt-get</span> install -y mysql-server libapache2-mod-auth-mysql php5-mysql</a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/my.cnf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">    <span class="fu">mv</span> /vagrant/tmp/my.cnf /etc/mysql/my.cnf</a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb7-10" data-line-number="10">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: my.cnf not found&quot;</span></a>
+<a class="sourceLine" id="cb7-11" data-line-number="11"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb7-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb7-13" data-line-number="13"><span class="ex">service</span> mysql restart</a></code></pre></div>
 <p>Final thing we need to do is adding the shell script as a shell provisioner to our <em>Vagrantfile</em>.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb8-1" title="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/mysql.sh&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb8-1" data-line-number="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/mysql.sh&quot;</span></a></code></pre></div>
 <p>Now let’s install PHP as well. This is pretty straight forward. Our <em>php.sh</em> looks like this:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb9-2" title="2"><span class="ex">apt-get</span> install -y php5 libapache2-mod-php5 php5-mcrypt php5-curl php5-mysql</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="ex">apt-get</span> install -y php5 libapache2-mod-php5 php5-mcrypt php5-curl php5-mysql</a></code></pre></div>
 <p>Afterwards we also add it as a provisioner</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb10-1" title="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/php.sh&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb10-1" data-line-number="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/php.sh&quot;</span></a></code></pre></div>
 <p>Which results in the following <em>Vagrantfile</em></p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb11-1" title="1"><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|</a>
-<a class="sourceLine" id="cb11-2" title="2">  config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a>
-<a class="sourceLine" id="cb11-3" title="3"></a>
-<a class="sourceLine" id="cb11-4" title="4">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/update.sh&quot;</span></a>
-<a class="sourceLine" id="cb11-5" title="5">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/apache.sh&quot;</span></a>
-<a class="sourceLine" id="cb11-6" title="6">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/mysql.sh&quot;</span></a>
-<a class="sourceLine" id="cb11-7" title="7">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/php.sh&quot;</span></a>
-<a class="sourceLine" id="cb11-8" title="8"></a>
-<a class="sourceLine" id="cb11-9" title="9">  config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/apache2.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/apache2.conf&quot;</span></a>
-<a class="sourceLine" id="cb11-10" title="10">  config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/my.cnf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/my.cnf&quot;</span></a>
-<a class="sourceLine" id="cb11-11" title="11"></a>
-<a class="sourceLine" id="cb11-12" title="12">  config.vm.network <span class="st">&quot;private_network&quot;</span>, <span class="st">ip: &quot;192.168.33.10&quot;</span></a>
-<a class="sourceLine" id="cb11-13" title="13"></a>
-<a class="sourceLine" id="cb11-14" title="14">  config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span></a>
-<a class="sourceLine" id="cb11-15" title="15"><span class="kw">end</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2">  config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/update.sh&quot;</span></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/apache.sh&quot;</span></a>
+<a class="sourceLine" id="cb11-6" data-line-number="6">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/mysql.sh&quot;</span></a>
+<a class="sourceLine" id="cb11-7" data-line-number="7">  config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/php.sh&quot;</span></a>
+<a class="sourceLine" id="cb11-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb11-9" data-line-number="9">  config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/apache2.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/apache2.conf&quot;</span></a>
+<a class="sourceLine" id="cb11-10" data-line-number="10">  config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/my.cnf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/my.cnf&quot;</span></a>
+<a class="sourceLine" id="cb11-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb11-12" data-line-number="12">  config.vm.network <span class="st">&quot;private_network&quot;</span>, <span class="st">ip: &quot;192.168.33.10&quot;</span></a>
+<a class="sourceLine" id="cb11-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb11-14" data-line-number="14">  config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span></a>
+<a class="sourceLine" id="cb11-15" data-line-number="15"><span class="kw">end</span></a></code></pre></div>
 <p>This is it. Our LAMP stack is complete. Now we want to check out our environment. Switch into the directory of the <em>Vagrantfile</em> and execute the following command</p>
 <pre><code>vagrant up</code></pre>
 <p>A lot of stuff is happening now and for the first time it will take some time to fire up the vagrant machine. If vagrant booted up successfully, we add an <em>index.php</em> in the directory above our <em>Vagrantfile</em>. This is our project directory. I won’t show anything big here, just a proof of concept</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb13-2" title="2"></a>
-<a class="sourceLine" id="cb13-3" title="3"><span class="fu">phpinfo</span><span class="ot">();</span></a></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">&lt;?php</span></a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="fu">phpinfo</span><span class="ot">();</span></a></code></pre></div>
 <p>If you browse to <strong>192.168.33.10</strong> on your host system, you should see an info page about the running PHP version, similar to this</p>
 <p><img src="/images/phpinfo.png" alt="phpinfo" title="phpinfo" /></p>
 <p>Congratulations! You’ve done it! To suspend your vagrant machine just type the following in the same spot, where you did the <em>vagrant up</em></p>
@@ -1651,56 +1681,56 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
 <li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
 </ul>
 <p>In the last post we installed vagrant and enabled the vagrant settings we need in the Vagrantfile. We have set a base image of ubuntu 14.04, made a synced folder and enabled a private network connection between host and guest system. Now it’s time to write our first shell scripts, which will configure our guest system to serve as a web server. Vagrant comes with a neat feature called provisioning. This can be shell scripts, which will be executed or files, which will be uploaded onto the guest system. Of course there are more provisioners to explore. For a full reference head over <a href="https://www.vagrantup.com/docs/provisioning/">here</a>. In this tutorial we will focus on these two provisioners. Before we setup our apache webserver, let’s start with a simple script, which should run before. This script will update the ubuntu system and should be a great intro into provisioning. First we create a new directory inside of our vagrant directory, called <strong>sh</strong>. This directory will contain all of our shell scripts, which we will write during this tutorial. Everything could be in a single shell script, but I like to split the shell scripts into specific categories. The first will be called <em>update.sh</em> and contains the the following content:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb1-2" title="2"></a>
-<a class="sourceLine" id="cb1-3" title="3"><span class="ex">apt-get</span> update</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="ex">apt-get</span> update</a></code></pre></div>
 <p>The first line will be in every script we write. It’s a dynamic binding to tell the operating system where to find the program, which should execute this script. Afterwards we update the system by executing <em>apt-get update</em>. As you can see, we don’t need to issue <em>sudo</em> rights. Everything inside these shell scripts will be run as a super user automagically. Now we need to get vagrant to provision this file. That’s why we add the following line after the definition of our base system.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" title="1">config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a>
-<a class="sourceLine" id="cb2-2" title="2">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/update.sh&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" data-line-number="1">config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/update.sh&quot;</span></a></code></pre></div>
 <p>This statement is pretty straight forward. We tell vagrant that we want to provision something, which is of the type <em>shell</em> and the path to the shell script is <em>sh/update.sh</em>. If we would start our system now, it would do a system update at the beginning. Now that we are working on the latest state of the system, we can start adding new software. It’s time to create the apache webserver. We add a new filed called <em>apache.sh</em> to the sh directory, which we created earlier. We start off in the same way, by downloading the software via apt-get:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="ex">apt-get</span> install -y apache2</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ex">apt-get</span> install -y apache2</a></code></pre></div>
 <p>Followed by this:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">if</span> !<span class="bu"> [</span> <span class="ot">-L</span> /var/www/html<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb4-2" title="2">    <span class="fu">rm</span> -rf /var/www/html</a>
-<a class="sourceLine" id="cb4-3" title="3">    <span class="fu">ln</span> -fs /vagrant/projects /var/www/html</a>
-<a class="sourceLine" id="cb4-4" title="4"><span class="kw">fi</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">if</span> !<span class="bu"> [</span> <span class="ot">-L</span> /var/www/html<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="fu">rm</span> -rf /var/www/html</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">    <span class="fu">ln</span> -fs /vagrant/projects /var/www/html</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="kw">fi</span></a></code></pre></div>
 <p>Here we delete any symlinks on the <em>/var/www/html</em> location, if they exist and create a new one afterwards. The symlink will be between our projects directory and the apache web server. So everything which changes in one place, will automatically change in the other location as well. It’s like the synced folders, but it’s an inter system feature of linux. The next part is optional. I copied the whole <em>apache.conf</em> out of it’s base installation and keep it on my host system to change some things. On system startup I copy it back onto the guest and replace the base config with it.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/apache2.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb5-2" title="2">    <span class="fu">mv</span> /vagrant/tmp/apache2.conf /etc/apache2/apache2.conf</a>
-<a class="sourceLine" id="cb5-3" title="3"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb5-4" title="4">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: apache2.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb5-5" title="5"><span class="kw">fi</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/apache2.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">    <span class="fu">mv</span> /vagrant/tmp/apache2.conf /etc/apache2/apache2.conf</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: apache2.conf not found&quot;</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">fi</span></a></code></pre></div>
 <p>This is a check, if a file is in the <em>vagrant/tmp</em> directory, called <em>apache2.conf</em>. If there is one, it will be moved over to the position of the original file. Otherwise an error is printed to the error channel of the console. But how do we get the file to the <em>tmp</em> directory? Remember that shell provision isn’t the only thing? Because now file provisioning comes into play.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/apache2.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/apache2.conf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" data-line-number="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/apache2.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/apache2.conf&quot;</span></a></code></pre></div>
 <p>We add this line under the shell provision. This copies the file from the <em>conf</em> directory to the <em>tmp</em> directory of the guest system. Why we need to do this extras step, you may ask? Why not copy it directly to the original location? Well, it’s pretty simple: In the provision context you don’t have any root rights. But later in the shell script you do. That’s why we provide a place for our files, where the shell scripts have access to later. The next thing I do, is changing the rights on the webspace and the log directory, to be able to create and read files without any problems.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" title="1"><span class="fu">chmod</span> -R 755 /var/www</a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="fu">chmod</span> -R 755 /var/log</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="fu">chmod</span> -R 755 /var/www</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="fu">chmod</span> -R 755 /var/log</a></code></pre></div>
 <p>The last thing I do is activating mod rewrite, which allows web applications to rewrite the routing of requests. Many frameworks rely heavily on this feature.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" title="1"><span class="ex">a2enmod</span> rewrite</a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="ex">a2enmod</span> rewrite</a></code></pre></div>
 <p>And this is our full <em>apache2.sh</em> script:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" title="1"><span class="co">#!/usr/bin/env bash</span></a>
-<a class="sourceLine" id="cb9-2" title="2"></a>
-<a class="sourceLine" id="cb9-3" title="3"><span class="ex">apt-get</span> install -y apache2</a>
-<a class="sourceLine" id="cb9-4" title="4"></a>
-<a class="sourceLine" id="cb9-5" title="5"><span class="co">#Symlink the apache webspace to the shared folder of the host and guest syste,</span></a>
-<a class="sourceLine" id="cb9-6" title="6"><span class="kw">if</span> !<span class="bu"> [</span> <span class="ot">-L</span> /var/www/html<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb9-7" title="7">    <span class="fu">rm</span> -rf /var/www/html</a>
-<a class="sourceLine" id="cb9-8" title="8">    <span class="fu">ln</span> -fs /vagrant/projects /var/www/html</a>
-<a class="sourceLine" id="cb9-9" title="9"><span class="kw">fi</span></a>
-<a class="sourceLine" id="cb9-10" title="10"></a>
-<a class="sourceLine" id="cb9-11" title="11"><span class="co">#Copy the apache2.conf to the right location</span></a>
-<a class="sourceLine" id="cb9-12" title="12"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/apache2.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb9-13" title="13">    <span class="fu">mv</span> /vagrant/tmp/apache2.conf /etc/apache2/apache2.conf</a>
-<a class="sourceLine" id="cb9-14" title="14"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb9-15" title="15">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: apache2.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb9-16" title="16"><span class="kw">fi</span></a>
-<a class="sourceLine" id="cb9-17" title="17"></a>
-<a class="sourceLine" id="cb9-18" title="18"><span class="co">#grant permission to webserver</span></a>
-<a class="sourceLine" id="cb9-19" title="19"><span class="fu">chmod</span> -R 777 /var/www</a>
-<a class="sourceLine" id="cb9-20" title="20"><span class="fu">chmod</span> -R 777 /var/log</a>
-<a class="sourceLine" id="cb9-21" title="21"></a>
-<a class="sourceLine" id="cb9-22" title="22"><span class="co">#enable mod_rewrite</span></a>
-<a class="sourceLine" id="cb9-23" title="23"><span class="ex">a2enmod</span> rewrite</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="co">#!/usr/bin/env bash</span></a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="ex">apt-get</span> install -y apache2</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="co">#Symlink the apache webspace to the shared folder of the host and guest syste,</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="kw">if</span> !<span class="bu"> [</span> <span class="ot">-L</span> /var/www/html<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7">    <span class="fu">rm</span> -rf /var/www/html</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8">    <span class="fu">ln</span> -fs /vagrant/projects /var/www/html</a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb9-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb9-11" data-line-number="11"><span class="co">#Copy the apache2.conf to the right location</span></a>
+<a class="sourceLine" id="cb9-12" data-line-number="12"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/apache2.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb9-13" data-line-number="13">    <span class="fu">mv</span> /vagrant/tmp/apache2.conf /etc/apache2/apache2.conf</a>
+<a class="sourceLine" id="cb9-14" data-line-number="14"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb9-15" data-line-number="15">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: apache2.conf not found&quot;</span></a>
+<a class="sourceLine" id="cb9-16" data-line-number="16"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb9-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb9-18" data-line-number="18"><span class="co">#grant permission to webserver</span></a>
+<a class="sourceLine" id="cb9-19" data-line-number="19"><span class="fu">chmod</span> -R 777 /var/www</a>
+<a class="sourceLine" id="cb9-20" data-line-number="20"><span class="fu">chmod</span> -R 777 /var/log</a>
+<a class="sourceLine" id="cb9-21" data-line-number="21"></a>
+<a class="sourceLine" id="cb9-22" data-line-number="22"><span class="co">#enable mod_rewrite</span></a>
+<a class="sourceLine" id="cb9-23" data-line-number="23"><span class="ex">a2enmod</span> rewrite</a></code></pre></div>
 <p>In the next part we will reach forward to install php and mysql. You already learned the main functionalities, which we need to get our dev-env running. From now on it gets far more repetitive, but some small challenges are still waiting on our way. <a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Go to Part 3</a></p>
     </section>
 </article>
@@ -1739,43 +1769,43 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
 <p>Double-Click it and you will be asked for the SSH password. Since we didn’t changed it yet, it’s still <em>vagrant</em>. Then you will be asked for the database password. If you followed this tutorial closely, this will be <strong>my_pw</strong>. Afterwards you should be logged into your database successfully and you can start interacting with it.</p>
 <h1 id="phpmyadmin">PHPMyAdmin</h1>
 <p>Here we process similar, like we did in the earlier posts. First we create a new shell script inside of our <strong>sh</strong> directory. We start off with the following content</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2&quot;</span></a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/dbconfig-install boolean true&quot;</span></a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/admin-pass password my_pw&quot;</span> </a>
-<a class="sourceLine" id="cb2-4" title="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/app-pass password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/app-password-confirm password my_pw&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2&quot;</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/dbconfig-install boolean true&quot;</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/admin-pass password my_pw&quot;</span> </a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/app-pass password my_pw&quot;</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/app-password-confirm password my_pw&quot;</span></a></code></pre></div>
 <p>This should look similar to you. We already did it, while installing MySQL. Because PHPMyAdmin is working with an interactive prompt as well, we pass the different parameters in before. Out of simplicity we go with <em>my_pw</em> as our password again. Now we can install it</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="ex">apt-get</span> install -y phpmyadmin</a>
-<a class="sourceLine" id="cb3-2" title="2"><span class="ex">php5enmod</span> mcrypt</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ex">apt-get</span> install -y phpmyadmin</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="ex">php5enmod</span> mcrypt</a></code></pre></div>
 <p>On PHP5 we need to enable the mcrypt library, otherwise we get an annoying red box inside of our PHPMyAdmin Frontend. The last part of our config looks like this.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/phpmyadmin.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb4-2" title="2">    <span class="fu">mv</span> /vagrant/tmp/phpmyadmin.conf /etc/apache2/sites-available/phpmyadmin.conf</a>
-<a class="sourceLine" id="cb4-3" title="3">    <span class="ex">a2ensite</span> phpmyadmin.conf</a>
-<a class="sourceLine" id="cb4-4" title="4"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb4-5" title="5">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: phpmyadmin.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb4-6" title="6"><span class="kw">fi</span></a>
-<a class="sourceLine" id="cb4-7" title="7"></a>
-<a class="sourceLine" id="cb4-8" title="8"><span class="ex">service</span> apache2 restart</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/phpmyadmin.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="fu">mv</span> /vagrant/tmp/phpmyadmin.conf /etc/apache2/sites-available/phpmyadmin.conf</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3">    <span class="ex">a2ensite</span> phpmyadmin.conf</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: phpmyadmin.conf not found&quot;</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="ex">service</span> apache2 restart</a></code></pre></div>
 <p>We put a virtual host configuration for the PHPMyAdmin page into the right place, like we did with our web app in the last post. Finally we restart the apache server. Our <em>phpmyadmin.conf</em> looks like this</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb5-2" title="2">    ServerAdmin<span class="st"> webmaster@dummy-host.com</span></a>
-<a class="sourceLine" id="cb5-3" title="3">    DocumentRoot<span class="st"> &quot;/usr/share/phpmyadmin&quot;</span></a>
-<a class="sourceLine" id="cb5-4" title="4">    ServerName<span class="st"> phpmyadmin.dev</span></a>
-<a class="sourceLine" id="cb5-5" title="5">    ServerAlias<span class="st"> www.phpmyadmin.dev</span></a>
-<a class="sourceLine" id="cb5-6" title="6">    ErrorLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-error_log&quot;</span></a>
-<a class="sourceLine" id="cb5-7" title="7">    CustomLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-access_log&quot; common</span></a>
-<a class="sourceLine" id="cb5-8" title="8">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/usr/share/phpmyadmin&quot;</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb5-9" title="9">       <span class="ex">Options</span><span class="ch"> </span><span class="kw">Indexes</span><span class="ch"> </span><span class="kw">FollowSymLinks</span><span class="ch"> </span><span class="kw">Includes</span><span class="ch"> </span><span class="kw">MultiViews</span></a>
-<a class="sourceLine" id="cb5-10" title="10">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
-<a class="sourceLine" id="cb5-11" title="11">       Allow<span class="st"> from all</span></a>
-<a class="sourceLine" id="cb5-12" title="12">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
-<a class="sourceLine" id="cb5-13" title="13">   <span class="fu">&lt;/Directory&gt;</span></a>
-<a class="sourceLine" id="cb5-14" title="14"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">    ServerAdmin<span class="st"> webmaster@dummy-host.com</span></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">    DocumentRoot<span class="st"> &quot;/usr/share/phpmyadmin&quot;</span></a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">    ServerName<span class="st"> phpmyadmin.dev</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">    ServerAlias<span class="st"> www.phpmyadmin.dev</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    ErrorLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-error_log&quot;</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">    CustomLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-access_log&quot; common</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/usr/share/phpmyadmin&quot;</span><span class="fu">&gt;</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9">       <span class="ex">Options</span><span class="ch"> </span><span class="kw">Indexes</span><span class="ch"> </span><span class="kw">FollowSymLinks</span><span class="ch"> </span><span class="kw">Includes</span><span class="ch"> </span><span class="kw">MultiViews</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">       Allow<span class="st"> from all</span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">   <span class="fu">&lt;/Directory&gt;</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
 <p>This is almost the same, like we did in the last post, except for the new paths. Additionally we set some more directory options for PHPMyAdmin to make it’s routing possible. Next thing to do is add these scripts as partitioners to our Vagrantfile.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/phpmyadmin.sh&quot;</span></a>
-<a class="sourceLine" id="cb6-2" title="2">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/phpmyadmin.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/phpmyadmin.conf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" data-line-number="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/phpmyadmin.sh&quot;</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/phpmyadmin.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/phpmyadmin.conf&quot;</span></a></code></pre></div>
 <p>Now we are only missing an entry in our hosts file, to make the new domain address known to our host machine. So we go to our <em>hosts</em> file again and add the following line</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">192.168.33.10 	phpmyadmin.dev</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="dt">192.168.33.10 	phpmyadmin.dev</span></a></code></pre></div>
 <p>That’s it! Recreate or re-provision your vagrant machine and go to <em>phpmyadmin.dev</em> on your hosts web browser. You should see this page</p>
 <p><img src="/images/phpmyadmin.png" alt="PHPMyAdmin" title="PHPMyAdmin" /></p>
 <p>Type in the credentials you have typed in earlier and you should be able to be in the web frontend of your database.</p>
@@ -1804,40 +1834,40 @@ $feature{&#39;highlight&#39;}{&#39;default&#39;} = [1];</code></pre>
 <li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
 </ul>
 <p>In the previous posts we’ve successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it’s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called <em>mysite.dev</em>. So let’s get started! First we create a config file inside our <em>conf</em> directory with the following content:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb1-2" title="2">    DocumentRoot<span class="st"> &quot;/var/www/html&quot;</span></a>
-<a class="sourceLine" id="cb1-3" title="3">    ServerName<span class="st"> mysite.dev</span></a>
-<a class="sourceLine" id="cb1-4" title="4">    ServerAlias<span class="st"> www.mysite.dev</span></a>
-<a class="sourceLine" id="cb1-5" title="5">    ErrorLog<span class="st"> &quot;/var/log/apache2/mysite.dev-error_log&quot;</span></a>
-<a class="sourceLine" id="cb1-6" title="6">    CustomLog<span class="st"> &quot;/var/log/apache2/mysite.dev-access_log&quot; common</span></a>
-<a class="sourceLine" id="cb1-7" title="7">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/var/www/html&quot;</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb1-8" title="8">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
-<a class="sourceLine" id="cb1-9" title="9">       Allow<span class="st"> from all</span></a>
-<a class="sourceLine" id="cb1-10" title="10">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
-<a class="sourceLine" id="cb1-11" title="11">   <span class="fu">&lt;/Directory&gt;</span></a>
-<a class="sourceLine" id="cb1-12" title="12"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    DocumentRoot<span class="st"> &quot;/var/www/html&quot;</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">    ServerName<span class="st"> mysite.dev</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">    ServerAlias<span class="st"> www.mysite.dev</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">    ErrorLog<span class="st"> &quot;/var/log/apache2/mysite.dev-error_log&quot;</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">    CustomLog<span class="st"> &quot;/var/log/apache2/mysite.dev-access_log&quot; common</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/var/www/html&quot;</span><span class="fu">&gt;</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">       Allow<span class="st"> from all</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">   <span class="fu">&lt;/Directory&gt;</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
 <p>This is the virtual host definition. The first line says that it’s listening on port 80, which is the default port. The <em>DocumentRoot</em> is the path to our webspace, which was symlinked to the vagrant synced directory in an earlier post. <em>ServerName</em> is the address, how you can access the page and the <em>ServerAlias</em> is the alternative if the <em>ServerName</em> isn’t accessible. The following two lines are the paths to the access and error log of our virtual host. If anything bad happens, those two files are the place to start troubleshooting. The following lines are some directory options about what the web app is allowed to do and what not. Next we need a new shell script, which we call <em>mysite.sh</em>. Everything required to setup your project(composer update, migrations etc.) will be defined in this script. In this tutorial we won’t do all this, but only activating our virtual host address.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/mysite.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb2-2" title="2">    <span class="fu">chown</span> <span class="va">$USER</span>:<span class="va">$USER</span> /var/www/html</a>
-<a class="sourceLine" id="cb2-3" title="3">    <span class="fu">mv</span> /vagrant/tmp/mysite.conf /etc/apache2/sites-available/mysite.conf</a>
-<a class="sourceLine" id="cb2-4" title="4">    <span class="ex">a2ensite</span> mysite.conf</a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb2-6" title="6">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: mysite.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb2-7" title="7"><span class="kw">fi</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/mysite.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="fu">chown</span> <span class="va">$USER</span>:<span class="va">$USER</span> /var/www/html</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">    <span class="fu">mv</span> /vagrant/tmp/mysite.conf /etc/apache2/sites-available/mysite.conf</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">    <span class="ex">a2ensite</span> mysite.conf</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: mysite.conf not found&quot;</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="kw">fi</span></a></code></pre></div>
 <h1 id="make-changes-effective">Make changes effective</h1>
 <pre><code>service apache2 restart</code></pre>
 <p>Most of this should be familiar to you from the previous chapters. First we check if the file exists in our temp directory. If it does, we create the directory for our project and set the owner of this directory. Afterwards we move the file to the <em>sites-available</em> directory of apache and enable it. To make sure all settings are active, we restart the apache demon. As you already know, we need to get the <em>mysite.conf</em> into the <em>tmp</em> directory. That’s why we add another file provisioner to our <em>Vagrantfile.</em></p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/mysite.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/mysite.conf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" data-line-number="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/mysite.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/mysite.conf&quot;</span></a></code></pre></div>
 <p>To activate the new provision you either need to execute</p>
 <pre><code>vagrant reload --provision</code></pre>
 <p>Or <em>vagrant destroy</em> and <em>vagrant up</em> again. The last step is to make the virtual host known to your host system. For this, you need to add a line into your hosts file. On unix like systems you can find the file in the <em>/etc/</em> directory. The file should begin with the following</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb6-1" title="1"><span class="co">#</span></a>
-<a class="sourceLine" id="cb6-2" title="2"><span class="co"># /etc/hosts: static lookup table for host names</span></a>
-<a class="sourceLine" id="cb6-3" title="3"><span class="co">#</span></a>
-<a class="sourceLine" id="cb6-4" title="4"></a>
-<a class="sourceLine" id="cb6-5" title="5"><span class="co">#&lt;ip-address&gt;	&lt;hostname.domain.org&gt;	&lt;hostname&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="co">#</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="co"># /etc/hosts: static lookup table for host names</span></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="co">#</span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb6-5" data-line-number="5"><span class="co">#&lt;ip-address&gt;	&lt;hostname.domain.org&gt;	&lt;hostname&gt;</span></a></code></pre></div>
 <p>After this intro we add the following line</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">192.168.33.10 mysite.dev</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="dt">192.168.33.10 mysite.dev</span></a></code></pre></div>
 <p>Which maps the IP address of our private network hosted by vagrant to a domain name. Ok let’s check it out. Type in <em>mysite.dev</em> into the address bar of your browser. You should now see the php info page from the last tutorial. In the next post I want to cover the database access. I will show two ways to you, how you can interact with your database from your host system. The first way will be with MySQL Workbench via an SSH connection. The second is by installing PHPMyAdmin on the guest system and access it via the hosts web browser. <a href="/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Go to Bonus 2</a></p>
     </section>
 </article>
@@ -2052,74 +2082,74 @@ nnoremap &lt;Leader&gt;s :sp .&lt;CR&gt;</code></pre>
     <hr class="section-head">
     <section>
         <p>Nice and readable URLs are the way to go in modern web applications. More and more people are abandoning the old style URLs, containing question marks and  equal signs, in favor of the slash separation for actions and parameters. Most frameworks are already supporting this new kind of URLs and encapsulate the logic inside of a routing class or module. Everyone is using it and everything is good so far. But even if these new URLs are all over the place, there is very little information on the net about how it is actually implemented. Because I’m currently working on a minimalistic PHP MVC Framework with a <a href="http://randy-schuett.de">friend</a>, I came across this problem. Beside of the source code of the big players in PHP Frameworks I found a small and easy to use snippet to get routes working pretty fast. In this post I want to present the key PHP feature, which allows us to realize it and how to build upon it. Everything starts of with the PHP super constant <a href="http://php.net/manual/en/reserved.variables.server.php">$_SERVER</a>. We are interested about the ‘REQUEST_URI’  key. If we type in the address of our webserver, followed by and <em>/index.php</em> and this file contains the following line of code.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="kw">echo</span> <span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">&#39;REQUEST_URI&#39;</span><span class="ot">];</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">&lt;?php</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">echo</span> <span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">&#39;REQUEST_URI&#39;</span><span class="ot">];</span></a></code></pre></div>
 <p>we probably would get back <em>/index.php</em>. This is exactly what we wanted to archive, because now we are able to read what the user typed into the address bar of his browser and now we can react to it. But with this approach comes a problem. If we would build our Router upon this feature, we are forced to place a file at each possible path, which we want to cover, containing the request of the super constant and reroute to the appropriate controller and action. A good way to solve this problem would be, that whatever the user types into the address bar, it would open up the same file everytime, like our <em>index.php</em>. Sadly there is no way to solve this in PHP. So this has to be done on the webserver level itself. Most webservers (like Apache)  support configurations written down to a <em>.htaccess</em> file, which is placed in the root directory of the webserver. We write the following content to the file.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb2-1" title="1">RewriteEngine On</a>
-<a class="sourceLine" id="cb2-2" title="2">RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span> - <span class="ot">[</span><span class="kw">E</span>=<span class="kw">BASE</span>:%<span class="dv">1</span><span class="ot">]</span></a>
-<a class="sourceLine" id="cb2-3" title="3">RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span>$ %{<span class="kw">ENV</span>:<span class="kw">BASE</span>}index.php <span class="ot">[</span><span class="kw">NC</span><span class="ot">,</span><span class="kw">L</span><span class="ot">]</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb2-1" data-line-number="1">RewriteEngine On</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span> - <span class="ot">[</span><span class="kw">E</span>=<span class="kw">BASE</span>:%<span class="dv">1</span><span class="ot">]</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span>$ %{<span class="kw">ENV</span>:<span class="kw">BASE</span>}index.php <span class="ot">[</span><span class="kw">NC</span><span class="ot">,</span><span class="kw">L</span><span class="ot">]</span></a></code></pre></div>
 <p>The first directive tells the webserver to turn on the rewrite engine. Afterwards we give him the rules to link everything to the <em>index.php</em> in the root directory. Now we can type in <em>/test/dir/index</em> for example and the <em>index.php</em> in the root directory is called, but with this output instead: <em>/test/dir/index</em>. Based on this behavior we can build our Router. For a minimalistic example we create a <em>Router.php</em> file which contains the following class.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb3-2" title="2"></a>
-<a class="sourceLine" id="cb3-3" title="3"><span class="kw">class</span> Router</a>
-<a class="sourceLine" id="cb3-4" title="4">{</a>
-<a class="sourceLine" id="cb3-5" title="5">    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></a>
-<a class="sourceLine" id="cb3-6" title="6">    {</a>
-<a class="sourceLine" id="cb3-7" title="7">        <span class="kw">echo</span> <span class="kw">$route</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb3-8" title="8">    }</a>
-<a class="sourceLine" id="cb3-9" title="9">}</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">&lt;?php</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="kw">class</span> Router</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">{</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    {</a>
+<a class="sourceLine" id="cb3-7" data-line-number="7">        <span class="kw">echo</span> <span class="kw">$route</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">    }</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">}</a></code></pre></div>
 <p>and we change our <em>index.php</em>.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb4-2" title="2"></a>
-<a class="sourceLine" id="cb4-3" title="3"><span class="kw">require_once</span> <span class="st">&#39;Router.php&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb4-4" title="4"></a>
-<a class="sourceLine" id="cb4-5" title="5"><span class="kw">$r</span> = <span class="kw">new</span> Router<span class="ot">();</span></a>
-<a class="sourceLine" id="cb4-6" title="6"><span class="kw">$r</span>-&gt;route<span class="ot">(</span><span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">&#39;REQUEST_URI&#39;</span><span class="ot">]);</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">&lt;?php</span></a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="kw">require_once</span> <span class="st">&#39;Router.php&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5"><span class="kw">$r</span> = <span class="kw">new</span> Router<span class="ot">();</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="kw">$r</span>-&gt;route<span class="ot">(</span><span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">&#39;REQUEST_URI&#39;</span><span class="ot">]);</span></a></code></pre></div>
 <p>So far we gained nothing except a new layer of abstraction. But now we are able to actually give our routing some behavior, similar to modern frameworks, which are based on controllers and actions. As an example we take the following path <em>/default/print_hello</em>. In theory this should instantiate a <em>DefaultController</em> class and call the <em>print_helloAction</em> method. As a place for our controllers we create a new directory called <em>controllers</em> and add a <em>DefaultController.php</em> file.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb5-2" title="2"></a>
-<a class="sourceLine" id="cb5-3" title="3"><span class="kw">class</span> DefaultController</a>
-<a class="sourceLine" id="cb5-4" title="4">{</a>
-<a class="sourceLine" id="cb5-5" title="5">    <span class="kw">public</span> <span class="kw">function</span> indexAction<span class="ot">()</span></a>
-<a class="sourceLine" id="cb5-6" title="6">    {</a>
-<a class="sourceLine" id="cb5-7" title="7">        <span class="kw">echo</span> <span class="st">&#39;Index&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb5-8" title="8">    }</a>
-<a class="sourceLine" id="cb5-9" title="9"></a>
-<a class="sourceLine" id="cb5-10" title="10">    <span class="kw">public</span> <span class="kw">function</span> print_helloAction<span class="ot">()</span></a>
-<a class="sourceLine" id="cb5-11" title="11">    {</a>
-<a class="sourceLine" id="cb5-12" title="12">        <span class="kw">echo</span> <span class="st">&#39;Hello&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb5-13" title="13">    }</a>
-<a class="sourceLine" id="cb5-14" title="14">}</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">&lt;?php</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">class</span> DefaultController</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">{</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">    <span class="kw">public</span> <span class="kw">function</span> indexAction<span class="ot">()</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6">    {</a>
+<a class="sourceLine" id="cb5-7" data-line-number="7">        <span class="kw">echo</span> <span class="st">&#39;Index&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8">    }</a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10">    <span class="kw">public</span> <span class="kw">function</span> print_helloAction<span class="ot">()</span></a>
+<a class="sourceLine" id="cb5-11" data-line-number="11">    {</a>
+<a class="sourceLine" id="cb5-12" data-line-number="12">        <span class="kw">echo</span> <span class="st">&#39;Hello&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13">    }</a>
+<a class="sourceLine" id="cb5-14" data-line-number="14">}</a></code></pre></div>
 <p>The last part of this post will be about how our Router class can actually instantiate the <em>DefaultController</em> and call the method based on the given route. One way to do it is to cut down the string at the slashes. Afterwards we got the controller and action name which we are now able to instantiate and call. The code for the route function could look like this.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb6-2" title="2"></a>
-<a class="sourceLine" id="cb6-3" title="3"><span class="kw">class</span> Router</a>
-<a class="sourceLine" id="cb6-4" title="4">{</a>
-<a class="sourceLine" id="cb6-5" title="5">    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></a>
-<a class="sourceLine" id="cb6-6" title="6">    {</a>
-<a class="sourceLine" id="cb6-7" title="7">        <span class="kw">$parts</span> = <span class="fu">explode</span><span class="ot">(</span><span class="st">&#39;/&#39;</span><span class="ot">,</span> <span class="kw">$route</span><span class="ot">);</span></a>
-<a class="sourceLine" id="cb6-8" title="8">        <span class="co">//Index 0 is empty because the routes</span></a>
-<a class="sourceLine" id="cb6-9" title="9">        <span class="co">//always start with a preceding /</span></a>
-<a class="sourceLine" id="cb6-10" title="10">        <span class="kw">$controller</span> = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">1</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">1</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">&#39;&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-11" title="11">        <span class="kw">$action</span>     = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">2</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">2</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">&#39;&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-12" title="12"></a>
-<a class="sourceLine" id="cb6-13" title="13">        <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">))</span> {</a>
-<a class="sourceLine" id="cb6-14" title="14">            <span class="co">//upper case the first letter of the controller name and</span></a>
-<a class="sourceLine" id="cb6-15" title="15">            <span class="co">//append the Controller string to it</span></a>
-<a class="sourceLine" id="cb6-16" title="16">            <span class="kw">$controller</span> = <span class="fu">ucfirst</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">)</span> . <span class="st">&#39;Controller&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-17" title="17">            <span class="co">//Include the PHP file for the Controller</span></a>
-<a class="sourceLine" id="cb6-18" title="18">            <span class="kw">require_once</span> <span class="st">&#39;controllers/&#39;</span> . <span class="kw">$controller</span> . <span class="st">&#39;.php&#39;</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-19" title="19">            <span class="co">//instantiate the controller</span></a>
-<a class="sourceLine" id="cb6-20" title="20">            <span class="kw">$object</span> = <span class="kw">new</span> <span class="kw">$controller</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-21" title="21">            <span class="co">//call the action</span></a>
-<a class="sourceLine" id="cb6-22" title="22">            <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$action</span><span class="ot">))</span> {</a>
-<a class="sourceLine" id="cb6-23" title="23">                <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="kw">$action</span> . <span class="st">&#39;Action&#39;</span><span class="ot">]);</span></a>
-<a class="sourceLine" id="cb6-24" title="24">            }</a>
-<a class="sourceLine" id="cb6-25" title="25">            <span class="co">//call indexAction if no action is given</span></a>
-<a class="sourceLine" id="cb6-26" title="26">            <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="st">&#39;indexAction&#39;</span><span class="ot">]);</span></a>
-<a class="sourceLine" id="cb6-27" title="27">        }</a>
-<a class="sourceLine" id="cb6-28" title="28">    }</a>
-<a class="sourceLine" id="cb6-29" title="29">}</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="kw">&lt;?php</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="kw">class</span> Router</a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">{</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5">    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">    {</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">        <span class="kw">$parts</span> = <span class="fu">explode</span><span class="ot">(</span><span class="st">&#39;/&#39;</span><span class="ot">,</span> <span class="kw">$route</span><span class="ot">);</span></a>
+<a class="sourceLine" id="cb6-8" data-line-number="8">        <span class="co">//Index 0 is empty because the routes</span></a>
+<a class="sourceLine" id="cb6-9" data-line-number="9">        <span class="co">//always start with a preceding /</span></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10">        <span class="kw">$controller</span> = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">1</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">1</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">&#39;&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11">        <span class="kw">$action</span>     = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">2</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">2</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">&#39;&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb6-13" data-line-number="13">        <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">))</span> {</a>
+<a class="sourceLine" id="cb6-14" data-line-number="14">            <span class="co">//upper case the first letter of the controller name and</span></a>
+<a class="sourceLine" id="cb6-15" data-line-number="15">            <span class="co">//append the Controller string to it</span></a>
+<a class="sourceLine" id="cb6-16" data-line-number="16">            <span class="kw">$controller</span> = <span class="fu">ucfirst</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">)</span> . <span class="st">&#39;Controller&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb6-17" data-line-number="17">            <span class="co">//Include the PHP file for the Controller</span></a>
+<a class="sourceLine" id="cb6-18" data-line-number="18">            <span class="kw">require_once</span> <span class="st">&#39;controllers/&#39;</span> . <span class="kw">$controller</span> . <span class="st">&#39;.php&#39;</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb6-19" data-line-number="19">            <span class="co">//instantiate the controller</span></a>
+<a class="sourceLine" id="cb6-20" data-line-number="20">            <span class="kw">$object</span> = <span class="kw">new</span> <span class="kw">$controller</span><span class="ot">;</span></a>
+<a class="sourceLine" id="cb6-21" data-line-number="21">            <span class="co">//call the action</span></a>
+<a class="sourceLine" id="cb6-22" data-line-number="22">            <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$action</span><span class="ot">))</span> {</a>
+<a class="sourceLine" id="cb6-23" data-line-number="23">                <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="kw">$action</span> . <span class="st">&#39;Action&#39;</span><span class="ot">]);</span></a>
+<a class="sourceLine" id="cb6-24" data-line-number="24">            }</a>
+<a class="sourceLine" id="cb6-25" data-line-number="25">            <span class="co">//call indexAction if no action is given</span></a>
+<a class="sourceLine" id="cb6-26" data-line-number="26">            <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="st">&#39;indexAction&#39;</span><span class="ot">]);</span></a>
+<a class="sourceLine" id="cb6-27" data-line-number="27">        }</a>
+<a class="sourceLine" id="cb6-28" data-line-number="28">    }</a>
+<a class="sourceLine" id="cb6-29" data-line-number="29">}</a></code></pre></div>
 <p>If we type in <em>/default/print_hello</em> we get back <em>Hello</em>. If no action is given, we automatically try to route to the index action. So <em>/default</em> would print <em>Index</em>. <a href="http://php.net/manual/en/function.call-user-func.php">call_user_func</a> also supports parameters. So it is very easy to extend the given Router with parameter handling. Also there should be more handling of special cases, like if no controller is given in the URL. It’s also simple to extend the given model to use real view files for showing a page, instead of just doing an echo. Nevertheless serves this basic concept  as a starting point and it should be straightforward to build upon it.</p>
     </section>
 </article>

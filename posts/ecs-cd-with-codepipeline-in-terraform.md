@@ -1,5 +1,5 @@
 ---
-title: ECS Blue Green Deployment with Terraform
+title: ECS CD with CodePipeline in Terraform
 tags:
   - aws
   - terraform
@@ -9,41 +9,72 @@ categories:
   - devops
   - terraform
   - aws
-date: 2019-05-01
+date: 2019-05-21
 ---
 
-Last week we came along a problem regarding the deployment of an ECS Service.
-We wanted to use the [newly
+Last week I came along a problem regarding the deployment of an ECS Service.
+I wanted to use the [newly
 announced](https://www.youtube.com/watch?v=5VPIzKDyLvo) Blue/Green-Deployment
-powered by CodeDeploy, because for the time being we only needed one Fargate
+powered by CodeDeploy, because for the time being I only needed one Fargate
 instance to run. The classic ECS Deployment destroyed one instance and started
 a new one in it's place. With one instance this would mean, we would have some
-downtime.
+downtime during the start of the new container.
 
-With Blue/Green Deployment a completely new group of instances will be started
-and can be tested. If everything looks fine, the load balancer forwards the
-traffic to the new group and the old gets shut down afterwards. Even with
-only one running instance, a second gets started before the first will be
-destroyed and if the second is working correctly, the traffic switches over
-and the old will be destroyed afterwards.
+With Blue/Green Deployment a completely new group of instances will be started.
+If everything went fine, the load balancer forwards the traffic to the new
+group and the old gets shut down afterwards. Even with only one running
+instance, a second gets started before the first will be destroyed and if the
+second is working correctly, the traffic switches over and the old will be
+destroyed afterwards. The traffic switch is a minimal downtime, which isn't
+recognizable in normal operation.
 
 In this post we will create a complete Continuous Delivery Pipeline with AWS
-Codepipeline, which consists of three stages. In the first stage (called
+CodePipeline, which consists of three stages. In the first stage (called
 source) the pipeline listens to master commits on the GitHub Repository of
 interest. The second stage (called build) builds a new docker image of the
 Dockerfile in the GitHub Repository and pushes the new image to AWS ECR. The
 last state (called deploy) does a blue green deployment to ECS with the new
 image.
 
-But before we can build the pipeline, we need to create the infrastructure for
-the ECS Service itself.
+The docker image is a simple HTML website with a message so we can see that the
+correct container is deployed.
+
+The complete codebase can be found in this [GitHub
+Repository](https://github.com/snowiow/green-blue-ecs-example).
+
+We start by creating the infrastructure for the ECS Service itself.
 
 <img src="/images/ecs-green-blue.png" alt="ECS Green Blue Overview" title="ECS Green Blue Overview">
 
-As you can see we will build up a VPC, with three subnets where the ECS
-Services can be spawned in. The ECS Services have Access to the ECR to pull
-their images. In front of our network is the load balancer, which redirects the
+As you can see we will build up a VPC with three subnets where the ECS
+Services can be spawned in. The ECS Services have access to the ECR to pull
+images. In front of our network is the load balancer, which redirects the
 traffic to the services.
+
+Before we go into the infrastructure, we create a _main.tf_ and create some
+variables, we need later and create the AWS provider.
+
+```terraform
+variable "github_token" {
+  description = "The GitHub Token to be used for the CodePipeline"
+  type        = "string"
+}
+
+variable "account_id" {
+  description = "id of the active account"
+  type        = "string"
+}
+
+variable "region" {
+  description = "region to deploy to"
+  type        = "string"
+}
+
+provider "aws" {
+  region  = "${var.region}"
+  version = "2.7"
+}
+```
 
 # Part 1: The VPC
 We start with what is the basis of every AWS tutorial: The VPC.
@@ -110,8 +141,8 @@ resource "aws_route_table_association" "this" {
 }
 ```
 
-Here we create a VPC with three subnets in the three AZs of the defined zone.
-The zone is a variable which is set in a _terraform.tfvars_ file (at least for
+Here we create a VPC with three subnets in the three AZs of the defined region.
+The region is a variable which is set in a _terraform.tfvars_ file (at least for
 me.  [You can choose other sources for input variables as
 well](https://www.terraform.io/docs/configuration-0-11/variables.html)). We
 create a routing table with route associations to the three subnets and a route
@@ -229,16 +260,22 @@ incoming traffic via port 80 to the load balancer.
 
 One more thing to point out is the health check on the target groups. Those are
 important for the blue/green deployment later, because only if the health check
-succeeds, the group switch will be made.
+succeeds, the group switch will be made. By default the Load Balancer checks
+the health of the targets every 30 seconds. After 3 consecutive successful
+checks, the target is healthy and real traffic is forwarded to the target. If a
+service fails to answer with a 200 status code within 6 seconds three
+consecutive times, then the target is marked unhealthy and real traffic isn't
+forwarded to this target.
 
 # Part 3: The ECS Service
 
 Now we create the ECS Service. AWS has created some concepts on top of the
 docker container itself. The smallest unit on top of the container in AWS is
 the _task definition_. In the task definition, we define what information is
-passed to one or more containers when they are run. Basically everything that
-can be passed and some more options are set in the task definition. For example
-port mappings or environment variables etc..
+passed to one or more containers when they are being run. Basically everything
+that can be passed as an argument to _docker run_ and some more options can be
+set in the task definition. For example port mappings or environment variables
+etc..
 
 Task definitions are normally written in JSON, but there is [a module by
 cloudposse](https://registry.terraform.io/modules/cloudposse/ecs-container-definition/aws/0.10.0)
@@ -247,16 +284,22 @@ to the
 [aws_iam_policy_document](https://www.terraform.io/docs/providers/aws/d/iam_policy_document.html).
 The advantage of writing those definitions in terraform is to get some more
 validation, before the resources get applied. Dump mistakes like missing
-mandatory attributes can be catched early this way. To use the cloudposses
-module and create a container definition document we do the following:
+mandatory attributes can be catched early this way. 
+
+Here is the basic overview what we are trying to achieve in this part:
+
+<img src="/images/ecs_service.png" alt="AWS ECS Service" title="AWS ECS Service">
+
+To use the cloudposses module and create a container definition document we
+need to import the module:
 
 ```terraform
-data "aws_ecr_repository" "this" {
-  name = "snowiow/green-blue-ecs-example"
-}
-
 locals {
   container_name = "green-blue-ecs-example"
+}
+
+data "aws_ecr_repository" "this" {
+  name = "snowiow/${local.container_name}"
 }
 
 resource "aws_cloudwatch_log_group" "this" {
@@ -397,8 +440,8 @@ document and restrict the ECR download actions to the ECR Repository of the
 example app. The task role needs permissions to describe the cluster it can be
 run in.
 
-Lastly we create the execution role and task role and append the documents to
-those roles.
+Lastly we create the execution role and task role and append the policy
+documents to those roles.
 
 Now we have everything in place to create the task definition and service:
 
@@ -445,7 +488,7 @@ resource "aws_ecs_service" "this" {
   }
 
   launch_type   = "FARGATE"
-  desired_count = 1
+  desired_count = 3
 
   network_configuration {
     subnets         = ["${aws_subnet.this.*.id}"]
@@ -463,14 +506,18 @@ awsvpc network mode to spawn it in our earlier created VPC. In the service we
 define a load balancer block. This way any task started by this service will be
 spawned in the target group of our load balancer. Here we start to fill the
 green group initially. We also have to set the subnets, where the service
-spawns the tasks in. As the security group we use one with allowed ingress from
-port 80 to 443. The normal traffic from the load balancer comes from port 80,
-but we also need to be able to download the docker image from the ECR, which
-will be done via HTTPS. We also need to assign a public IP to the task to be
-able to download the image.
+spawns the tasks in. The service has a desired task count of three. AWS
+balances these three tasks in all of our subnets evenly, so we will have one
+task running in every subnet.
+
+As the security group we use one with allowed ingress from port 80 to 443. The
+normal traffic from the load balancer comes from port 80, but we also need to
+be able to download the docker image from the ECR, which will be done via
+HTTPS. We also need to assign a public IP to the task to be able to download
+the image.
 
 It is important to note, that we need to explicitly name a dependency to the
-aws_lb_listener. Because we apply anything simultaneously, the service would
+_aws_lb_listener_. Because we apply anything simultaneously, the service would
 otherwise just wait for the target group to be finished. But then the creation
 of the ECS Service would give us an error, because the created target group
 isn't linked to a load balancer. That's why we need to explicitly wait for the
@@ -551,6 +598,8 @@ resource "aws_iam_role_policy" "pipeline" {
 For the moment we only give the pipeline the permissions to list, download and
 upload to the bucket, we created before.
 
+Now we can create the pipeline.
+
 ```terraform
 resource "aws_codepipeline" "this" {
   name     = "example-pipeline"
@@ -583,13 +632,12 @@ resource "aws_codepipeline" "this" {
 }
 ```
 
-Now we can create the pipeline. We define GitHub as the source and my
-repository's master branch as the start trigger. You will need an OAuthToken as
-well. This way the pipeline will be notified when a new commit happened. The
-other way would be to let the pipeline pull information from GitHub every now
-and then. But with this option you will always have some time between the
-commit and the start of the pipeline. To generate a GitHub Token with the right
-scopes, you can follow [this guide from
+We define GitHub as the source and my repository's master branch as the start
+trigger. You will need an OAuthToken as well. This way the pipeline will be
+notified when a new commit happened. The other way would be to let the pipeline
+pull information from GitHub every now and then. But with this option you will
+always have some time between the commit and the start of the pipeline. To
+generate a GitHub Token with the right scopes, you can follow [this guide from
 AWS](https://docs.aws.amazon.com/codepipeline/latest/userguide/GitHub-rotate-personal-token-CLI.html).
 If you copied the token you can use it for example as a variable in terraform.
 Another way is to set the _GITHUB_TOKEN_ environment variable. This way you can
@@ -597,7 +645,7 @@ leave the OAuthToken attribute unset.
 
 Now we will add the build stage. First of all, the CodeBuild needs it's own set
 of permissions, so we do the usual stuff to create an IAM role for the
-codebuild:
+CodeBuild:
 
 ```terraform
 data "aws_iam_policy_document" "assume_by_codebuild" {
@@ -687,10 +735,10 @@ resource "aws_iam_role_policy" "codebuild" {
 ```
 
 Because our CodeBuild should be able to upload Images to the ECR, we give the
-according rights here. The CodeBuild also needs rights to access the S3 Bucket,
-to download the artifact from the Source (GitHub). Otherwise the Codebuild
-wouldn't be able to access the downloaded source code of GitHub and therefeore
-couldn't create the Docker Image.
+according permissions here. The CodeBuild also needs permissions to access the
+S3 Bucket, to download the artifact from the Source (GitHub). Otherwise the
+Codebuild wouldn't be able to access the downloaded source code of GitHub and
+therefeore couldn't create the Docker Image.
 
 Now we are able to create the Codebuild project like this:
 
@@ -752,8 +800,9 @@ stage {
 Here you can see how we connect the artifact inputs and outputs of the
 different stages. In the source stage we created an _output_artifact_, which is
 used as an _input_artifact_ in the build stage. The artifact names are
-subfolders of the S3 Bucket we defined earlier. In these folder the artifact is
-saved as a zip file with a specific hash identifying the build, it belongs to.
+subdirectories of the S3 Bucket we defined earlier. In these directories the
+artifact is saved as a zip file with a specific hash identifying the build, it
+belongs to.
 
 Because the CodeBuild will be triggered from the CodePipeline, we need to give
 it the corresponding permissions. Therefore we add the following statement to
@@ -807,6 +856,11 @@ logging into the ECR and I set some environment variables, which I use during
 the build. The build phase builds the docker image from the _Dockerfile_ of the
 root directory. In the _post_build_ the image is pushed to the ECR.
 
+This file will be placed in the project root. Because the source stage of the
+pipeline downloads the whole repository from github and set it as an input
+artifact for the build, CodeBuild looks automatically for a _buildspec.yml_
+there.
+
 Now we conclude with the CodeDeploy. Like the _buildspec.yml_ for the
 CodeBuild, there is a _appspec.yaml_ for CodeDeploy (Yes, here the suffix is
 yaml, not yml by default). This file will be placed in the directory root as
@@ -842,7 +896,7 @@ install:
 
 We need jq to get the current task definition and pass it to codedeploy. This
 is the second file which is needed by CodeDeploy next to the appspec.yml.
-In The post build section we save the most current task definition as a file,
+In the post build section we save the most current task definition as a file,
 which will be passed as an artifact to CodeDeploy:
 
 ```yaml
@@ -850,8 +904,9 @@ which will be passed as an artifact to CodeDeploy:
   jq '.taskDefinition' > taskdef.json
 ```
 
-With jq we extract the actual task definition and write it to a file. Now we
-substitute every environment variable in the appspec_template.yaml with
+With jq we extract the actual task definition and write it to a file.
+
+Now we substitute every environment variable in the appspec_template.yaml with
 _envsubst_ and write it to the actual _appspec.yml_:
 
 ```yaml
@@ -920,6 +975,10 @@ resource "aws_codebuild_project" "this" {
 }
 ```
 
+It is important to note, that we give the task definition arn wihtout it's
+revision. This is how we always force, that the most current task definition
+revision is used.
+
 To pass these two files to CodeDeploy, we set them as artifacts of the
 CodeBuild in the _buildspec.yml_:
 
@@ -932,7 +991,7 @@ artifacts:
 
 Because we already set the output artifacts path in the _aws_codepipeline_
 resource, these files will be saved in the build directory in S3, which will be
-picked up by CodeDeploy.
+picked up by CodeDeploy afterwards.
 
 Now we need the IAM Policy for CodeDeploy:
 
@@ -1022,7 +1081,7 @@ resource "aws_codedeploy_deployment_group" "this" {
     }
 
     terminate_blue_instances_on_deployment_success {
-      action                           = "TERMINATE"
+      action = "TERMINATE"
     }
   }
 
