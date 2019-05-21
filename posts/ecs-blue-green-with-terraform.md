@@ -51,9 +51,9 @@ We start with what is the basis of every AWS tutorial: The VPC.
 ```terraform
 locals {
   subnets = {
-    eu-central-1a = "172.16.0.0/21"
-    eu-central-1b = "172.16.8.0/21"
-    eu-central-1c = "172.16.16.0/21"
+    "${var.region}a" = "172.16.0.0/21"
+    "${var.region}b" = "172.16.8.0/21"
+    "${var.region}c" = "172.16.16.0/21"
   }
 }
 
@@ -110,7 +110,10 @@ resource "aws_route_table_association" "this" {
 }
 ```
 
-Here we create a VPC with three subnets in the three AZs of eu-central-1. We
+Here we create a VPC with three subnets in the three AZs of the defined zone.
+The zone is a variable which is set in a _terraform.tfvars_ file (at least for
+me.  [You can choose other sources for input variables as
+well](https://www.terraform.io/docs/configuration-0-11/variables.html)). We
 create a routing table with route associations to the three subnets and a route
 to an internet gateway. I won't go into detail about the VPC. For more infos
 you can read [my previous
@@ -118,10 +121,9 @@ post](/posts/vpc-peering-with-mongodb-atlas-and-aws-in-terraform.html) in which
 I talk a bit more about VPCs. The difference this time is, that there are three
 subnets, which split up the whole CIDR space of the VPC. We are making three
 subnets, because we want to spawn instances randomly in different availability
-zones. If we increase the count of the running tasks, those will
-be split evenly over the different AZs. In the rare case of unavailability of
-one AZ, the app would still be available, because it's also running in the
-other AZs.
+zones. If we increase the count of the running tasks, those will be split
+evenly over the different AZs. In the rare case of unavailability of one AZ,
+the app would still be available, because it's also running in the other AZs.
 
 # Part 2: The Load Balancer
 Now we need a load balancer, which is the key part of our Green/Blue
@@ -182,9 +184,7 @@ locals {
 resource "aws_lb_target_group" "this" {
   count = "${length(local.target_groups)}"
 
-  name = "example-tg-${
-    element(local.target_groups, count.index)
-  }"
+  name = "example-tg-${element(local.target_groups, count.index)}"
 
   port        = 80
   protocol    = "HTTP"
@@ -231,7 +231,7 @@ One more thing to point out is the health check on the target groups. Those are
 important for the blue/green deployment later, because only if the health check
 succeeds, the group switch will be made.
 
-# Part 3: The ECS Service 
+# Part 3: The ECS Service
 
 Now we create the ECS Service. AWS has created some concepts on top of the
 docker container itself. The smallest unit on top of the container in AWS is
@@ -326,18 +326,14 @@ data "aws_iam_policy_document" "execution_role" {
       "ecr:BatchCheckLayerAvailability",
     ]
 
-    resources = [
-      "${data.aws_ecr_repository.this.arn}",
-    ]
+    resources = ["${data.aws_ecr_repository.this.arn}"]
   }
 
   statement {
     sid    = "AllowECRAuth"
     effect = "Allow"
 
-    actions = [
-      "ecr:GetAuthorizationToken",
-    ]
+    actions = ["ecr:GetAuthorizationToken"]
 
     resources = ["*"]
   }
@@ -660,9 +656,7 @@ data "aws_iam_policy_document" "codebuild" {
       "ecr:PutImage",
     ]
 
-    resources = [
-      "${data.aws_ecr_repository.this.arn}",
-    ]
+    resources = ["${data.aws_ecr_repository.this.arn}"]
   }
 
   statement {
@@ -775,9 +769,7 @@ statement {
     "codebuild:StartBuild",
   ]
 
-  resources = [
-    "${aws_codebuild_project.this.arn}",
-  ]
+  resources = ["${aws_codebuild_project.this.arn}"]
 }
 ```
 
@@ -893,7 +885,7 @@ resource "aws_codebuild_project" "this" {
 
     environment_variable {
       name  = "TASK_DEFINITION"
-      value = "${aws_ecs_task_definition.this.id}"
+      value = "arn:aws:ecs:${var.region}:${var.account_id}:task-definition/${aws_ecs_task_definition.this.family}"
     }
 
     environment_variable {
@@ -987,12 +979,20 @@ data "aws_iam_policy_document" "codedeploy" {
     sid    = "AllowS3"
     effect = "Allow"
 
-    actions = [
-      "s3:GetObject",
-    ]
+    actions = ["s3:GetObject"]
+
+    resources = ["${aws_s3_bucket.this.arn}/*"]
+  }
+
+  statement {
+    sid    = "AllowPassRole"
+    effect = "Allow"
+
+    actions = ["iam:PassRole"]
 
     resources = [
-      "${aws_s3_bucket.this.arn}/*",
+      "${aws_iam_role.execution_role.arn}",
+      "${aws_iam_role.task_role.arn}",
     ]
   }
 }
@@ -1023,7 +1023,6 @@ resource "aws_codedeploy_deployment_group" "this" {
 
     terminate_blue_instances_on_deployment_success {
       action                           = "TERMINATE"
-      termination_wait_time_in_minutes = 5
     }
   }
 
@@ -1101,17 +1100,13 @@ statement {
     "codedeploy:RegisterApplicationRevision",
   ]
 
-  resources = [
-    "*",
-  ]
+  resources = ["*"]
 
   statement {
     sid    = "AllowECS"
     effect = "Allow"
 
-    actions = [
-      "ecs:*",
-    ]
+    actions = ["ecs:*"]
 
     resources = ["*"]
   }
@@ -1120,9 +1115,7 @@ statement {
     sid    = "AllowPassRole"
     effect = "Allow"
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
 
     actions = ["iam:PassRole"]
 
@@ -1144,25 +1137,31 @@ deployment_controller {
 }
 ```
 
-With everything applied, a first AWS CodePipeline is triggered automatically.
-The progress of the pipeline can be followed in the AWS Web Console:
+With everything applied, a first AWS CodePipeline run through is triggered
+automatically.  The progress of the pipeline can be followed in the AWS Web
+Console:
 
 <img src="/images/codepipeline.png" alt="AWS Codepipeline" title="AWS Codepipeline">
 
 CodeDeploy also has a very good overview of the state of the Blue/Green
-Deployment, where you can see to which target group the traffic is forwarded at
-the moment
+Deployment, where you can see how much traffic to which target group is
+forwarded at the moment:
 
 <img src="/images/codedeploy.png" alt="AWS Codedeploy Traffic" title="AWS Codedeploy Traffic">
 
 Furthermore you can append validation lambdas to different states of the
 deployment to check automatically, if the newly started version of your
-application is working correctly. You get an overview further down the page.
+application is working correctly. For example you can program a lambda which
+checks your newly created application routes for a 500 status code. When the
+lambda discovers one, it returns a validation failure and the deployment is
+rolled back automatically. You get an overview of the lifecycle events further
+down the page.
 
 <img src="/images/codedeploy2.png" alt="AWS Codedeploy Lifecycle" title="AWS Codedeploy Lifecycle">
 
 I hope this post was helpful. It is very extensive and some parts, where it
-could be shortened. Especially the explicit IAM permissions take up a big part,
-but I don't want to use the predefined policies, because they allow more than
-needed in most cases. If you are writing your own policies you get much more
-control and can fine grain your permissions for every AWS service.
+could be shortened. Especially the explicit IAM permissions take up a big part.
+But I don't want to encourage you to use the predefined policies, because they
+often allow more than needed. If you are writing your own policies you
+get much more control and can fine grain your permissions for every AWS
+service you instantiate.

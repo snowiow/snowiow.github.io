@@ -56,43 +56,43 @@
 <p>Double-Click it and you will be asked for the SSH password. Since we didn’t changed it yet, it’s still <em>vagrant</em>. Then you will be asked for the database password. If you followed this tutorial closely, this will be <strong>my_pw</strong>. Afterwards you should be logged into your database successfully and you can start interacting with it.</p>
 <h1 id="phpmyadmin">PHPMyAdmin</h1>
 <p>Here we process similar, like we did in the earlier posts. First we create a new shell script inside of our <strong>sh</strong> directory. We start off with the following content</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2&quot;</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/dbconfig-install boolean true&quot;</span></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/admin-pass password my_pw&quot;</span> </a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/app-pass password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/app-password-confirm password my_pw&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2&quot;</span></a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/dbconfig-install boolean true&quot;</span></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/admin-pass password my_pw&quot;</span> </a>
+<a class="sourceLine" id="cb2-4" title="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/app-pass password my_pw&quot;</span></a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/app-password-confirm password my_pw&quot;</span></a></code></pre></div>
 <p>This should look similar to you. We already did it, while installing MySQL. Because PHPMyAdmin is working with an interactive prompt as well, we pass the different parameters in before. Out of simplicity we go with <em>my_pw</em> as our password again. Now we can install it</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ex">apt-get</span> install -y phpmyadmin</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="ex">php5enmod</span> mcrypt</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="ex">apt-get</span> install -y phpmyadmin</a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="ex">php5enmod</span> mcrypt</a></code></pre></div>
 <p>On PHP5 we need to enable the mcrypt library, otherwise we get an annoying red box inside of our PHPMyAdmin Frontend. The last part of our config looks like this.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/phpmyadmin.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">    <span class="fu">mv</span> /vagrant/tmp/phpmyadmin.conf /etc/apache2/sites-available/phpmyadmin.conf</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">    <span class="ex">a2ensite</span> phpmyadmin.conf</a>
-<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: phpmyadmin.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="kw">fi</span></a>
-<a class="sourceLine" id="cb4-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="ex">service</span> apache2 restart</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/phpmyadmin.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
+<a class="sourceLine" id="cb4-2" title="2">    <span class="fu">mv</span> /vagrant/tmp/phpmyadmin.conf /etc/apache2/sites-available/phpmyadmin.conf</a>
+<a class="sourceLine" id="cb4-3" title="3">    <span class="ex">a2ensite</span> phpmyadmin.conf</a>
+<a class="sourceLine" id="cb4-4" title="4"><span class="kw">else</span></a>
+<a class="sourceLine" id="cb4-5" title="5">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: phpmyadmin.conf not found&quot;</span></a>
+<a class="sourceLine" id="cb4-6" title="6"><span class="kw">fi</span></a>
+<a class="sourceLine" id="cb4-7" title="7"></a>
+<a class="sourceLine" id="cb4-8" title="8"><span class="ex">service</span> apache2 restart</a></code></pre></div>
 <p>We put a virtual host configuration for the PHPMyAdmin page into the right place, like we did with our web app in the last post. Finally we restart the apache server. Our <em>phpmyadmin.conf</em> looks like this</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">    ServerAdmin<span class="st"> webmaster@dummy-host.com</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">    DocumentRoot<span class="st"> &quot;/usr/share/phpmyadmin&quot;</span></a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">    ServerName<span class="st"> phpmyadmin.dev</span></a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">    ServerAlias<span class="st"> www.phpmyadmin.dev</span></a>
-<a class="sourceLine" id="cb5-6" data-line-number="6">    ErrorLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-error_log&quot;</span></a>
-<a class="sourceLine" id="cb5-7" data-line-number="7">    CustomLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-access_log&quot; common</span></a>
-<a class="sourceLine" id="cb5-8" data-line-number="8">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/usr/share/phpmyadmin&quot;</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb5-9" data-line-number="9">       <span class="ex">Options</span><span class="ch"> </span><span class="kw">Indexes</span><span class="ch"> </span><span class="kw">FollowSymLinks</span><span class="ch"> </span><span class="kw">Includes</span><span class="ch"> </span><span class="kw">MultiViews</span></a>
-<a class="sourceLine" id="cb5-10" data-line-number="10">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
-<a class="sourceLine" id="cb5-11" data-line-number="11">       Allow<span class="st"> from all</span></a>
-<a class="sourceLine" id="cb5-12" data-line-number="12">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
-<a class="sourceLine" id="cb5-13" data-line-number="13">   <span class="fu">&lt;/Directory&gt;</span></a>
-<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
+<a class="sourceLine" id="cb5-2" title="2">    ServerAdmin<span class="st"> webmaster@dummy-host.com</span></a>
+<a class="sourceLine" id="cb5-3" title="3">    DocumentRoot<span class="st"> &quot;/usr/share/phpmyadmin&quot;</span></a>
+<a class="sourceLine" id="cb5-4" title="4">    ServerName<span class="st"> phpmyadmin.dev</span></a>
+<a class="sourceLine" id="cb5-5" title="5">    ServerAlias<span class="st"> www.phpmyadmin.dev</span></a>
+<a class="sourceLine" id="cb5-6" title="6">    ErrorLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-error_log&quot;</span></a>
+<a class="sourceLine" id="cb5-7" title="7">    CustomLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-access_log&quot; common</span></a>
+<a class="sourceLine" id="cb5-8" title="8">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/usr/share/phpmyadmin&quot;</span><span class="fu">&gt;</span></a>
+<a class="sourceLine" id="cb5-9" title="9">       <span class="ex">Options</span><span class="ch"> </span><span class="kw">Indexes</span><span class="ch"> </span><span class="kw">FollowSymLinks</span><span class="ch"> </span><span class="kw">Includes</span><span class="ch"> </span><span class="kw">MultiViews</span></a>
+<a class="sourceLine" id="cb5-10" title="10">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
+<a class="sourceLine" id="cb5-11" title="11">       Allow<span class="st"> from all</span></a>
+<a class="sourceLine" id="cb5-12" title="12">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
+<a class="sourceLine" id="cb5-13" title="13">   <span class="fu">&lt;/Directory&gt;</span></a>
+<a class="sourceLine" id="cb5-14" title="14"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
 <p>This is almost the same, like we did in the last post, except for the new paths. Additionally we set some more directory options for PHPMyAdmin to make it’s routing possible. Next thing to do is add these scripts as partitioners to our Vagrantfile.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" data-line-number="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/phpmyadmin.sh&quot;</span></a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/phpmyadmin.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/phpmyadmin.conf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/phpmyadmin.sh&quot;</span></a>
+<a class="sourceLine" id="cb6-2" title="2">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/phpmyadmin.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/phpmyadmin.conf&quot;</span></a></code></pre></div>
 <p>Now we are only missing an entry in our hosts file, to make the new domain address known to our host machine. So we go to our <em>hosts</em> file again and add the following line</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="dt">192.168.33.10 	phpmyadmin.dev</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">192.168.33.10 	phpmyadmin.dev</span></a></code></pre></div>
 <p>That’s it! Recreate or re-provision your vagrant machine and go to <em>phpmyadmin.dev</em> on your hosts web browser. You should see this page</p>
 <p><img src="../images/phpmyadmin.png" alt="PHPMyAdmin" title="PHPMyAdmin" /></p>
 <p>Type in the credentials you have typed in earlier and you should be able to be in the web frontend of your database.</p>
