@@ -1143,3 +1143,26 @@ deployment_controller {
   type = "CODE_DEPLOY"
 }
 ```
+
+With everything applied, a first AWS CodePipeline is triggered automatically.
+The progress of the pipeline can be followed in the AWS Web Console:
+
+<img src="/images/codepipeline.png" alt="AWS Codepipeline" title="AWS Codepipeline">
+
+CodeDeploy also has a very good overview of the state of the Blue/Green
+Deployment, where you can see to which target group the traffic is forwarded at
+the moment
+
+<img src="/images/codedeploy.png" alt="AWS Codedeploy Traffic" title="AWS Codedeploy Traffic">
+
+Furthermore you can append validation lambdas to different states of the
+deployment to check automatically, if the newly started version of your
+application is working correctly. You get an overview further down the page.
+
+<img src="/images/codedeploy2.png" alt="AWS Codedeploy Lifecycle" title="AWS Codedeploy Lifecycle">
+
+I hope this post was helpful. It is very extensive and some parts, where it
+could be shortened. Especially the explicit IAM permissions take up a big part,
+but I don't want to use the predefined policies, because they allow more than
+needed in most cases. If you are writing your own policies you get much more
+control and can fine grain your permissions for every AWS service.
