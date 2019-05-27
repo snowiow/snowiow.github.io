@@ -10,7 +10,7 @@
     </author>
     <updated>2019-05-21T00:00:00Z</updated>
     <entry>
-    <title>ECS CD with CodePipeline in Terraform</title>
+    <title>ECS CD with AWS CodePipeline in Terraform</title>
     <link href="https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html" />
     <id>https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html</id>
     <published>2019-05-21T00:00:00Z</published>

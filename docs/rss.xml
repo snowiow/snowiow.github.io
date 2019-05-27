@@ -9,7 +9,7 @@
                    type="application/rss+xml" />
         <lastBuildDate>Tue, 21 May 2019 00:00:00 UT</lastBuildDate>
         <item>
-    <title>ECS CD with CodePipeline in Terraform</title>
+    <title>ECS CD with AWS CodePipeline in Terraform</title>
     <link>https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html</link>
     <description><![CDATA[<article>
     <section class="header">

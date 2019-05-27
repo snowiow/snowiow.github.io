@@ -1,5 +1,5 @@
 ---
-title: ECS CD with CodePipeline in Terraform
+title: ECS CD with AWS CodePipeline in Terraform
 tags:
   - aws
   - terraform
@@ -33,7 +33,7 @@ CodePipeline, which consists of three stages. In the first stage (called
 source) the pipeline listens to master commits on the GitHub Repository of
 interest. The second stage (called build) builds a new docker image of the
 Dockerfile in the GitHub Repository and pushes the new image to AWS ECR. The
-last state (called deploy) does a blue green deployment to ECS with the new
+last state (called deploy) does a blue/green deployment to ECS with the new
 image.
 
 The docker image is a simple HTML website with a message so we can see that the
