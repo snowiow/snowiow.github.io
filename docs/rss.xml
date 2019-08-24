@@ -7,34 +7,8 @@
         <description><![CDATA[A blog about linux, vim, devops and various other tech topics]]></description>
         <atom:link href="https://snow-dev.com/rss.xml" rel="self"
                    type="application/rss+xml" />
-        <lastBuildDate>Sat, 13 Jul 2019 00:00:00 UT</lastBuildDate>
+        <lastBuildDate>Tue, 21 May 2019 00:00:00 UT</lastBuildDate>
         <item>
-    <title>Next level Dotfiles with Ansible</title>
-    <link>https://snow-dev.com/posts/next-level-dotfiles-with-ansible.html</link>
-    <description><![CDATA[<article>
-    <section class="header">
-        Posted on 2019-07-13
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>In the life of every linux enthusiast comes the point, where he has a lot of individual configuration build up and wants to migrate these settings over to another machine as seamlessly as possible. At this point a whole philosophy of how to do this is coming into play. Today this philosophy is bundled under the name: <em>dotfiles</em>. Historically dotfiles are the config files, which lie in your home directory. Because they try to be invisible to the user they start with a dot (which is the linux convention for invisible files).</p>
-<p>I started the classical approach like many others and kept <a href="https://github.com/snowiow/dotfiles">a git repository</a> with all the important dotfiles I want to share between my machines. A shell script lies in the root directory which symlinks everything inside the <code>dotfiles</code> sub directory to the <code>home</code> directory. In the beginning this was great. All my important applications, like vim, were configured after executing the shell script. From that point on I could change my configuration files, which were synced back to the git repository and I could sync the changes between my machines. My main concern with this approach arised when more and more application implemented the <a href="https://www.freedesktop.org/wiki/Software/xdg-user-dirs/">xdg-user-dir</a>. Now most of the dotfiles were located in my <code>.config</code> directory and the symlink linked to <code>/config</code> itself. Now I had to differentiate a lot between files I want to track and those I don’t before every commit. Long story short: I found a new and better approach, which I want to present to you: Ansible.</p>
-<p>You might think now: “Ansible? Really? That’s total overkill for syncing dotfiles!” That’s true, but on the other hand it’s much more than just for syncing my dotfiles. But first of all for everyone, who never heard about ansible. Ansible is a project written in python, which helps you create reproducible systems. The normal use case for ansible is as a configuration manager. Ansible projects mostly consist of yaml files, in which you define a want to state of a system. Then you apply this state to a system and ansible syncs everything between the system and your yaml files. So in many ways it can be compared to terraform, which I talked a lot about in my previous posts. But I see ansible on level lower than terraform. While terraform is about the big picture representing your whole infrastructure, ansible takes care about each and every system in this infrastructure. So it is more like docker, but you install and configure stuff on the system itself. Ok, this should be enough of an intro to ansible, let’s dive into my totally over engineered dotfiles!</p>
-<h1 id="getting-a-base-structure-built-up">Getting a base structure built up</h1>
-<p>Normally you provision other systems from one operator system, mostly via ssh. But we want to use ansible on the current system. Sure it would also be cool, to provision a new system from a some sort of main machine, but in reality it was never necessary for me. So the first thing we do, is to tell ansible we want to execute everything on localhost. Therefore we create a <code>hosts</code> file in our new dotfiles directory, with the following line of code:</p>
-<pre><code>[local]
-localhost ansible_connection=local</code></pre>
-<p>This will tell ansible which hosts to provision.</p>
-<p>Now we need to talk about two important concepts of ansible. The first one are playbooks. Playbooks are ansible’s infrastructure as code so to say. They demonstrate the want to be state of a system and are described in form of yaml files. The ansible docs describe playbooks as the instruction manual for configuration, deployment and orchestration.</p>
-<p>The second important concept are roles. Ansible roles are a form of structuring your playbooks and make them reproducible. We mainly use roles to structure our dotfiles and keep different application configurations separated. For example I reuse my roles in different forms for my Linux and OSX machine, because the installation process is different, but the configuration is the same. Roles dictate a special directory structure. This way ansible is able to magically run those roles without setting too much manually. I will go into more detail, when we create our first role. All roles are located in <code>roles</code> sub directory.</p>
-    </section>
-</article>
-]]></description>
-    <pubDate>Sat, 13 Jul 2019 00:00:00 UT</pubDate>
-    <guid>https://snow-dev.com/posts/next-level-dotfiles-with-ansible.html</guid>
-    <dc:creator>Marcel Patzwahl</dc:creator>
-</item>
-<item>
     <title>ECS CD with AWS CodePipeline in Terraform</title>
     <link>https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html</link>
     <description><![CDATA[<article>

@@ -7,13 +7,6 @@
   </url>
 
   <url>
-    <loc>https://snow-dev.com/posts/next-level-dotfiles-with-ansible.html</loc>
-    <lastmod>2019-07-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
     <loc>https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html</loc>
     <lastmod>2019-05-21</lastmod>
     <changefreq>weekly</changefreq>
