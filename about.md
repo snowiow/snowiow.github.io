@@ -11,5 +11,5 @@ is programming, DevOps, Linux, Vim or other terminal applications.
 I hope you have as much fun reading as I have writing and working out the
 different topics. I always try to write long in depth articles, which can be
 followed as a step by step tutorial, but if you have any questions or requests,
-please write me an [email](mailto:marcel.patzwahl@posteo.de). I will always try
+please write me an email. I will always try
 to answer as fast as possible.

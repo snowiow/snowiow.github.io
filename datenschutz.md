@@ -20,8 +20,6 @@ Definition der verwendeten Begriffe (z.B. "personenbezogene Daten" oder
 # Benennung der verantwortlichen Stelle
 Die verantwortliche Stelle für die Datenverarbeitung auf dieser Website ist:  
 Marcel Patzwahl  
-Gleiwitzer Kehre 6  
-22850 Norderstedt  
 Deutschland
 
 # Zugriffsdaten
@@ -70,4 +68,4 @@ Wenn Sie eine Berichtigung, Sperrung, Löschung oder Auskunft über die zu Ihrer
 Person gespeicherten personenbezogenen Daten wünschen oder Fragen bzgl. der
 Erhebung, Verarbeitung oder Verwendung Ihrer personenbezogenen Daten haben oder
 erteilte Einwilligung widerrufen möchten, wenden Sie sich bitte an folgende
-E-Mail Adresse: marcel.patzwahl (at) posteo.de
+E-Mail Adresse: marcel (dot) patzwahl (at) posteo (dot) de

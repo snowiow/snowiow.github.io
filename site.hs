@@ -96,7 +96,7 @@ feedConfiguration = FeedConfiguration
   { feedTitle = "snow-dev.com"
   , feedDescription = "A blog about linux, vim, devops and various other tech topics"
   , feedAuthorName = "Marcel Patzwahl"
-  , feedAuthorEmail = "marcel.patzwahl@posteo.de"
+  , feedAuthorEmail = "marcel (dot) patzwahl (at) posteo (dot) de"
   , feedRoot = root
   }
 
