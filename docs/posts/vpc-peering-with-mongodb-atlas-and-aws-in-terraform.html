@@ -1,41 +1,103 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: VPC Peering with MongoDB Atlas and AWS in Terraform</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>VPC Peering with MongoDB Atlas and AWS in Terraform</h1>
-              <article>
-    <section class="header">
-        Posted on 2018-12-26
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>Lately I was doing a lot of “Infrastructure as Code” (IaC) in terraform at work. There was one application, which needed a MongoDB as the primary database. Sadly there is no managed MongoDB service in AWS so far. So there were two initial options for me:</p>
-<ul>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2018-12-26" />
+  <title>snow-dev.com :: VPC Peering with MongoDB Atlas and AWS in Terraform</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>VPC Peering with MongoDB Atlas and AWS in Terraform</h1>
+    <article>
+<section class="header">
+    Posted on 2018-12-26
+</section>
+<hr class="section-head">
+<section>
+<p>Lately I was doing a lot of “Infrastructure as Code” (IaC) in terraform at work. There was one application, which needed a MongoDB as the primary database. Sadly there is no managed MongoDB service in AWS so far. So there were two initial options for me:</p>
+<ul class="incremental">
 <li>Host a self managed MongoDB in an EC2 instance</li>
 <li>Use Amazons DynamoDB</li>
 </ul>
@@ -43,342 +105,340 @@
 <p>Update 10.02.2019: Actually there is a real alternative now called AWS DocumentDB. I didn’t look into it so far, so I don’t feel qualified to give any opinion on DocumentDB. But based on the MongoDB CEO MongoDB <a href="https://www.mongodb.com/blog/post/documents-are-everywhere">Atlas still has it’s right to exist</a>.</p>
 <p>Luckily there was a third option called <a href="https://www.mongodb.com/cloud/atlas">MongoDB Atlas</a>. This is MongoDB Inc’s own take at DaaS (Database as a Service). They instanciate a replica set of three or more instances on one of the most common cloud providers (AWS, Google Cloud Platform or Azure) for you. Additionally you get backups, auto scaling, alerts and many more features. MongoDB Atlas is also following an API first approach like AWS, so the creation of MongoDB resources can be automated. Sadly there is no support for MongoDB Atlas in Terraform so far. Luckily Akshay Karle already took care of this problem and <a href="https://github.com/akshaykarle/terraform-provider-mongodbatlas">wrote a third party plugin for Terraform</a>.</p>
 <p>In this blog post we create an infrastructure setup which consists of 2 AWS VPCs. In the first VPC our application will be hosted. This application will be able to communicate with the MongoDB replica set, hosted in another VPC by Atlas. Because we will host our MongoDB cluster in the same region, we can benefit of VPC peering. This means, that the application and MongoDB can communicate directly via local IPs between the two VPCs and no traffic goes out to the internet and back into the other VPC. This is more secure (Because you don’t need to care about securing the connection, because it’s local anyway) and also a lot of faster than sending every request and response over the internet. We will code everything in Terraform, so we are able to create our whole infrastructure with one <em>terraform apply</em> and are done with it. So let’s get started. Here is a rough overview of the most important pieces:</p>
-<p><img src="../images/vpc_overview.svg" alt="VPC Overview" title="VPC Overview" /></p>
+<p><img src="/images/vpc_overview.svg" alt="VPC Overview" title="VPC Overview" /></p>
 <p>As you can see we have our 2 VPCs. The left AWS VPC will be avaible in the CIDR block 172.16.0.0/16. The right VPC is the one created by Mongo Atlas and will be available under 10.0.0.0/21. Both VPCs are connected via VPC-Peering. Also the CIDR block of the AWS VPC is whitelisted in MongoDB Atlas. On top we have a route table, to route traffic between the two VPCs and to the internet via an internet gateway.</p>
 <p>The following guide will be threefold. In the first part we create the route table, internet gateway and AWS VPC with it’s subnet. In part two the MongoDB part will be build. In the third part we will deploy a small application inside of an EC2 instance, which is able to interact with the MongoDB. The whole code for this guide can be found <a href="https://github.com/snowiow/mongodbatlas-example-app">here</a>.</p>
 <h1 id="part-1-the-aws-vpc">Part 1: The AWS VPC</h1>
 <p>In this part we will be creating the left side of our overview diagram. So basically this part:</p>
-<p><img src="../images/aws_vpc.svg" alt="VPC Overview" title="AWS VPC" /></p>
+<p><img src="/images/aws_vpc.svg" alt="VPC Overview" title="AWS VPC" /></p>
 <p>In my example project I have created a subfolder called <code>terraform</code> where all the infrastructure code can be found. First of all we load the AWS Provider. This is done in the <code>main.tf</code>:</p>
-<pre class="hcl"><code>provider &quot;aws&quot; {
-  region  = &quot;eu-central-1&quot;
-  version = &quot;1.54&quot;
-}</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb1-1"><a href="#cb1-1"></a>provider <span class="st">&quot;aws&quot;</span> <span class="kw">{</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>  region  = <span class="st">&quot;eu-central-1&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>  version = <span class="st">&quot;1.54&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">}</span></span></code></pre></div>
 <p>Next we create the actual VPC. This is done in the <code>vpc.tf</code> file:</p>
-<pre class="terraform"><code>resource &quot;aws_vpc&quot; &quot;this&quot; {
-  cidr_block = &quot;172.16.0.0/16&quot;
-
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = &quot;vpc&quot;
-  }
-}</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_vpc&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>  cidr_block = <span class="st">&quot;172.16.0.0/16&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a>  enable_dns_support   = true</span>
+<span id="cb2-5"><a href="#cb2-5"></a>  enable_dns_hostnames = true</span>
+<span id="cb2-6"><a href="#cb2-6"></a></span>
+<span id="cb2-7"><a href="#cb2-7"></a>  tags = <span class="kw">{</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>    Name = <span class="st">&quot;vpc&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a>  <span class="kw">}</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="kw">}</span></span></code></pre></div>
 <p>As already stated in the beginning, we use the 172.16.0.0/16 CIDR block for the AWS VPC. We also enable DNS support and DNS hostnames inside of the VPC. With those two options we basically enable DNS discovery in the local VPC scope, which allows us to resolve the MongoDB cluster DNS to it’s private IP.</p>
 <p>Now we create a subnet inside of the VPC:</p>
-<pre class="hcl"><code>
-resource &quot;aws_subnet&quot; &quot;this&quot; {
-  cidr_block = &quot;176.16.0.0/16&quot;
-  vpc_id     = &quot;${aws_vpc.this.id}&quot;
-
-  map_public_ip_on_launch = true
-
-  availability_zone = &quot;eu-central-1a&quot;
-
-  tags = {
-    Name = &quot;subnet1&quot;
-  }
-}</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb3-1"><a href="#cb3-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw">resource</span> <span class="st">&quot;aws_subnet&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>  cidr_block = <span class="st">&quot;176.16.0.0/16&quot;</span></span>
+<span id="cb3-4"><a href="#cb3-4"></a>  vpc_id     = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_vpc.this.id}&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a>  map_public_ip_on_launch = true</span>
+<span id="cb3-7"><a href="#cb3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8"></a>  availability_zone = <span class="st">&quot;eu-central-1a&quot;</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a></span>
+<span id="cb3-10"><a href="#cb3-10"></a>  tags = <span class="kw">{</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a>    Name = <span class="st">&quot;subnet1&quot;</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a>  <span class="kw">}</span></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="kw">}</span></span></code></pre></div>
 <p>Here we create one subnet, which takes all of the VPCs available addresses and is hosted in the availability zone eu-central-1a. Furthermore we want to give launched instances a public IP on startup to be able to download updates for the EC2 instance.</p>
 <p>Next we put the internet gateway in front of the VPC, which is straight forward.</p>
-<pre class="hcl"><code>resource &quot;aws_internet_gateway&quot; &quot;this&quot; {
-  vpc_id = &quot;${aws_vpc.this.id}&quot;
-
-  tags = {
-    Name = &quot;internet-gateway&quot;
-  }
-}</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_internet_gateway&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>  vpc_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_vpc.this.id}&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a></span>
+<span id="cb4-4"><a href="#cb4-4"></a>  tags = <span class="kw">{</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>    Name = <span class="st">&quot;internet-gateway&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>  <span class="kw">}</span></span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="kw">}</span></span></code></pre></div>
 <p>Finally we create the route table with a public route and associate our subnet to that route:</p>
-<pre class="hcl"><code>resource &quot;aws_route_table&quot; &quot;this&quot; {
-  vpc_id = &quot;${aws_vpc.this.id}&quot;
-
-  tags = {
-    Name = &quot;route-table-public&quot;
-  }
-}
-
-resource &quot;aws_route&quot; &quot;this&quot; {
-  route_table_id         = &quot;${aws_route_table.this.id}&quot;
-  destination_cidr_block = &quot;0.0.0.0/0&quot;
-  gateway_id             = &quot;${aws_internet_gateway.this.id}&quot;
-}
-
-resource &quot;aws_route_table_association&quot; &quot;this&quot; {
-  route_table_id = &quot;${aws_route_table.this.id}&quot;
-  subnet_id      = &quot;${aws_subnet.this.id}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_route_table&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>  vpc_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_vpc.this.id}&quot;</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a></span>
+<span id="cb5-4"><a href="#cb5-4"></a>  tags = <span class="kw">{</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a>    Name = <span class="st">&quot;route-table-public&quot;</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>  <span class="kw">}</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="kw">}</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="kw">resource</span> <span class="st">&quot;aws_route&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a>  route_table_id         = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_route_table.this.id}&quot;</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a>  destination_cidr_block = <span class="st">&quot;0.0.0.0/0&quot;</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a>  gateway_id             = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_internet_gateway.this.id}&quot;</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="kw">}</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="kw">resource</span> <span class="st">&quot;aws_route_table_association&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb5-16"><a href="#cb5-16"></a>  route_table_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_route_table.this.id}&quot;</span></span>
+<span id="cb5-17"><a href="#cb5-17"></a>  subnet_id      = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_subnet.this.id}&quot;</span></span>
+<span id="cb5-18"><a href="#cb5-18"></a><span class="kw">}</span></span></code></pre></div>
 <p>Basically what we are doing here is to allow to route traffic from our VPC to every address in the internet. This is mandatory, because we want to get responses from our web applications inside of the VPC.</p>
 <p>That’s it for the first part. You are now able to run <code>terraform init &amp;&amp; terraform apply</code> to deploy the AWS VPC.</p>
 <h1 id="part-2-mongodb-atlas">Part 2: MongoDB Atlas</h1>
 <p>In this part we care about the right half of the diagram and create our MongoDB Cluster at Atlas, make a whitelist entry for our AWS VPC and create VPC Peering between the two VPCs:</p>
-<p><img src="../images/mongodb_atlas.svg" alt="MongoDB Atlas" title="MongoDB Atlas" /></p>
+<p><img src="/images/mongodb_atlas.svg" alt="MongoDB Atlas" title="MongoDB Atlas" /></p>
 <p>You can find the part 2 code in the <code>atlas.tf</code> file. We get started again, by adding a new provider to the <code>main.tf</code>:</p>
-<pre class="hcl"><code>provider &quot;mongodbatlas&quot; {
-  username = &quot;${var.username}&quot;
-  api_key  = &quot;${var.api_key}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb6"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb6-1"><a href="#cb6-1"></a>provider <span class="st">&quot;mongodbatlas&quot;</span> <span class="kw">{</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>  username = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{var.username}&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a>  api_key  = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{var.api_key}&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="kw">}</span></span></code></pre></div>
 <p>To access your MongoDB Atlas account you need to pass your username and an API key. If you define them as variables like me, you can create a new file called <code>variables.tf</code> with the following content:</p>
-<pre class="hcl"><code>variable &quot;username&quot; {
-  type        = &quot;string&quot;
-  description = &quot;The Username for the MongoDB Atlas Login&quot;
-}
-
-variable &quot;api_key&quot; {
-  type        = &quot;string&quot;
-  description = &quot;The API Key for the MongoDB Atlas Login&quot;
-}</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">variable</span> <span class="st">&quot;username&quot;</span> <span class="kw">{</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>  <span class="ot">type</span>        = <span class="st">&quot;string&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a>  description = <span class="st">&quot;The Username for the MongoDB Atlas Login&quot;</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a><span class="kw">}</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="kw">variable</span> <span class="st">&quot;api_key&quot;</span> <span class="kw">{</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a>  <span class="ot">type</span>        = <span class="st">&quot;string&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8"></a>  description = <span class="st">&quot;The API Key for the MongoDB Atlas Login&quot;</span></span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="kw">}</span></span></code></pre></div>
 <p>this defines the variables used in the <code>main.tf</code> file. Next we create a <code>terraform.tfvars</code> in which we actually set the values of those variables:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb8-1" title="1"><span class="dt">username </span><span class="ot">=</span><span class="st"> &quot;&lt;your_username&gt;&quot;</span></a>
-<a class="sourceLine" id="cb8-2" title="2"><span class="dt">api_key </span><span class="ot">=</span><span class="st"> &quot;&lt;your_api_key&gt;&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb8-1"><a href="#cb8-1"></a><span class="dt">username </span><span class="ot">=</span><span class="st"> &quot;&lt;your_username&gt;&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="dt">api_key </span><span class="ot">=</span><span class="st"> &quot;&lt;your_api_key&gt;&quot;</span></span></code></pre></div>
 <p>Because we save trustworthy information in those variables, we don’t actually set them in a normal <code>*.tf</code> file. These files are checked into version control, so we don’t want to write those informations down in those files. Instead we use <code>*.tfvars</code> files, which aren’t checked into version control.</p>
 <p>As said in the beginning, mongodb atlas isn’t supported by terraform officially. So we need to install the third party provider. To install the provider you need to have <a href="https://golang.org/">go</a> installed. With go installed you can get the package and symlink the executable to the plugin folder of terraform:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb9-1" title="1"><span class="ex">go</span> get github.com/akshaykarle/terraform-provider-mongodbatlas</a>
-<a class="sourceLine" id="cb9-2" title="2"><span class="fu">ln</span> -s <span class="va">$GOPATH</span>/bin/terraform-provider-mongodbatlas \</a>
-<a class="sourceLine" id="cb9-3" title="3">      ~/.terraform.d/plugins/</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1"></a><span class="ex">go</span> get github.com/akshaykarle/terraform-provider-mongodbatlas</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="fu">ln</span> -s <span class="va">$GOPATH</span>/bin/terraform-provider-mongodbatlas \</span>
+<span id="cb9-3"><a href="#cb9-3"></a>      ~/.terraform.d/plugins/</span></code></pre></div>
 <p>If you do a <code>terraform init</code> again, you are able to initialize the mongodbatlas provider as well.</p>
 <p>With everything set up, we can start creating the MongoDB Atlas cluster. The first thing needed is a project (former known as groups). Projects are a sort of grouping to isolate different environments from each other or to configure different alert settings. For a full description head over to the <a href="https://docs.atlas.mongodb.com/tutorial/manage-projects/">official documentation</a>. We create a new file called <code>atlas.tf</code> for all our MongoDB Atlas resources. There we create a project first:</p>
-<pre class="hcl"><code>resource &quot;mongodbatlas_project&quot; &quot;this&quot; {
-  org_id = &quot;${var.org_id}&quot;
-  name   = &quot;example-project&quot;
-}</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">resource</span> <span class="st">&quot;mongodbatlas_project&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>  org_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{var.org_id}&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="ot">name</span>   = <span class="st">&quot;example-project&quot;</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="kw">}</span></span></code></pre></div>
 <p>To create a project resource we need an organisation id, which can be found in the settings tab:</p>
-<p><img src="../images/mongodbatlas_organisation_id.png" alt="MongoDB Atlas Organisation ID" title="MongoDB Atlas Organisation ID" /></p>
+<p><img src="/images/mongodbatlas_organisation_id.png" alt="MongoDB Atlas Organisation ID" title="MongoDB Atlas Organisation ID" /></p>
 <p>Because we use it as a variable in the <code>atlas.tf</code> file, we need to add it to our <code>terraform.tfvars</code></p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb11-1" title="1"><span class="dt">...</span></a>
-<a class="sourceLine" id="cb11-2" title="2"><span class="dt">org_id </span><span class="ot">=</span><span class="st"> &quot;&lt;your-organisation-id&gt;&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1"></a><span class="dt">...</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="dt">org_id </span><span class="ot">=</span><span class="st"> &quot;&lt;your-organisation-id&gt;&quot;</span></span></code></pre></div>
 <p>and <code>variables.tf</code></p>
-<pre class="hcl"><code>variable &quot;org_id&quot; {
-  type        = &quot;string&quot;
-  description = &quot;The organisation id of the mongodb Login&quot;
-}</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">variable</span> <span class="st">&quot;org_id&quot;</span> <span class="kw">{</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="ot">type</span>        = <span class="st">&quot;string&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a>  description = <span class="st">&quot;The organisation id of the mongodb Login&quot;</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="kw">}</span></span></code></pre></div>
 <p>The next thing we need is a container. The container is the network of the cloud provider. In the example of AWS it would create a VPC.</p>
-<pre class="hcl"><code>resource &quot;mongodbatlas_container&quot; &quot;this&quot; {
-  group            = &quot;${mongodbatlas_project.this.id}&quot;
-  atlas_cidr_block = &quot;10.0.0.0/21&quot;
-  provider_name    = &quot;AWS&quot;
-  region           = &quot;EU_CENTRAL_1&quot;
-}</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">resource</span> <span class="st">&quot;mongodbatlas_container&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb13-2"><a href="#cb13-2"></a>  <span class="ot">group</span>            = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_project.this.id}&quot;</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a>  atlas_cidr_block = <span class="st">&quot;10.0.0.0/21&quot;</span></span>
+<span id="cb13-4"><a href="#cb13-4"></a>  provider_name    = <span class="st">&quot;AWS&quot;</span></span>
+<span id="cb13-5"><a href="#cb13-5"></a>  region           = <span class="st">&quot;EU_CENTRAL_1&quot;</span></span>
+<span id="cb13-6"><a href="#cb13-6"></a><span class="kw">}</span></span></code></pre></div>
 <p>Pay attention to the region names, because they are <a href="https://docs.atlas.mongodb.com/reference/api/clusters-create-one/">different than in AWS</a>.</p>
 <p>Now we can create the cluster:</p>
-<pre class="hcl"><code>resource &quot;mongodbatlas_cluster&quot; &quot;this&quot; {
-  name                  = &quot;example&quot;
-  group                 = &quot;${mongodbatlas_project.this.id}&quot;
-  mongodb_major_version = &quot;4.0&quot;
-  provider_name         = &quot;AWS&quot;
-  region                = &quot;EU_CENTRAL_1&quot;
-  size                  = &quot;M10&quot;
-  disk_gb_enabled       = true
-  backup                = false
-  depends_on            = [&quot;mongodbatlas_container.this&quot;]
-}</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">resource</span> <span class="st">&quot;mongodbatlas_cluster&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="ot">name</span>                  = <span class="st">&quot;example&quot;</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="ot">group</span>                 = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_project.this.id}&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a>  mongodb_major_version = <span class="st">&quot;4.0&quot;</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a>  provider_name         = <span class="st">&quot;AWS&quot;</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a>  region                = <span class="st">&quot;EU_CENTRAL_1&quot;</span></span>
+<span id="cb14-7"><a href="#cb14-7"></a>  <span class="ot">size</span>                  = <span class="st">&quot;M10&quot;</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a>  disk_gb_enabled       = true</span>
+<span id="cb14-9"><a href="#cb14-9"></a>  backup                = false</span>
+<span id="cb14-10"><a href="#cb14-10"></a>  depends_on            = <span class="kw">[</span><span class="st">&quot;mongodbatlas_container.this&quot;</span><span class="kw">]</span></span>
+<span id="cb14-11"><a href="#cb14-11"></a><span class="kw">}</span></span></code></pre></div>
 <p>Here we create a MongoDB Cluster in Version 4.0 in AWS with the same region as the container. M10 is the smallest non sandbox size available. It has 2GB of RAM, 10 GB of storage and 0.2 vCPUs. With <code>disk_gb_enabled</code> we allow the cluster to automatically scale up. Lastly the cluster should be created explicitly after the container.</p>
 <p>Now we create a database user:</p>
-<pre class="hcl"><code>resource &quot;mongodbatlas_database_user&quot; &quot;this&quot; {
-  username = &quot;application-user&quot;
-  password = &quot;application-pw&quot;
-  database = &quot;admin&quot;
-  group    = &quot;${mongodbatlas_project.this.id}&quot;
-
-  roles {
-    name     = &quot;readWrite
-    database = &quot;app&quot;
-  }
-}</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">resource</span> <span class="st">&quot;mongodbatlas_database_user&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb15-2"><a href="#cb15-2"></a>  username = <span class="st">&quot;application-user&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a>  password = <span class="st">&quot;application-pw&quot;</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a>  database = <span class="st">&quot;admin&quot;</span></span>
+<span id="cb15-5"><a href="#cb15-5"></a>  <span class="ot">group</span>    = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_project.this.id}&quot;</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a></span>
+<span id="cb15-7"><a href="#cb15-7"></a>  roles <span class="kw">{</span></span>
+<span id="cb15-8"><a href="#cb15-8"></a>    <span class="ot">name</span>     = <span class="st">&quot;readWrite</span></span>
+<span id="cb15-9"><a href="#cb15-9"></a><span class="st">    database = &quot;</span>app<span class="st">&quot;</span></span>
+<span id="cb15-10"><a href="#cb15-10"></a><span class="st">  }</span></span>
+<span id="cb15-11"><a href="#cb15-11"></a><span class="st">}</span></span></code></pre></div>
 <p>This user will later be used by the application to access the MongoDB. He gets a username, password and a will be authenticated in the <code>admin</code> database. Those information can also be exported to the <code>terraform.tfvars</code> file, but for this example application I keep those information hardcoded in the <code>atlas.tf</code> file. The <code>admin</code> database is the default value for MongoDB Atlas. The user gets rights to read and write to the <code>app</code> database.</p>
 <p>Next thing we do, is establishing the VPC peering connection:</p>
-<pre class="hcl"><code>resource &quot;mongodbatlas_vpc_peering_connection&quot; &quot;this&quot; {
-  group                  = &quot;${mongodbatlas_project.this.id}&quot;
-  aws_account_id         = &quot;${var.aws_account_id}&quot;
-  vpc_id                 = &quot;${aws_vpc.this.id}&quot;
-  route_table_cidr_block = &quot;${aws_vpc.this.cidr_block}&quot;
-  container_id           = &quot;${mongodbatlas_container.this.id}&quot;
-}
-
-resource &quot;aws_vpc_peering_connection_accepter&quot; &quot;this&quot; {
-  vpc_peering_connection_id = &quot;${mongodbatlas_vpc_peering_connection.this.connection_id}&quot;
-  auto_accept               = true
-}</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb16-1"><a href="#cb16-1"></a><span class="kw">resource</span> <span class="st">&quot;mongodbatlas_vpc_peering_connection&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a>  <span class="ot">group</span>                  = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_project.this.id}&quot;</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  aws_account_id         = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{var.aws_account_id}&quot;</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  vpc_id                 = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_vpc.this.id}&quot;</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a>  route_table_cidr_block = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_vpc.this.cidr_block}&quot;</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a>  container_id           = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_container.this.id}&quot;</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="kw">}</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="kw">resource</span> <span class="st">&quot;aws_vpc_peering_connection_accepter&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a>  vpc_peering_connection_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_vpc_peering_connection.this.connection_id}&quot;</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a>  auto_accept               = true</span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="kw">}</span></span></code></pre></div>
 <p>First we create the MongoDB Atlas peering connection. The connection needs most of the stuff, we created before, like the AWS VPC to peer to and the container of our MongoDB cluster. Here we use another variable for the AWS account in which the destination VPC for the peering lies. This variable will be created analogous to those, we created earlier. The second thing is an acceptor, which should auto accept the peering requests for peerings with the MongoDB VPC.</p>
 <p>Now we can also create an entry in our route table for the new MongoDB Atlas VPC, which allows traffic to be routed between those two VPCs properly:</p>
-<pre class="hcl"><code>resource &quot;aws_route&quot; &quot;this&quot; {
-  route_table_id            = &quot;${data.aws_route_table.this.id}&quot;
-  destination_cidr_block    = &quot;${mongodbatlas_container.this.atlas_cidr_block}&quot;
-  vpc_peering_connection_id = &quot;${mongodbatlas_vpc_peering_connection.this.connection_id}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_route&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a>  route_table_id            = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_route_table.this.id}&quot;</span></span>
+<span id="cb17-3"><a href="#cb17-3"></a>  destination_cidr_block    = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_container.this.atlas_cidr_block}&quot;</span></span>
+<span id="cb17-4"><a href="#cb17-4"></a>  vpc_peering_connection_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_vpc_peering_connection.this.connection_id}&quot;</span></span>
+<span id="cb17-5"><a href="#cb17-5"></a><span class="kw">}</span></span></code></pre></div>
 <p>The last thing we have to do, is whitelist the AWS VPC CIDR Block in MongoDB Atlas, so that services inside of the AWS VPC are allowed to access the cluster.</p>
-<pre class="hcl"><code>resource &quot;mongodbatlas_ip_whitelist&quot; &quot;this&quot; {
-  group      = &quot;${mongodbatlas_project.this.id}&quot;
-  cidr_block = &quot;${data.aws_vpc.this.cidr_block}&quot;
-  comment    = &quot;Whitelist for the AWS VPC&quot;
-}</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">resource</span> <span class="st">&quot;mongodbatlas_ip_whitelist&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>  <span class="ot">group</span>      = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{mongodbatlas_project.this.id}&quot;</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a>  cidr_block = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_vpc.this.cidr_block}&quot;</span></span>
+<span id="cb18-4"><a href="#cb18-4"></a>  comment    = <span class="st">&quot;Whitelist for the AWS VPC&quot;</span></span>
+<span id="cb18-5"><a href="#cb18-5"></a><span class="kw">}</span></span></code></pre></div>
 <p>With this in place we are now able to create our MongoDB Atlas cluster. Again you can execute <code>terraform apply</code> to see the results.</p>
 <h1 id="part-3-deploying-the-app">Part 3: Deploying the app</h1>
 <p>In the last part we keep it as simple as possible. We will create a single EC2 instance, which will be provisioned to install a docker container with a small PHP application. The important part here, is that we now can give the DSN (Data Source Name) of the MongoDB to the app as an environment variable and the app is able to work with the MongoDB without any further manual interventions.</p>
 <p>In reality there is a lot more to running a scalable infrastructure, like load balancing, autoscaling groups, launch templates and logging to name a few. But covering these topics in this post would crush the scope of this article, which is already pretty long at this point.</p>
 <p>So without further ado let’s get startet by creating a <code>ec2.tf</code> file. First of all we create an AMI</p>
-<pre class="hcl"><code>data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
-  most_recent = true
-  owners      = [&quot;amazon&quot;]
-
-  filter {
-    name   = &quot;name&quot;
-    values = [&quot;amzn2-ami-hvm-2.0.20181024-x86_64-gp2&quot;]
-  }
-}</code></pre>
+<div class="sourceCode" id="cb19"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb19-1"><a href="#cb19-1"></a>data <span class="st">&quot;aws_ami&quot;</span> <span class="st">&quot;amazon_linux&quot;</span> <span class="kw">{</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>  most_recent = true</span>
+<span id="cb19-3"><a href="#cb19-3"></a>  owners      = <span class="kw">[</span><span class="st">&quot;amazon&quot;</span><span class="kw">]</span></span>
+<span id="cb19-4"><a href="#cb19-4"></a></span>
+<span id="cb19-5"><a href="#cb19-5"></a>  filter <span class="kw">{</span></span>
+<span id="cb19-6"><a href="#cb19-6"></a>    <span class="ot">name</span>   = <span class="st">&quot;name&quot;</span></span>
+<span id="cb19-7"><a href="#cb19-7"></a>    <span class="ot">values</span> = <span class="kw">[</span><span class="st">&quot;amzn2-ami-hvm-2.0.20181024-x86_64-gp2&quot;</span><span class="kw">]</span></span>
+<span id="cb19-8"><a href="#cb19-8"></a>  <span class="kw">}</span></span>
+<span id="cb19-9"><a href="#cb19-9"></a><span class="kw">}</span></span></code></pre></div>
 <p>This defines an AMI (Amazon Machine Image) which is basically the operating system, the ec2 instance will be started with.</p>
 <p>In this EC2 instance we will run a docker container. I created a repository in amazons own ECR for my container image. So I add the repository as a data source:</p>
-<pre class="hcl"><code>data &quot;aws_ecr_repository&quot; &quot;example_app&quot; {
-  name = &quot;snowiow/example-app&quot;
-}</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb20-1"><a href="#cb20-1"></a>data <span class="st">&quot;aws_ecr_repository&quot;</span> <span class="st">&quot;example_app&quot;</span> <span class="kw">{</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a>  <span class="ot">name</span> = <span class="st">&quot;snowiow/example-app&quot;</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="kw">}</span></span></code></pre></div>
 <p>Now we create a small shell script, which will be executed as soon as the instance is started.</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb21-1" title="1"><span class="bu">echo</span> <span class="st">&quot;Update YUM&quot;</span></a>
-<a class="sourceLine" id="cb21-2" title="2"><span class="fu">sudo</span> yum -y update</a>
-<a class="sourceLine" id="cb21-3" title="3"></a>
-<a class="sourceLine" id="cb21-4" title="4"><span class="bu">echo</span> <span class="st">&quot;Install Docker&quot;</span></a>
-<a class="sourceLine" id="cb21-5" title="5"><span class="fu">sudo</span> yum install -y docker</a>
-<a class="sourceLine" id="cb21-6" title="6"></a>
-<a class="sourceLine" id="cb21-7" title="7"><span class="bu">echo</span> <span class="st">&quot;Start Docker&quot;</span></a>
-<a class="sourceLine" id="cb21-8" title="8"><span class="fu">sudo</span> service docker start</a>
-<a class="sourceLine" id="cb21-9" title="9"></a>
-<a class="sourceLine" id="cb21-10" title="10"><span class="bu">echo</span> <span class="st">&quot;Login to ECR (your Docker Registry)&quot;</span></a>
-<a class="sourceLine" id="cb21-11" title="11"><span class="va">$(</span><span class="ex">aws</span> ecr get-login --no-include-email --region eu-central-1<span class="va">)</span></a>
-<a class="sourceLine" id="cb21-12" title="12"></a>
-<a class="sourceLine" id="cb21-13" title="13"><span class="bu">echo</span> <span class="st">&quot;Start docker container&quot;</span></a>
-<a class="sourceLine" id="cb21-14" title="14"><span class="ex">docker</span> run \</a>
-<a class="sourceLine" id="cb21-15" title="15">  -p 80:80 \</a>
-<a class="sourceLine" id="cb21-16" title="16">  --env <span class="st">&quot;MONGO_DSN=</span><span class="va">${mongodb_dsn}</span><span class="st">&quot;</span> \</a>
-<a class="sourceLine" id="cb21-17" title="17">  --env <span class="st">&quot;MONGO_DB=app&quot;</span> \</a>
-<a class="sourceLine" id="cb21-18" title="18">  <span class="va">${container_img_url}</span></a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1"></a><span class="bu">echo</span> <span class="st">&quot;Update YUM&quot;</span></span>
+<span id="cb21-2"><a href="#cb21-2"></a><span class="fu">sudo</span> yum -y update</span>
+<span id="cb21-3"><a href="#cb21-3"></a></span>
+<span id="cb21-4"><a href="#cb21-4"></a><span class="bu">echo</span> <span class="st">&quot;Install Docker&quot;</span></span>
+<span id="cb21-5"><a href="#cb21-5"></a><span class="fu">sudo</span> yum install -y docker</span>
+<span id="cb21-6"><a href="#cb21-6"></a></span>
+<span id="cb21-7"><a href="#cb21-7"></a><span class="bu">echo</span> <span class="st">&quot;Start Docker&quot;</span></span>
+<span id="cb21-8"><a href="#cb21-8"></a><span class="fu">sudo</span> service docker start</span>
+<span id="cb21-9"><a href="#cb21-9"></a></span>
+<span id="cb21-10"><a href="#cb21-10"></a><span class="bu">echo</span> <span class="st">&quot;Login to ECR (your Docker Registry)&quot;</span></span>
+<span id="cb21-11"><a href="#cb21-11"></a><span class="va">$(</span><span class="ex">aws</span> ecr get-login --no-include-email --region eu-central-1<span class="va">)</span></span>
+<span id="cb21-12"><a href="#cb21-12"></a></span>
+<span id="cb21-13"><a href="#cb21-13"></a><span class="bu">echo</span> <span class="st">&quot;Start docker container&quot;</span></span>
+<span id="cb21-14"><a href="#cb21-14"></a><span class="ex">docker</span> run \</span>
+<span id="cb21-15"><a href="#cb21-15"></a>  -p 80:80 \</span>
+<span id="cb21-16"><a href="#cb21-16"></a>  --env <span class="st">&quot;MONGO_DSN=</span><span class="va">${mongodb_dsn}</span><span class="st">&quot;</span> \</span>
+<span id="cb21-17"><a href="#cb21-17"></a>  --env <span class="st">&quot;MONGO_DB=app&quot;</span> \</span>
+<span id="cb21-18"><a href="#cb21-18"></a>  <span class="va">${container_img_url}</span></span></code></pre></div>
 <p>Basically this installs docker, downloads the image from the container repository URL, where I uploaded it and executes it. As environment variables I give the container the DSN of the MongoDB cluster, the container repository URL and the database, which will always be called app, so it is hardcoded here. The DSN and repository URL values are interpolated, so we need a way to fill in the actual values. We do this by creating a template file as a data source in terraform:</p>
-<pre class="hcl"><code>data &quot;template_file&quot; &quot;user_data&quot; {
-  template = &quot;${file(&quot;user_data.sh&quot;)}&quot;
-
-  vars {
-    mongodb_dsn    = &quot;mongodb://${mongodbatlas_database_user.this.username}:${mongodbatlas_database_user.this.password}@${substr(mongodbatlas_cluster.this.mongo_uri_with_options, 10, -1)}&quot;
-    docker_img_url = &quot;${data.aws_ecr_repository.example_app.repository_url}&quot;
-  }
-}</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb22-1"><a href="#cb22-1"></a>data <span class="st">&quot;template_file&quot;</span> <span class="st">&quot;user_data&quot;</span> <span class="kw">{</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>  template = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{file(&quot;</span>user_data.sh<span class="st">&quot;)}&quot;</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a></span>
+<span id="cb22-4"><a href="#cb22-4"></a>  <span class="ot">vars</span> <span class="kw">{</span></span>
+<span id="cb22-5"><a href="#cb22-5"></a>    mongodb_dsn    = <span class="st">&quot;mongodb://</span><span class="dt">$</span><span class="st">{mongodbatlas_database_user.this.username}:</span><span class="dt">$</span><span class="st">{mongodbatlas_database_user.this.password}@</span><span class="dt">$</span><span class="st">{substr(mongodbatlas_cluster.this.mongo_uri_with_options, 10, -1)}&quot;</span></span>
+<span id="cb22-6"><a href="#cb22-6"></a>    docker_img_url = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_ecr_repository.example_app.repository_url}&quot;</span></span>
+<span id="cb22-7"><a href="#cb22-7"></a>  <span class="kw">}</span></span>
+<span id="cb22-8"><a href="#cb22-8"></a><span class="kw">}</span></span></code></pre></div>
 <p>Here we have to do some string manipulations to get the username and password in the DSN as well, otherwise the app wouldn’t be able to login to the cluster.</p>
 <p>The last thing we need before creating our instances, is an IAM Role. The EC2 instance we launch will assume this role and will have the rights provided by this role. First of all we need a policy document, which says, that the EC2 instance is allowed to assume a role</p>
-<pre class="hcl"><code>data &quot;aws_iam_policy_document&quot; &quot;assume&quot; {
-  statement {
-    sid     = &quot;AllowAssumeByEC2&quot;
-    effect  = &quot;Allow&quot;
-    actions = [&quot;sts:AssumeRole&quot;]
-
-    principals {
-      type        = &quot;Service&quot;
-      identifiers = [&quot;ec2.amazonaws.com&quot;]
-    }
-  }
-}</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb23-1"><a href="#cb23-1"></a>data <span class="st">&quot;aws_iam_policy_document&quot;</span> <span class="st">&quot;assume&quot;</span> <span class="kw">{</span></span>
+<span id="cb23-2"><a href="#cb23-2"></a>  statement <span class="kw">{</span></span>
+<span id="cb23-3"><a href="#cb23-3"></a>    sid     = <span class="st">&quot;AllowAssumeByEC2&quot;</span></span>
+<span id="cb23-4"><a href="#cb23-4"></a>    effect  = <span class="st">&quot;Allow&quot;</span></span>
+<span id="cb23-5"><a href="#cb23-5"></a>    actions = <span class="kw">[</span><span class="st">&quot;sts:AssumeRole&quot;</span><span class="kw">]</span></span>
+<span id="cb23-6"><a href="#cb23-6"></a></span>
+<span id="cb23-7"><a href="#cb23-7"></a>    principals <span class="kw">{</span></span>
+<span id="cb23-8"><a href="#cb23-8"></a>      <span class="ot">type</span>        = <span class="st">&quot;Service&quot;</span></span>
+<span id="cb23-9"><a href="#cb23-9"></a>      identifiers = <span class="kw">[</span><span class="st">&quot;ec2.amazonaws.com&quot;</span><span class="kw">]</span></span>
+<span id="cb23-10"><a href="#cb23-10"></a>    <span class="kw">}</span></span>
+<span id="cb23-11"><a href="#cb23-11"></a>  <span class="kw">}</span></span>
+<span id="cb23-12"><a href="#cb23-12"></a><span class="kw">}</span></span></code></pre></div>
 <p>Now we can create the role itself</p>
-<pre class="hcl"><code>resource &quot;aws_iam_role&quot; &quot;example_app&quot; {
-  name               = &quot;example-app-iam-role&quot;
-  assume_role_policy = &quot;${data.aws_iam_policy_document.assume.json}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb24"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_iam_role&quot;</span> <span class="st">&quot;example_app&quot;</span> <span class="kw">{</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>  <span class="ot">name</span>               = <span class="st">&quot;example-app-iam-role&quot;</span></span>
+<span id="cb24-3"><a href="#cb24-3"></a>  assume_role_policy = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_iam_policy_document.assume.json}&quot;</span></span>
+<span id="cb24-4"><a href="#cb24-4"></a><span class="kw">}</span></span></code></pre></div>
 <p>Because our EC2 instance needs to download a Docker Image from the ECR, we need to give the right to the role first. Therefore we create another policy document:</p>
-<pre class="hcl"><code>data &quot;aws_iam_policy_document&quot; &quot;ecr&quot; {
-  statement {
-    sid    = &quot;AllowECRAuthorization&quot;
-    effect = &quot;Allow&quot;
-
-    actions = [
-      &quot;ecr:GetAuthorizationToken&quot;,
-    ]
-
-    resources = [&quot;*&quot;]
-  }
-
-  statement {
-    sid    = &quot;AllowECRDownload&quot;
-    effect = &quot;Allow&quot;
-
-    actions = [
-      &quot;ecr:GetDownloadUrlForLayer&quot;,
-      &quot;ecr:BatchGetImage&quot;,
-      &quot;ecr:BatchCheckLayerAvailability&quot;,
-    ]
-
-    resources = [&quot;${data.aws_ecr_repository.example_app.arn}&quot;]
-  }
-}</code></pre>
+<div class="sourceCode" id="cb25"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb25-1"><a href="#cb25-1"></a>data <span class="st">&quot;aws_iam_policy_document&quot;</span> <span class="st">&quot;ecr&quot;</span> <span class="kw">{</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a>  statement <span class="kw">{</span></span>
+<span id="cb25-3"><a href="#cb25-3"></a>    sid    = <span class="st">&quot;AllowECRAuthorization&quot;</span></span>
+<span id="cb25-4"><a href="#cb25-4"></a>    effect = <span class="st">&quot;Allow&quot;</span></span>
+<span id="cb25-5"><a href="#cb25-5"></a></span>
+<span id="cb25-6"><a href="#cb25-6"></a>    actions = <span class="kw">[</span></span>
+<span id="cb25-7"><a href="#cb25-7"></a>      <span class="st">&quot;ecr:GetAuthorizationToken&quot;</span>,</span>
+<span id="cb25-8"><a href="#cb25-8"></a>    <span class="kw">]</span></span>
+<span id="cb25-9"><a href="#cb25-9"></a></span>
+<span id="cb25-10"><a href="#cb25-10"></a>    resources = <span class="kw">[</span><span class="st">&quot;*&quot;</span><span class="kw">]</span></span>
+<span id="cb25-11"><a href="#cb25-11"></a>  <span class="kw">}</span></span>
+<span id="cb25-12"><a href="#cb25-12"></a></span>
+<span id="cb25-13"><a href="#cb25-13"></a>  statement <span class="kw">{</span></span>
+<span id="cb25-14"><a href="#cb25-14"></a>    sid    = <span class="st">&quot;AllowECRDownload&quot;</span></span>
+<span id="cb25-15"><a href="#cb25-15"></a>    effect = <span class="st">&quot;Allow&quot;</span></span>
+<span id="cb25-16"><a href="#cb25-16"></a></span>
+<span id="cb25-17"><a href="#cb25-17"></a>    actions = <span class="kw">[</span></span>
+<span id="cb25-18"><a href="#cb25-18"></a>      <span class="st">&quot;ecr:GetDownloadUrlForLayer&quot;</span>,</span>
+<span id="cb25-19"><a href="#cb25-19"></a>      <span class="st">&quot;ecr:BatchGetImage&quot;</span>,</span>
+<span id="cb25-20"><a href="#cb25-20"></a>      <span class="st">&quot;ecr:BatchCheckLayerAvailability&quot;</span>,</span>
+<span id="cb25-21"><a href="#cb25-21"></a>    <span class="kw">]</span></span>
+<span id="cb25-22"><a href="#cb25-22"></a></span>
+<span id="cb25-23"><a href="#cb25-23"></a>    resources = <span class="kw">[</span><span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_ecr_repository.example_app.arn}&quot;</span><span class="kw">]</span></span>
+<span id="cb25-24"><a href="#cb25-24"></a>  <span class="kw">}</span></span>
+<span id="cb25-25"><a href="#cb25-25"></a><span class="kw">}</span></span></code></pre></div>
 <p>This policy consists of two statements. The first one allows an action to authorize ourselfs with the ECR, which we do in the <code>user_data.sh</code> script with this statement:</p>
-<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb26-1" title="1"><span class="va">$(</span><span class="ex">aws</span> ecr get-login --no-include-email --region eu-central-1<span class="va">)</span></a></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1"></a><span class="va">$(</span><span class="ex">aws</span> ecr get-login --no-include-email --region eu-central-1<span class="va">)</span></span></code></pre></div>
 <p>As a resource <code>*</code> was chosen, because the <code>ecr:GetAuthorizationToken</code> action is global and can’t be restricted to a specific resource. The second statement allows the download of the image. Here we defined the ARN of the specific repository, we want to pull from, because we don’t want to allow our EC2 instance to pull from every repository we have in our account.</p>
 <p>With this policy document, we can create an actual policy from it, which will be attached to our <code>example-app-role</code>:</p>
-<pre class="hcl"><code>resource &quot;aws_iam_policy&quot; &quot;ecr&quot; {
-  name        = &quot;ExampleAppECRAccess&quot;
-  description = &quot;Gives right to get an ECR authorization token and pull images&quot;
-  policy      = &quot;${data.aws_iam_policy_document.ecr.json}&quot;
-}
-
-resource &quot;aws_iam_role_policy_attachment&quot; &quot;ecr&quot; {
-  role       = &quot;${aws_iam_role.example_app.name}&quot;
-  policy_arn = &quot;${aws_iam_policy.ecr.arn}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb27"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb27-1"><a href="#cb27-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_iam_policy&quot;</span> <span class="st">&quot;ecr&quot;</span> <span class="kw">{</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a>  <span class="ot">name</span>        = <span class="st">&quot;ExampleAppECRAccess&quot;</span></span>
+<span id="cb27-3"><a href="#cb27-3"></a>  description = <span class="st">&quot;Gives right to get an ECR authorization token and pull images&quot;</span></span>
+<span id="cb27-4"><a href="#cb27-4"></a>  policy      = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_iam_policy_document.ecr.json}&quot;</span></span>
+<span id="cb27-5"><a href="#cb27-5"></a><span class="kw">}</span></span>
+<span id="cb27-6"><a href="#cb27-6"></a></span>
+<span id="cb27-7"><a href="#cb27-7"></a><span class="kw">resource</span> <span class="st">&quot;aws_iam_role_policy_attachment&quot;</span> <span class="st">&quot;ecr&quot;</span> <span class="kw">{</span></span>
+<span id="cb27-8"><a href="#cb27-8"></a>  role       = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_iam_role.example_app.name}&quot;</span></span>
+<span id="cb27-9"><a href="#cb27-9"></a>  policy_arn = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_iam_policy.ecr.arn}&quot;</span></span>
+<span id="cb27-10"><a href="#cb27-10"></a><span class="kw">}</span></span></code></pre></div>
 <p>Because we can’t attach a role directly to an EC2 instance, we need an instance profile:</p>
-<pre class="hcl"><code>resource &quot;aws_iam_instance_profile&quot; &quot;this&quot; {
-  name = &quot;example-app-instance-profile&quot;
-  role = &quot;${aws_iam_role.example_app.name}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb28-1"><a href="#cb28-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_iam_instance_profile&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb28-2"><a href="#cb28-2"></a>  <span class="ot">name</span> = <span class="st">&quot;example-app-instance-profile&quot;</span></span>
+<span id="cb28-3"><a href="#cb28-3"></a>  role = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_iam_role.example_app.name}&quot;</span></span>
+<span id="cb28-4"><a href="#cb28-4"></a><span class="kw">}</span></span></code></pre></div>
 <p>Finally we create the EC2 instance itself and output the IP address, where it is reachable afterwards. We also need a security group for the instance, which basically tells who will be able to access the instance and to who the instance is allowed to respond to. In this example we allow traffic from any IP over port 80, because this is the port where the website is hosted:</p>
-<pre class="hcl"><code>resource &quot;aws_security_group&quot; &quot;this&quot; {
-  name   = &quot;sg&quot;
-  vpc_id = &quot;${aws_vpc.this.id}&quot;
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = &quot;tcp&quot;
-    cidr_blocks = [&quot;0.0.0.0/0&quot;]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = &quot;-1&quot;
-    cidr_blocks = [&quot;0.0.0.0/0&quot;]
-  }
-}
-
-resource &quot;aws_instance&quot; &quot;this&quot; {
-  ami                  = &quot;${data.aws_ami.amazon_linux.id}&quot;
-  instance_type        = &quot;t2.micro&quot;
-  subnet_id            = &quot;${aws_subnet.this.id}&quot;
-  user_data            = &quot;${data.template_file.user_data.rendered}&quot;
-  iam_instance_profile = &quot;${aws_iam_instance_profile.this.name}&quot;
-  security_groups      = [&quot;${aws_security_group.this.id}&quot;]
-}
-
-output &quot;example_app&quot; {
-  value = &quot;${aws_instance.this.public_ip}&quot;
-}</code></pre>
+<div class="sourceCode" id="cb29"><pre class="sourceCode tcl"><code class="sourceCode tcl"><span id="cb29-1"><a href="#cb29-1"></a><span class="kw">resource</span> <span class="st">&quot;aws_security_group&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb29-2"><a href="#cb29-2"></a>  <span class="ot">name</span>   = <span class="st">&quot;sg&quot;</span></span>
+<span id="cb29-3"><a href="#cb29-3"></a>  vpc_id = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_vpc.this.id}&quot;</span></span>
+<span id="cb29-4"><a href="#cb29-4"></a></span>
+<span id="cb29-5"><a href="#cb29-5"></a>  ingress <span class="kw">{</span></span>
+<span id="cb29-6"><a href="#cb29-6"></a>    from_port   = <span class="dv">80</span></span>
+<span id="cb29-7"><a href="#cb29-7"></a>    to_port     = <span class="dv">80</span></span>
+<span id="cb29-8"><a href="#cb29-8"></a>    <span class="ot">protocol</span>    = <span class="st">&quot;tcp&quot;</span></span>
+<span id="cb29-9"><a href="#cb29-9"></a>    cidr_blocks = <span class="kw">[</span><span class="st">&quot;0.0.0.0/0&quot;</span><span class="kw">]</span></span>
+<span id="cb29-10"><a href="#cb29-10"></a>  <span class="kw">}</span></span>
+<span id="cb29-11"><a href="#cb29-11"></a></span>
+<span id="cb29-12"><a href="#cb29-12"></a>  egress <span class="kw">{</span></span>
+<span id="cb29-13"><a href="#cb29-13"></a>    from_port   = <span class="dv">0</span></span>
+<span id="cb29-14"><a href="#cb29-14"></a>    to_port     = <span class="dv">0</span></span>
+<span id="cb29-15"><a href="#cb29-15"></a>    <span class="ot">protocol</span>    = <span class="st">&quot;-1&quot;</span></span>
+<span id="cb29-16"><a href="#cb29-16"></a>    cidr_blocks = <span class="kw">[</span><span class="st">&quot;0.0.0.0/0&quot;</span><span class="kw">]</span></span>
+<span id="cb29-17"><a href="#cb29-17"></a>  <span class="kw">}</span></span>
+<span id="cb29-18"><a href="#cb29-18"></a><span class="kw">}</span></span>
+<span id="cb29-19"><a href="#cb29-19"></a></span>
+<span id="cb29-20"><a href="#cb29-20"></a><span class="kw">resource</span> <span class="st">&quot;aws_instance&quot;</span> <span class="st">&quot;this&quot;</span> <span class="kw">{</span></span>
+<span id="cb29-21"><a href="#cb29-21"></a>  ami                  = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.aws_ami.amazon_linux.id}&quot;</span></span>
+<span id="cb29-22"><a href="#cb29-22"></a>  instance_type        = <span class="st">&quot;t2.micro&quot;</span></span>
+<span id="cb29-23"><a href="#cb29-23"></a>  subnet_id            = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_subnet.this.id}&quot;</span></span>
+<span id="cb29-24"><a href="#cb29-24"></a>  user_data            = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{data.template_file.user_data.rendered}&quot;</span></span>
+<span id="cb29-25"><a href="#cb29-25"></a>  iam_instance_profile = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_iam_instance_profile.this.name}&quot;</span></span>
+<span id="cb29-26"><a href="#cb29-26"></a>  security_groups      = <span class="kw">[</span><span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_security_group.this.id}&quot;</span><span class="kw">]</span></span>
+<span id="cb29-27"><a href="#cb29-27"></a><span class="kw">}</span></span>
+<span id="cb29-28"><a href="#cb29-28"></a></span>
+<span id="cb29-29"><a href="#cb29-29"></a>output <span class="st">&quot;example_app&quot;</span> <span class="kw">{</span></span>
+<span id="cb29-30"><a href="#cb29-30"></a>  value = <span class="st">&quot;</span><span class="dt">$</span><span class="st">{aws_instance.this.public_ip}&quot;</span></span>
+<span id="cb29-31"><a href="#cb29-31"></a><span class="kw">}</span></span></code></pre></div>
 <p>This is it! If you execute <code>terraform apply</code> again, you will see the public IP of the EC2 instance. To see if the connection to the MongoDB is working we can play around with the example application.</p>
 <p>The example application is a small website with two routes. Both use GET parameters. The first route looks like this:</p>
 <pre><code>/insert/{firstname}/{lastname}</code></pre>
 <p>This route will insert a user with a first and lastname into the MongoDB. For the example of will willson we combine the returned IP of the terraform script with the route like this</p>
 <pre><code>&lt;ec2ip&gt;/insert/will/willson</code></pre>
 <p>the response would look like this:</p>
-<p><img src="../images/insert_will_willson.png" alt="Insert Will Willson" title="Insert Will Willson" /></p>
+<p><img src="/images/insert_will_willson.png" alt="Insert Will Willson" title="Insert Will Willson" /></p>
 <p>To really see if the user was inserted into MongoDB, we use the second route, which looks like this:</p>
 <pre><code>/{lastname}</code></pre>
 <p>Basically if we insert the lastname as the only part of the route, the example application searches for users with this lastname and will print them. For the example of willson the URL would look like this:</p>
 <pre><code>&lt;ec2ip&gt;/willson</code></pre>
 <p>and we get this response</p>
-<p><img src="../images/will_willson_is_here.png" alt="Will Willson is here" title="Will Willson is here" /></p>
+<p><img src="/images/will_willson_is_here.png" alt="Will Willson is here" title="Will Willson is here" /></p>
 <p>This application is pretty basic but works as a proof of concept of our infrastructure.</p>
 <p>So there you have it. A VPC peering connection between MongoDB Atlas and our own AWS VPC, which is applicable in a single command, thanks to terraform. I created this post because there are many useful resources scattered around about this topic, but there is no single resource which combines them all together. So I hope this is of help for anybody who is trying to achieve something similar.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

@@ -1,0 +1,11 @@
+pre {
+  padding: 10px;
+}
+
+pre > code {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 85%;
+    tab-size: 4;
+    white-space: pre-wrap;
+    line-height: 1.45;
+}

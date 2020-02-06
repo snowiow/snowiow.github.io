@@ -1,75 +1,135 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: The power of Vim Plugins: Vim-Plug</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>The power of Vim Plugins: Vim-Plug</h1>
-              <article>
-    <section class="header">
-        Posted on 2016-04-03
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>A few weeks after my <a href="http://snow-dev.com/the-power-of-vim-plugins-vundle/">Vundle</a> post, I stumbled upon a plugin manager called <a href="https://github.com/junegunn/vim-plug">vim-plug</a>. It sounded very promising and I checked it out. Until today I didn’t go back to Vundle. This is almost half a year ago and I think it’s time to write something up about this amazing plugin manager. When you enter the GitHub page you see a bunch of pros, why this plugin manager is so awesome. Two points stood out for me though. Point one is the utilization of asynchronous downloads and installation, which makes the whole process of installing and updating a whole lot faster. If you installed your vim with the +python/+python3 or +ruby flag, you are able to use this feature. The alternative is to install <a href="https://neovim.io/">neovim</a>, which comes with asynchronous batteries included. The second point is “On-demand loading for faster startup time”. This line says, you are able to give every plugin some options, when they should be loaded up. For example, if you program in more than one language, say PHP and C++. Now you got some language specific plugins for example <a href="https://github.com/rhysd/vim-clang-format">clang-format</a>, which formats your C++ Code. Having the plugin loaded up, only makes sense if you are in a C++ file, right? With the help of vim-plug you are now able to delay the startup of clang-format until you open a C++ file for the first time. This isn’t the only lazy load option. We will cover this feature in depth in a later section. As I looked through my plugin list I got about one half of my plugins which didn’t need to be loaded on startup. After setting these options, my startup time increased quite a bit. If you are convinced either by me or because of the rest of pro list, let’s get started with the installation.</p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2016-04-03" />
+  <title>snow-dev.com :: The power of Vim Plugins: Vim-Plug</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>The power of Vim Plugins: Vim-Plug</h1>
+    <article>
+<section class="header">
+    Posted on 2016-04-03
+</section>
+<hr class="section-head">
+<section>
+<p>A few weeks after my <a href="http://snow-dev.com/the-power-of-vim-plugins-vundle/">Vundle</a> post, I stumbled upon a plugin manager called <a href="https://github.com/junegunn/vim-plug">vim-plug</a>. It sounded very promising and I checked it out. Until today I didn’t go back to Vundle. This is almost half a year ago and I think it’s time to write something up about this amazing plugin manager. When you enter the GitHub page you see a bunch of pros, why this plugin manager is so awesome. Two points stood out for me though. Point one is the utilization of asynchronous downloads and installation, which makes the whole process of installing and updating a whole lot faster. If you installed your vim with the +python/+python3 or +ruby flag, you are able to use this feature. The alternative is to install <a href="https://neovim.io/">neovim</a>, which comes with asynchronous batteries included. The second point is “On-demand loading for faster startup time”. This line says, you are able to give every plugin some options, when they should be loaded up. For example, if you program in more than one language, say PHP and C++. Now you got some language specific plugins for example <a href="https://github.com/rhysd/vim-clang-format">clang-format</a>, which formats your C++ Code. Having the plugin loaded up, only makes sense if you are in a C++ file, right? With the help of vim-plug you are now able to delay the startup of clang-format until you open a C++ file for the first time. This isn’t the only lazy load option. We will cover this feature in depth in a later section. As I looked through my plugin list I got about one half of my plugins which didn’t need to be loaded on startup. After setting these options, my startup time increased quite a bit. If you are convinced either by me or because of the rest of pro list, let’s get started with the installation.</p>
 <h1 id="installation">Installation</h1>
 <p>The installation is pretty straight forward. The GitHub page gives you 3 different commands. If you use normal vim on Unix, you need to execute the following line:</p>
-<pre><code>curl -fLo ~/.vim/autoload/plug.vim --create-dirs</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a><span class="ex">curl</span> -fLo ~/.vim/autoload/plug.vim --create-dirs</span></code></pre></div>
 <p>If you use neovim and you don’t have your default vim location symlinked, you need to change the destination path:</p>
-<pre><code>curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">curl</span> -fLo ~/.config/nvim/autoload/plug.vim --create-dirs</span></code></pre></div>
 <p>Now that you have vim-plug installed you need a section at the beginning of your <em>.vimrc</em>, which looks like this:</p>
-<pre class="vim"><code>call plug#begin('~/.vim/plugged')
+<pre class="vim"><code>call plug#begin(&#39;~/.vim/plugged&#39;)
 
 call plug#end()</code></pre>
 <p>With this template you are ready to go for the next steps.</p>
 <h1 id="configuration">Configuration</h1>
 <p>Adding plugins from GitHub is as easy as the following line. You need to place these between the 2 lines, which we added at the end of the last section.</p>
-<pre><code>Plug 'scrooloose/nerdtree'</code></pre>
+<pre><code>Plug &#39;scrooloose/nerdtree&#39;</code></pre>
 <p>If you are using another source than GitHub, you can put the full git path between the quotes. Pay attention to the ending of the URL:</p>
-<pre><code>Plug 'https://github.com/scrooloose/nerdtree.git'</code></pre>
+<pre><code>Plug &#39;https://github.com/scrooloose/nerdtree.git&#39;</code></pre>
 <p>Thats it! Now you can install that Plugin via the <em>:PlugInstall</em> command. Another tiny benefit is, that you save 2 characters in each command. You just type <em>:PlugInstall</em> for vim-plug instead of <em>:PluginInstall</em> in Vundle. The same goes for updating existing packages, which is <em>:PlugUpdate</em> instead of <em>:PluginUpdate</em>. This is only a small thing, but I really like this, since I’ve switched. The second important feature I use very often is to remove packages. For this you just remove the line</p>
-<pre><code>Plug 'scrooloose/nerdtree'</code></pre>
+<pre><code>Plug &#39;scrooloose/nerdtree&#39;</code></pre>
 <p>Afterwards you call <em>:PlugClean</em>. Now you get a prompt with the plugins, which should get deleted. You can accept with [y]es or [n]o. To skip this prompt, you can also type in the command <em>:PlugClean!</em>. Now we are coming to one of the main advantages: The on-demand loading. As described in the beginning, this delays the loading of the plugin until something specific happens. This is great because vim doesn’t load up all plugins on startup, which improves your startup time quite a bit. Let’s get to our first example, where I want to show you the <strong>on</strong> keyword. The <strong>on</strong> keyword loads a plugin, when a specific command was executed. Those options will be written as JSON after the plugin path. For example, we want to load NERDTree when <em>:NERDTreeToggle</em> was executed for the first time.</p>
-<pre><code>Plug 'scrooloose/nerdtree', {'on': 'NERDTreeToggle'}</code></pre>
+<pre><code>Plug &#39;scrooloose/nerdtree&#39;, {&#39;on&#39;: &#39;NERDTreeToggle&#39;}</code></pre>
 <p>As you can see, we split up the line by a comma. Afterwards we write down a JSON string, where <strong>on</strong> is the key and the command(without the colon) is the value. That’s everything! Now NERDTree load will be delayed until this command is executed. The second keyword I use pretty often is <strong>for</strong>. This keyword loads plugins for specific filetypes. Let’s take the C++ plugin clang-format from the intro, which formats C++ code according to some sort of standard. This plugin is only useful to us, if we work on C++ files. That’s why we want to delay the loading of this plugin until we work on a C++ file for the first time</p>
-<pre><code>Plug 'rhysd/vim-clang-format', {'for': 'cpp'}</code></pre>
+<pre><code>Plug &#39;rhysd/vim-clang-format&#39;, {&#39;for&#39;: &#39;cpp&#39;}</code></pre>
 <p>And here we go. Clang-fromat will be lazy loaded when we open a C++ file for the first time. The last keyword which is pretty useful is <strong>do</strong>. It’s used for plugins, which need another third party component to be compiled. One example is <a href="https://github.com/Valloric/YouCompleteMe">YouCompleteMe</a>, an autocompletion engine for vim. If you want to have C++ semantic completion support, you need to compile another component, which is used by this plugin. The compilation is triggered via a python script, which downloads clang and compiles the component afterwards. Normally you do this manually after each update, but you are also able to tell vim-plug to execute it after the plugin update automatically. To make it happen add the following line to your <em>.vimrc</em>.</p>
-<pre><code>Plug 'Valloric/YouCompleteMe', { 'do': './install.py' }</code></pre>
+<pre><code>Plug &#39;Valloric/YouCompleteMe&#39;, { &#39;do&#39;: &#39;./install.py&#39; }</code></pre>
 <p>Now everytime YouCompleteMe is updated, the third party component will be recompiled automatically and you don’t have to deal with it anymore. Of course you can combine the keywords in a single JSON document.</p>
-<pre><code>Plug 'Valloric/YouCompleteMe', { 'do': './install.py', 'for': 'cpp' }</code></pre>
+<pre><code>Plug &#39;Valloric/YouCompleteMe&#39;, { &#39;do&#39;: &#39;./install.py&#39;, &#39;for&#39;: &#39;cpp&#39; }</code></pre>
 <p>Those are the things I mainly use, but there is much more to discover. For a full reference head over to the <a href="https://github.com/junegunn/vim-plug">GitHub page of vim-plug</a>.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

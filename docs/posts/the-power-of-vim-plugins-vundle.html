@@ -1,40 +1,40 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: The power of Vim Plugins: Vundle</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>The power of Vim Plugins: Vundle</h1>
-              <article>
-    <section class="header">
-        Posted on 2015-09-29
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>To start of this series properly, we need a plugin manager, to handle all our plugins and keep them up to date. <a href="https://github.com/VundleVim/Vundle.vim">Vundle</a> is one common option, but there are some more to choose from. Two more big players in this business are <a href="https://github.com/Shougo/neobundle.vim">NeoBundle</a> and <a href="https://github.com/tpope/vim-pathogen">Pathogen</a>. I didn’t looked too deep into the last two plugin managers. To be honest, I never tried out something else than Vundle and I think the reason is that I never felt uncomfortable or missed something. So I never felt in need of getting another plugin manager and in this post I want to show you why. First of all you need to have git installed. You can download git with the package manager of your distribution, if it isn’t installed already. You can easily check this by starting up your console and type in the following:</p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2015-09-29" />
+  <title>snow-dev.com :: The power of Vim Plugins: Vundle</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>The power of Vim Plugins: Vundle</h1>
+    <article>
+<section class="header">
+    Posted on 2015-09-29
+</section>
+<hr class="section-head">
+<section>
+<p>To start of this series properly, we need a plugin manager, to handle all our plugins and keep them up to date. <a href="https://github.com/VundleVim/Vundle.vim">Vundle</a> is one common option, but there are some more to choose from. Two more big players in this business are <a href="https://github.com/Shougo/neobundle.vim">NeoBundle</a> and <a href="https://github.com/tpope/vim-pathogen">Pathogen</a>. I didn’t looked too deep into the last two plugin managers. To be honest, I never tried out something else than Vundle and I think the reason is that I never felt uncomfortable or missed something. So I never felt in need of getting another plugin manager and in this post I want to show you why. First of all you need to have git installed. You can download git with the package manager of your distribution, if it isn’t installed already. You can easily check this by starting up your console and type in the following:</p>
 <pre><code>git --version </code></pre>
 <p>If git version &lt;some number&gt; appears you are good to go, but if something like unknown command pops up, you are in a lot of trouble… Not really. You just need to install git with your package manager and everything will be fine. For the most common Linux distributions, the command looks like one of these:</p>
 <pre><code>apt-get install git</code></pre>
@@ -52,12 +52,12 @@ call vundle#begin()
 
 &quot; let Vundle manage Vundle, required
 
-Plugin 'VundleVim/Vundle.vim'
+Plugin &#39;VundleVim/Vundle.vim&#39;
 &quot;New plugins go here
 
 call vundle#end()</code></pre>
-<p>To test if Vundle is working, we add a new plugin. As an example we install NERDTree, which will be covered in the next post of this series. Under the comment <em>&quot;New plugins go here</em> the plugin will be added. Because it is hosted on GitHub we can write the following into the .vimrc</p>
-<pre><code>Plugin 'scrooloose/nerdtree'</code></pre>
+<p>To test if Vundle is working, we add a new plugin. As an example we install NERDTree, which will be covered in the next post of this series. Under the comment <em>"New plugins go here</em> the plugin will be added. Because it is hosted on GitHub we can write the following into the .vimrc</p>
+<pre><code>Plugin &#39;scrooloose/nerdtree&#39;</code></pre>
 <p>To take this change into effect, you either need to restart Vim or re-source your .vimrc. I’ve got the following line saved into my .vimrc, which automatically re-sources my .vimrc everytime it is saved.</p>
 <pre><code>autocmd! bufwritepost .vimrc source %</code></pre>
 <p>After restarting/resourcing the .vimrc you enter the following command</p>
@@ -69,20 +69,18 @@ call vundle#end()</code></pre>
 <p>Again a new split view opens and an arrow is moving through your installed plugins and marks them with a dot or a star, similar to the <em>:PluginInstall</em> command. The symbols also have the same meaning. Dots say that nothing needed to be done and the star tells you if a update was available and installed. If you want to search for new plugins you can use the <em>:PluginSearch</em> command like this:</p>
 <pre><code>:PluginSearch nerdtree</code></pre>
 <p>But I often got problems doing it this way. So the normal way I search for new plugins is using my search engine of trust. I also prefer downloading every plugin from Github to keep this clean overview of <em>Plugin ‘creator/plugin_name’</em> in my .vimrc. But maybe a plugin isn’t available on GitHub(which was never the case for me), the second best source would be <a href="http://vim-scripts.org">Vim Scripts</a>. To add a Vim Scripts link, you just need to add the name of the plugin, which is even cleaner:</p>
-<pre><code>Plugin 'nerdtree'</code></pre>
+<pre><code>Plugin &#39;nerdtree&#39;</code></pre>
 <p>Another option is to include a plugin from a non GitHub Hoster, who also uses git, like Bitbucket. To add a plugin you need to start writing _git: _followed by the complete URL of the plugin. As an imaginary example, if NERDTree would be hosted on Bitbucket, it would look like this:</p>
-<pre><code>Plugin 'git:bitbucket.com/scrooloose/nerdtree'</code></pre>
+<pre><code>Plugin &#39;git:bitbucket.com/scrooloose/nerdtree&#39;</code></pre>
 <p>I hope I could help with this brief overview of Vundle. If you need further information either head to the GitHub page of the <a href="https://github.com/VundleVim/Vundle.vim">Vundle project</a> or type the following command into Vim:</p>
 <pre><code>:h vundle</code></pre>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

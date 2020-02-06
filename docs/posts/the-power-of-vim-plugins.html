@@ -1,41 +1,41 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: The power of Vim Plugins</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>The power of Vim Plugins</h1>
-              <article>
-    <section class="header">
-        Posted on 2015-09-16
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>In this post I want to introduce a new series, which will cover some of the most useful Vim plugins available. There are many guides and tutorials out there about how Vim works and how great its modal editing is. So I won’t cover these things in this series. I personally learned a lot from the book <a href="http://vimcasts.org/publications/">Practical Vim</a> by Drew Neil. He also published a lot of video tutorials, called <a href="http://vimcasts.org/">VimCasts</a>. Before I started of with Vim, I was using Sublime Text and as I started using Vim, I missed some essential knowledge about how to install, configure and use plugins. Part of the problem was, that everyone is telling you: “When you start of with Vim, learn it without any plugins first, so you get used to the modal editing.” Well this isn’t completely correct, because those are two different pairs of shoes. Of course it’s more to learn at once, but many people don’t want to learn Vim completely and then start installing plugins until they find out, that something they need very bad, isn’t available in Vim. So they wasted about 2 months of their life until they can go on with the next tool on their list. Luckily there is not much missing, to transform Vim into a good programming tool, in my opinion. For me it became my one and only code editing/writing tool for work, studying and hobby projects. By configuring plugins, people will discover another great thing: the .vimrc. It’s a file where all the plugins are linked and where Vim is configured, to really become your personal editor. And because it’s just one file, it’s easy to put into a Version Control System like GIT. This gives you the ability to have the same look and feel of Vim on different machines in no time. It’s also the first time you get in touch with VimL(VimScript). It’s a script language, which is used to configure, write plugins and interact with Vim in command mode. So it can be seen the same way as Python for Sublime and Coffeescript for Atom. To give you a slight overview about what is coming next, I will list up a short summary(non-chronologically) of what I want to cover in the next posts.</p>
-<ul>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2015-09-16" />
+  <title>snow-dev.com :: The power of Vim Plugins</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>The power of Vim Plugins</h1>
+    <article>
+<section class="header">
+    Posted on 2015-09-16
+</section>
+<hr class="section-head">
+<section>
+<p>In this post I want to introduce a new series, which will cover some of the most useful Vim plugins available. There are many guides and tutorials out there about how Vim works and how great its modal editing is. So I won’t cover these things in this series. I personally learned a lot from the book <a href="http://vimcasts.org/publications/">Practical Vim</a> by Drew Neil. He also published a lot of video tutorials, called <a href="http://vimcasts.org/">VimCasts</a>. Before I started of with Vim, I was using Sublime Text and as I started using Vim, I missed some essential knowledge about how to install, configure and use plugins. Part of the problem was, that everyone is telling you: “When you start of with Vim, learn it without any plugins first, so you get used to the modal editing.” Well this isn’t completely correct, because those are two different pairs of shoes. Of course it’s more to learn at once, but many people don’t want to learn Vim completely and then start installing plugins until they find out, that something they need very bad, isn’t available in Vim. So they wasted about 2 months of their life until they can go on with the next tool on their list. Luckily there is not much missing, to transform Vim into a good programming tool, in my opinion. For me it became my one and only code editing/writing tool for work, studying and hobby projects. By configuring plugins, people will discover another great thing: the .vimrc. It’s a file where all the plugins are linked and where Vim is configured, to really become your personal editor. And because it’s just one file, it’s easy to put into a Version Control System like GIT. This gives you the ability to have the same look and feel of Vim on different machines in no time. It’s also the first time you get in touch with VimL(VimScript). It’s a script language, which is used to configure, write plugins and interact with Vim in command mode. So it can be seen the same way as Python for Sublime and Coffeescript for Atom. To give you a slight overview about what is coming next, I will list up a short summary(non-chronologically) of what I want to cover in the next posts.</p>
+<ul class="incremental">
 <li>Vundle(The plugin manager of Vim)</li>
 <li>NERDTree(A tree like view, which shows the hierarchy of files and sub folders)</li>
 <li> CtrlP(A fuzzy search for files. Similar to Sublimes/Atoms Ctrl-P)</li>
@@ -46,15 +46,13 @@
 <li>UltiSnips(Snippets for Vim)</li>
 <li>Ag(A project wide search for pieces of texts)</li>
 </ul>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

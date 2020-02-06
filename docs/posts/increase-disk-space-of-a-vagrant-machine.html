@@ -1,44 +1,106 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: Increase disk space of a vagrant machine</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>Increase disk space of a vagrant machine</h1>
-              <article>
-    <section class="header">
-        Posted on 2016-10-26
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>Lately I came across a rather big problem of vagrant: Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily. You can change it like this:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" title="1">config.vm.provider <span class="st">&quot;virtualbox&quot;</span> <span class="kw">do</span> |vb|</a>
-<a class="sourceLine" id="cb1-2" title="2">    vb.memory = <span class="dv">4096</span></a>
-<a class="sourceLine" id="cb1-3" title="3">    vb.cpus = <span class="dv">4</span></a>
-<a class="sourceLine" id="cb1-4" title="4"><span class="kw">end</span></a></code></pre></div>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2016-10-26" />
+  <title>snow-dev.com :: Increase disk space of a vagrant machine</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>Increase disk space of a vagrant machine</h1>
+    <article>
+<section class="header">
+    Posted on 2016-10-26
+</section>
+<hr class="section-head">
+<section>
+<p>Lately I came across a rather big problem of vagrant: Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily. You can change it like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb1-1"><a href="#cb1-1"></a>config.vm.provider <span class="st">&quot;virtualbox&quot;</span> <span class="kw">do</span> |vb|</span>
+<span id="cb1-2"><a href="#cb1-2"></a>    vb.memory = <span class="dv">4096</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>    vb.cpus = <span class="dv">4</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">end</span></span></code></pre></div>
 <p>So my thoughts were, that there must be a similar option to disk space as well, but there wasn’t. After some research I found out, there was no easy solution to that. There are already some solutions though, but nothing worked for me completely. I’m currently mainly using <a href="https://atlas.hashicorp.com/kaorimatz/boxes/ubuntu-16.04-amd64">kaorimatz ubuntu 16.04 iso.</a> One point which wasn’t working for me is, that other machines used lvm2 as a volume manager. Second problem was, that some people’s new increased hdd’s got attached automagically to the vagrant machine, even though it should give an UUID conflict. So I had to go for my own solution, which is a combination of various solutions out there. I hope this is of any use for someone else out there, who was as frustrated as I was.</p>
 <h1 id="the-solution">The Solution</h1>
 <p>First things first: This solution is for machines, which use VirtualBox as their virtualisation platform. If you use VirtualBox, we can go on. The first thing you have to do is turn your running vagrant machine off (<em>vagrant halt</em> or <em>vagrant suspend</em>). Next we need to find the actual VMDK file, which represents the HDD of the machine. If you have installed VirtualBox with the standard procedure, your machine should be here:</p>
@@ -54,13 +116,13 @@
 <p>The next thing we need to do, is closing the SATA controller to the old disk</p>
 <pre><code>VBoxManage storageattach &lt;name-of-the-vm&gt; --storagectl &quot;IDE Controller&quot; --port 0 --device 0 --medium none</code></pre>
 <p>Here are two things, you need to take care of. First thing is <em><name-of-the-vm></em>. This is the same as the directory name, where the initial VMDK file is placed. The second thing is, that your storagectl could have another name. You can find it out by opening the _*.vbox_ file, which is in the same directory as the initial VMDK file. This should be a normal XML file. Now look out for this tag</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">&lt;StorageControllers&gt;</span></a>
-<a class="sourceLine" id="cb8-2" title="2">  <span class="kw">&lt;StorageController</span><span class="ot"> name=</span><span class="st">&quot;IDE Controller&quot;</span><span class="ot"> type=</span><span class="st">&quot;PIIX4&quot;</span><span class="ot"> PortCount=</span><span class="st">&quot;2&quot;</span><span class="ot"> useHostIOCache=</span><span class="st">&quot;true&quot;</span><span class="ot"> Bootable=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb8-3" title="3">    <span class="kw">&lt;AttachedDevice</span><span class="ot"> type=</span><span class="st">&quot;HardDisk&quot;</span><span class="ot"> hotpluggable=</span><span class="st">&quot;false&quot;</span><span class="ot"> port=</span><span class="st">&quot;0&quot;</span><span class="ot"> device=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span></a>
-<a class="sourceLine" id="cb8-4" title="4">      <span class="kw">&lt;Image</span><span class="ot"> uuid=</span><span class="st">&quot;{42b28bc6-a130-45be-9603-ee16779459d5}&quot;</span><span class="kw">/&gt;</span></a>
-<a class="sourceLine" id="cb8-5" title="5">    <span class="kw">&lt;/AttachedDevice&gt;</span></a>
-<a class="sourceLine" id="cb8-6" title="6">  <span class="kw">&lt;/StorageController&gt;</span></a>
-<a class="sourceLine" id="cb8-7" title="7"><span class="kw">&lt;/StorageControllers&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode xml"><code class="sourceCode xml"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">&lt;StorageControllers&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="kw">&lt;StorageController</span><span class="ot"> name=</span><span class="st">&quot;IDE Controller&quot;</span><span class="ot"> type=</span><span class="st">&quot;PIIX4&quot;</span><span class="ot"> PortCount=</span><span class="st">&quot;2&quot;</span><span class="ot"> useHostIOCache=</span><span class="st">&quot;true&quot;</span><span class="ot"> Bootable=</span><span class="st">&quot;true&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a>    <span class="kw">&lt;AttachedDevice</span><span class="ot"> type=</span><span class="st">&quot;HardDisk&quot;</span><span class="ot"> hotpluggable=</span><span class="st">&quot;false&quot;</span><span class="ot"> port=</span><span class="st">&quot;0&quot;</span><span class="ot"> device=</span><span class="st">&quot;0&quot;</span><span class="kw">&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>      <span class="kw">&lt;Image</span><span class="ot"> uuid=</span><span class="st">&quot;{42b28bc6-a130-45be-9603-ee16779459d5}&quot;</span><span class="kw">/&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5"></a>    <span class="kw">&lt;/AttachedDevice&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a>  <span class="kw">&lt;/StorageController&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a><span class="kw">&lt;/StorageControllers&gt;</span></span></code></pre></div>
 <p>As you can see, we are interested in the name of the <em>StorageController</em> tag. If there is something else than “IDE Controller”, you need to use that name for the <em>–storagectl</em> flag instead. Now we need to close the old medium</p>
 <pre><code>VBoxManage closemedium disk &lt;name-of-the-disk&gt;.vmdk</code></pre>
 <p>When it is closed, we can attach our new resized VMDK</p>
@@ -70,19 +132,19 @@
 <p>If there is your new size already, you are done. But if you are like me and still have the old size, we need to do some more steps. Namely we need to create a partition with the new space and resize our filesystem to that space. The following images are used from my example of increasing the disk from 40GB to 60GB, but there shouldn’t be a difference in doing the same for other sizes. First we need to search for our HDD</p>
 <pre><code>sudo fdisk -l</code></pre>
 <p>There are some USB drives and the last entry should look like this</p>
-<p><img src="../images/fdisk.png" alt="Fdisk" title="Fdisk" /></p>
+<p><img src="/images/fdisk.png" alt="Fdisk" title="Fdisk" /></p>
 <p>Here we are interested in what comes after <em>Disk</em>. This should always be <em>/dev/sda</em>. If not, you continue using that name instead of <em>/dev/sda</em>. Next execute</p>
 <pre><code>sudo fdisk /dev/sda</code></pre>
 <p>You should have entered the fdisk prompt now, which looks like this</p>
-<p><img src="../images/fdisk-prompt.png" alt="Fdisk-Prompt" title="Fdisk Prompt" /></p>
+<p><img src="/images/fdisk-prompt.png" alt="Fdisk-Prompt" title="Fdisk Prompt" /></p>
 <p>Now type in <strong>p</strong> and Enter to execute. This should call the current partition table</p>
-<p><img src="../images/fdisk-partition-table-1.png" alt="Fdisk Partition Table" title="Fdisk Partition Table" /></p>
+<p><img src="/images/fdisk-partition-table-1.png" alt="Fdisk Partition Table" title="Fdisk Partition Table" /></p>
 <p>Here <em>/dev/sda1</em> should be the boot partition, <em>/dev/sda2</em> is the swap partition and <em>/dev/sda3</em> is the actual partition, which should be resized. If yours isn’t <em>/dev/sda3</em>, change the following commands to your partition name. First we delete the current <em>/dev/sda3</em> partition by typing in <strong>d</strong> and Enter. Now you should get to choose which one. We want to delete the 3. So we type in 3 + Enter.</p>
-<p><img src="../images/fdisk-delete-partition.png" alt="Fdisk delete partition" title="Fdisk delete partition" /></p>
+<p><img src="/images/fdisk-delete-partition.png" alt="Fdisk delete partition" title="Fdisk delete partition" /></p>
 <p>Now we create a new one with <strong>n</strong> + Enter. Next we choose <strong>p</strong> for a primary partition. The new partition number will be 3 again and the next two questions for first and last sector will just be accepted with the default value by pressing Enter.</p>
-<p><img src="../images/fdisk-new-partition.png" alt="Fdisk new Partition" title="Fdisk new Partition" /></p>
+<p><img src="/images/fdisk-new-partition.png" alt="Fdisk new Partition" title="Fdisk new Partition" /></p>
 <p>As you can see we now have a new partition 3 with size 58.8 GB. To save the changes, we have made so far, type in <em>w</em> + Enter. This will result in an error like this</p>
-<p><img src="../images/fdisk-write-changes.png" alt="Fdisk write changes" title="Fdisk write changes" /></p>
+<p><img src="/images/fdisk-write-changes.png" alt="Fdisk write changes" title="Fdisk write changes" /></p>
 <p>As the messages tells us, the changes can’t be applied until a restart. That’s why we do exactly that. We leave the machine via exit and execute:</p>
 <pre><code>vagrant reload</code></pre>
 <p>After a few moments you should be able to re-SSH into your vagrant machine. The last thing we need to do is resize our file system to the new partition size.</p>
@@ -90,15 +152,13 @@
 <p>If you do</p>
 <pre><code>df -h</code></pre>
 <p>again, you should now see the new size you’ve always wanted.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

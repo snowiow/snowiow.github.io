@@ -1,45 +1,107 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant: Bonus 2</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>Creating your own PHP dev-env in Vagrant: Bonus 2</h1>
-              <article>
-    <section class="header">
-        Posted on 2016-06-03
-    </section>
-    <hr class="section-head">
-    <section>
-        <h1 id="table-of-contents">Table of Contents</h1>
-<ul>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant.html">Part 1</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Part 3</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html">Bonus 1</a></li>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2016-06-03" />
+  <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant: Bonus 2</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>Creating your own PHP dev-env in Vagrant: Bonus 2</h1>
+    <article>
+<section class="header">
+    Posted on 2016-06-03
+</section>
+<hr class="section-head">
+<section>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul class="incremental">
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant.html">Part 1</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Part 3</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html">Bonus 1</a></li>
 <li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
 </ul>
 <p>Slowly but surely we get to the end of this series. In this last post, I will write about database access from the host system, while your database is running on the guest machine. Therefore I will present two strategies to do so. Sure you also can</p>
@@ -47,63 +109,61 @@
 <p>via the terminal and access the database on the CLI. But viewing and fast editing of some tables is much more comfortable from a GUI. In this post I will go over two MySQL applications: MySQL Workbench and PHPMyAdmin. While the Workbench will be installed on your host system and access the database via ssh, PHPMyAdmin will be installed on the guest system, on the existing apache web server. Here we are able to access it over the hosts browser like our web app.</p>
 <h1 id="mysql-workbench">MySQL Workbench</h1>
 <p>The MySQL Workbench can be installed via your package manager or from their <a href="https://dev.mysql.com/downloads/workbench/">website</a>. After the installation we start up the vagrant machine and open the workbench. You should see this area.</p>
-<p><img src="../images/workbench-one.png" alt="Workbench 1" title="Workbench 1" /></p>
+<p><img src="/images/workbench-one.png" alt="Workbench 1" title="Workbench 1" /></p>
 <p>Click on the “+” next to the MySQL Connections. Now a new dialog should open up.</p>
-<p><img src="../images/workbench2.png" alt="Workbench 2" title="Workbench 2" /></p>
+<p><img src="/images/workbench2.png" alt="Workbench 2" title="Workbench 2" /></p>
 <p>Choose “Standard TCP/IP over SSH”. Afterwards fill out SSH Hostname and SSH username, like I did. At the top you can choose whatever name you like for the Connection Name. Then press Ok. Afterwards you should see your newly created Connection.</p>
-<p><img src="../images/workbench3.png" alt="Workbench 3" title="Workbench 3" /></p>
+<p><img src="/images/workbench3.png" alt="Workbench 3" title="Workbench 3" /></p>
 <p>Double-Click it and you will be asked for the SSH password. Since we didn’t changed it yet, it’s still <em>vagrant</em>. Then you will be asked for the database password. If you followed this tutorial closely, this will be <strong>my_pw</strong>. Afterwards you should be logged into your database successfully and you can start interacting with it.</p>
 <h1 id="phpmyadmin">PHPMyAdmin</h1>
 <p>Here we process similar, like we did in the earlier posts. First we create a new shell script inside of our <strong>sh</strong> directory. We start off with the following content</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2&quot;</span></a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/dbconfig-install boolean true&quot;</span></a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/admin-pass password my_pw&quot;</span> </a>
-<a class="sourceLine" id="cb2-4" title="4"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/app-pass password my_pw&quot;</span></a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/app-password-confirm password my_pw&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/dbconfig-install boolean true&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/admin-pass password my_pw&quot;</span> </span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/mysql/app-pass password my_pw&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="ex">debconf-set-selections</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">&quot;phpmyadmin phpmyadmin/app-password-confirm password my_pw&quot;</span></span></code></pre></div>
 <p>This should look similar to you. We already did it, while installing MySQL. Because PHPMyAdmin is working with an interactive prompt as well, we pass the different parameters in before. Out of simplicity we go with <em>my_pw</em> as our password again. Now we can install it</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" title="1"><span class="ex">apt-get</span> install -y phpmyadmin</a>
-<a class="sourceLine" id="cb3-2" title="2"><span class="ex">php5enmod</span> mcrypt</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1"></a><span class="ex">apt-get</span> install -y phpmyadmin</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="ex">php5enmod</span> mcrypt</span></code></pre></div>
 <p>On PHP5 we need to enable the mcrypt library, otherwise we get an annoying red box inside of our PHPMyAdmin Frontend. The last part of our config looks like this.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/phpmyadmin.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb4-2" title="2">    <span class="fu">mv</span> /vagrant/tmp/phpmyadmin.conf /etc/apache2/sites-available/phpmyadmin.conf</a>
-<a class="sourceLine" id="cb4-3" title="3">    <span class="ex">a2ensite</span> phpmyadmin.conf</a>
-<a class="sourceLine" id="cb4-4" title="4"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb4-5" title="5">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: phpmyadmin.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb4-6" title="6"><span class="kw">fi</span></a>
-<a class="sourceLine" id="cb4-7" title="7"></a>
-<a class="sourceLine" id="cb4-8" title="8"><span class="ex">service</span> apache2 restart</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/phpmyadmin.conf<span class="bu"> ]</span>; <span class="kw">then</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>    <span class="fu">mv</span> /vagrant/tmp/phpmyadmin.conf /etc/apache2/sites-available/phpmyadmin.conf</span>
+<span id="cb4-3"><a href="#cb4-3"></a>    <span class="ex">a2ensite</span> phpmyadmin.conf</span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="kw">else</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: phpmyadmin.conf not found&quot;</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="kw">fi</span></span>
+<span id="cb4-7"><a href="#cb4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="ex">service</span> apache2 restart</span></code></pre></div>
 <p>We put a virtual host configuration for the PHPMyAdmin page into the right place, like we did with our web app in the last post. Finally we restart the apache server. Our <em>phpmyadmin.conf</em> looks like this</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb5-2" title="2">    ServerAdmin<span class="st"> webmaster@dummy-host.com</span></a>
-<a class="sourceLine" id="cb5-3" title="3">    DocumentRoot<span class="st"> &quot;/usr/share/phpmyadmin&quot;</span></a>
-<a class="sourceLine" id="cb5-4" title="4">    ServerName<span class="st"> phpmyadmin.dev</span></a>
-<a class="sourceLine" id="cb5-5" title="5">    ServerAlias<span class="st"> www.phpmyadmin.dev</span></a>
-<a class="sourceLine" id="cb5-6" title="6">    ErrorLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-error_log&quot;</span></a>
-<a class="sourceLine" id="cb5-7" title="7">    CustomLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-access_log&quot; common</span></a>
-<a class="sourceLine" id="cb5-8" title="8">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/usr/share/phpmyadmin&quot;</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb5-9" title="9">       <span class="ex">Options</span><span class="ch"> </span><span class="kw">Indexes</span><span class="ch"> </span><span class="kw">FollowSymLinks</span><span class="ch"> </span><span class="kw">Includes</span><span class="ch"> </span><span class="kw">MultiViews</span></a>
-<a class="sourceLine" id="cb5-10" title="10">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
-<a class="sourceLine" id="cb5-11" title="11">       Allow<span class="st"> from all</span></a>
-<a class="sourceLine" id="cb5-12" title="12">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
-<a class="sourceLine" id="cb5-13" title="13">   <span class="fu">&lt;/Directory&gt;</span></a>
-<a class="sourceLine" id="cb5-14" title="14"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode apache"><code class="sourceCode apache"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>    ServerAdmin<span class="st"> webmaster@dummy-host.com</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a>    DocumentRoot<span class="st"> &quot;/usr/share/phpmyadmin&quot;</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a>    ServerName<span class="st"> phpmyadmin.dev</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a>    ServerAlias<span class="st"> www.phpmyadmin.dev</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>    ErrorLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-error_log&quot;</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a>    CustomLog<span class="st"> &quot;/var/log/apache2/phpmyadmin.dev-access_log&quot; common</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a>    <span class="fu">&lt;Directory</span><span class="at"> &quot;/usr/share/phpmyadmin&quot;</span><span class="fu">&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a>       <span class="ex">Options</span><span class="ch"> </span><span class="kw">Indexes</span><span class="ch"> </span><span class="kw">FollowSymLinks</span><span class="ch"> </span><span class="kw">Includes</span><span class="ch"> </span><span class="kw">MultiViews</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a>       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a>       Allow<span class="st"> from all</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a>       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a>   <span class="fu">&lt;/Directory&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="fu">&lt;/VirtualHost&gt;</span></span></code></pre></div>
 <p>This is almost the same, like we did in the last post, except for the new paths. Additionally we set some more directory options for PHPMyAdmin to make it’s routing possible. Next thing to do is add these scripts as partitioners to our Vagrantfile.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/phpmyadmin.sh&quot;</span></a>
-<a class="sourceLine" id="cb6-2" title="2">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/phpmyadmin.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/phpmyadmin.conf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb6-1"><a href="#cb6-1"></a>config.vm.provision <span class="st">&quot;shell&quot;</span>, <span class="st">path: &quot;sh/phpmyadmin.sh&quot;</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a>config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/phpmyadmin.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/phpmyadmin.conf&quot;</span></span></code></pre></div>
 <p>Now we are only missing an entry in our hosts file, to make the new domain address known to our host machine. So we go to our <em>hosts</em> file again and add the following line</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">192.168.33.10 	phpmyadmin.dev</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb7-1"><a href="#cb7-1"></a><span class="dt">192.168.33.10   phpmyadmin.dev</span></span></code></pre></div>
 <p>That’s it! Recreate or re-provision your vagrant machine and go to <em>phpmyadmin.dev</em> on your hosts web browser. You should see this page</p>
-<p><img src="../images/phpmyadmin.png" alt="PHPMyAdmin" title="PHPMyAdmin" /></p>
+<p><img src="/images/phpmyadmin.png" alt="PHPMyAdmin" title="PHPMyAdmin" /></p>
 <p>Type in the credentials you have typed in earlier and you should be able to be in the web frontend of your database.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

@@ -1,43 +1,43 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: The power of Vim Plugins: NERDTree</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>The power of Vim Plugins: NERDTree</h1>
-              <article>
-    <section class="header">
-        Posted on 2015-10-16
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>Hey everyone, this time we will cover a plugin called <a href="https://github.com/scrooloose/nerdtree">NERDTree</a>. This is the kind of addition, which shows the file system with all it’s files and sub folders. It is a great tool to keep an overview, when working on a project or a big set of files. Because I’m coming from a Sublime background, it was one of the first things I’ve been missing. I was and am still one of those people, who interact with the tree view quite a lot. I also prefer it over tabs and other alternatives, but that is just my personal preference. With <a href="https://github.com/VundleVim/Vundle.vim">Vundle</a> installed from the last <a href="http://snow-dev.com/the-power-of-vim-plugins-vundle/">post</a>, it is pretty easy to get started with NERDTree. Just add the following line to your plugin list inside your <em>.vimrc</em></p>
-<pre class="vim"><code>Plugin 'scrooloose/nerdtree'</code></pre>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2015-10-16" />
+  <title>snow-dev.com :: The power of Vim Plugins: NERDTree</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>The power of Vim Plugins: NERDTree</h1>
+    <article>
+<section class="header">
+    Posted on 2015-10-16
+</section>
+<hr class="section-head">
+<section>
+<p>Hey everyone, this time we will cover a plugin called <a href="https://github.com/scrooloose/nerdtree">NERDTree</a>. This is the kind of addition, which shows the file system with all it’s files and sub folders. It is a great tool to keep an overview, when working on a project or a big set of files. Because I’m coming from a Sublime background, it was one of the first things I’ve been missing. I was and am still one of those people, who interact with the tree view quite a lot. I also prefer it over tabs and other alternatives, but that is just my personal preference. With <a href="https://github.com/VundleVim/Vundle.vim">Vundle</a> installed from the last <a href="http://snow-dev.com/the-power-of-vim-plugins-vundle/">post</a>, it is pretty easy to get started with NERDTree. Just add the following line to your plugin list inside your <em>.vimrc</em></p>
+<pre class="vim"><code>Plugin &#39;scrooloose/nerdtree&#39;</code></pre>
 <p>Re-source your <em>.vimrc</em> and call <em>:PluginInstall</em>. Restart vim, just to be save everything is properly set. Now call <em>:NERDTreeToggle</em> and the tree view should pop up on the left side of your vim instance.</p>
-<p><img src="../images/nerdtree.png" alt="NerdTree" title="NerdTree" /></p>
+<p><img src="/images/nerdtree.png" alt="NerdTree" title="NerdTree" /></p>
 <p>NERDTree is just another split view, in which you aren’t able to write anything. It has it’s own shortcuts, to which we come later.</p>
 <h1 id="configuration">Configuration</h1>
 <p>The first thing you probably think of, is why would I call <em>:NERDTreeToggle</em> every time I start vim or open a new buffer. To end this struggle, just add the following line into your <em>.vimrc</em></p>
@@ -51,23 +51,21 @@
 <p>This maps the control key <strong>F5</strong> to the NERDTree focus action. If you prefer another key or a combination you are free to use whatever you are comfortable with.</p>
 <h1 id="usage">Usage</h1>
 <p>With the last part of the configuration, we already stepped into the usage. But what are we able to do, if we called <em>:NERDTreeFocus</em>? The short answer is: pretty much everything you can do with a tree view in Sublime and other editors/IDEs. In this tutorial I only go through the functions I use mostly, but there are plenty more helpful shortcuts and functionalities. For a full reference you can always type in ? while in NERDTree and you get the full list of shortcuts. Press ? again to come back to the tree view. # Navigation Ok, lets start of easy. <strong>j</strong> and <strong>k</strong> are also used for navigating up and down like in any other buffer. To jump to the parent directory, you can press <strong>p</strong> and if you want to go to your root directory you press <strong>P</strong>. To open a directory press <strong>o</strong>. This will show all files and sub directories. To close the directory, simply press <strong>o</strong> again. # Setting the current node and bookmark The number one reason we want to use NERDTree is an overview of our current project or set of files, which is always a sub node in our file system. At the moment I’m navigating through the console to the root directory of my project and open vim there. But there is also a NERDTree way of doing this. You navigate to the root directory of your project in NERDTRee and press <strong>cd</strong> afterwards. This means “change directory” and it doesn’t have any visual effect. But now every command you type into command-line mode is relative to your chosen root directory and not to the system root. Next thing you may want to do is to only show this directory and hide the rest of your file system. By pressing <strong>C</strong> you set the underlying directory as the top most visible node. Every time you want to work on your project you need to navigate there. This gets very exhaustive, but NERDTree has a neat feature called bookmarks. You can bookmark directories and files and you are instantly able to open them from a bookmarks list, without navigating there first. To bookmark a node, like our project root, we type in <em>:Bookmark</em>, while NERDTree is focused and the project root is chosen. To open our bookmarks we can press <strong>B</strong> and now we can type <strong>cd</strong>, <strong>C</strong> and <strong>o</strong> on the chosen bookmark and we are in our project without navigating there first.</p>
-<p><img src="../images/nerdtree_bookmarks.png" alt="NerdTree Bookmarks" title="NerdTree Bookmarks" /></p>
+<p><img src="/images/nerdtree_bookmarks.png" alt="NerdTree Bookmarks" title="NerdTree Bookmarks" /></p>
 <p>If you want to get rid of the bookmark, you just navigate to the bookmark and press <strong>D</strong>.</p>
 <h1 id="opening-files">Opening files</h1>
 <p>Now we come to the most important part, actually opening a file. There are many different ways of opening. A normal open in the buffer to the right is done by pressing <strong>o</strong>. But you are also able to open a file in a new tab[<strong>t</strong>], in a vertical split[<strong>s</strong>] or horizontal split[<strong>i</strong>]. As a site node: <strong>o</strong> is always overwriting the buffer you were in last. So for example, if you opened some vertical splits and you are in the most right split, you focus NERDTree and open another file by pressing <strong>o</strong>, the most right buffer will be overwritten.</p>
 <h1 id="modifying-nodes-in-the-file-system">Modifying nodes in the file system</h1>
 <p>In the beginning I just used terminal commands like <em>touch/mkdir/mv</em>. With the help of <strong>:!</strong> I was able to do any CLI command from within vim. Afterwards I needed to refresh the file system by pressing <strong>R</strong>. But I discovered a much easier way of doing things like these, quite recently. Just go to a node, which you want to modify and press <strong>m</strong>. Now you get an overview of allowed operations.</p>
-<p><img src="../images/nerdtree_menu.png" alt="NERDTree Menu" title="NERDTree Menu" /></p>
+<p><img src="/images/nerdtree_menu.png" alt="NERDTree Menu" title="NERDTree Menu" /></p>
 <p>These are adding, moving/renaming, copying and removing files or directories. Just choose the shortcut in front of the option and you will be put to the next instruction buffer. Removing needs to be confirmed by a ‘yes’. Adding, moving and copying requires the new path. As an example: if you want to add a new directory you press <strong>m</strong> on the given node, followed by <strong>a</strong> and then type in a directory name, followed by a <strong>/</strong>, otherwise a file would be created. If you are ok with the name, you confirm by pressing <strong>Enter</strong>. Every modification done from this menu will update your tree view automatically, so there is no need to refresh manually. I hope, this overview will get you started with NERDTree properly. If you have any questions you can ask them in the comment section below.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>
