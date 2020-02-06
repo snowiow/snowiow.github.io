@@ -1,43 +1,43 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: The power of Vim Plugins: netrw</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>The power of Vim Plugins: netrw</h1>
-              <article>
-    <section class="header">
-        Posted on 2015-11-03
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>This time we look into an alternative for NERDTree, which is called netrw. Thanks to <a href="https://www.reddit.com/user/aguerosantiale">aguerosantiale</a>, who put my attention onto it. Both plugins serve the same purpose, but they behave fundamentaly different in archiving this. So the first question you will probably ask is: “why use netrw, if I’m already familiar with NERDTree?”. The biggest plus for netrw is, that you don’t have to download anything. If you <em>set nocampatible</em> in your .vimrc you are able to use it. So if you are on a different machine, for example connected via ssh, you are able to use netrw. The second point is, that vim is very reactive by nature, but if you have too many plugins running at the same time, you could destroy this attribute. So it’s always good to use something, what is already there. Not everyone will like netrw, because it isn’t the approach you know from Sublime Text or others. Netrw is a so called split explorer, while tree views like NERDTree are called project drawer. To learn about the difference, we will talk about the project drawer approach first. Project drawer open a new split view on the left(sometimes right) and stays opened during your complete coding session. Every time you click on an item in the project drawer, it opens the files in a separate buffer.</p>
-<p><img src="../images/blog_explorer.png" alt="Explorer" title="Explorer" /></p>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2015-11-03" />
+  <title>snow-dev.com :: The power of Vim Plugins: netrw</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/index.html">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/index.html" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>The power of Vim Plugins: netrw</h1>
+    <article>
+<section class="header">
+    Posted on 2015-11-03
+</section>
+<hr class="section-head">
+<section>
+<p>This time we look into an alternative for NERDTree, which is called netrw. Thanks to <a href="https://www.reddit.com/user/aguerosantiale">aguerosantiale</a>, who put my attention onto it. Both plugins serve the same purpose, but they behave fundamentaly different in archiving this. So the first question you will probably ask is: “why use netrw, if I’m already familiar with NERDTree?”. The biggest plus for netrw is, that you don’t have to download anything. If you <em>set nocampatible</em> in your .vimrc you are able to use it. So if you are on a different machine, for example connected via ssh, you are able to use netrw. The second point is, that vim is very reactive by nature, but if you have too many plugins running at the same time, you could destroy this attribute. So it’s always good to use something, what is already there. Not everyone will like netrw, because it isn’t the approach you know from Sublime Text or others. Netrw is a so called split explorer, while tree views like NERDTree are called project drawer. To learn about the difference, we will talk about the project drawer approach first. Project drawer open a new split view on the left(sometimes right) and stays opened during your complete coding session. Every time you click on an item in the project drawer, it opens the files in a separate buffer.</p>
+<p><img src="/images/blog_explorer.png" alt="Explorer" title="Explorer" /></p>
 <p>Vim wasn’t supposed to work along with a feature like this. That’s why we had to do some tweaks in the <a href="http://snow-dev.com/the-power-of-vim-plugins-nerdtree/">last post</a>, to make it work. Especially if you are working with splits, you first must know in which split NERDTree opens your file. If you got that down, you need to learn, how to navigate between them fast. If you want to open a file in a split, which is on the opposite to the project drawer, you have to go a long way… That’s why we created a keybinding to toggle NERDTree instantly. Then we choose a file and got thrown in the opened buffer immediately. To sum it up: that aren’t d many key presses to get work done with NERDTree. So overall they provide a very good solution for bringin in a principle, which wasn’t supposed to be in vim initially. But what is different with the split explorer? A split explorer opens up in the same buffer. You then are able to choose a new file and this file opens up in the same buffer again. It’s like sitting in front of a book and having the table of contents opened. You look up the page you want to see and switch to the according page. If you read the page, you can go back to the table of contents and choose a new page and switch to it and so on and so forth. You are also able to open the explorer in another split view and choose which file to open from there.</p>
-<p><img src="../images/split.png" alt="Split" title="Split" /></p>
+<p><img src="/images/split.png" alt="Split" title="Split" /></p>
 <p>So what’s the benefit from this? First of all: you look at the project drawer very rarely(only if you want to change a file). So let’s say 5% of your time coding is spent with the project explorer and the rest of the time you ignore it. But 95% of the time it is still open and takes away space from your monitor. So why not keep it closed as long as you are working on a file until you need to switch? Another benefit is, that you always know where your buffer opens up. If you want to know more about project drawers and split explorers, have a look at <a href="http://vimcasts.org/blog/2013/01/oil-and-vinegar-split-windows-and-project-drawer/">oil and vinegar</a>, it’s great in-depth article about this topic. If you are a NERDTree user and you are critical with the previous principle, you can test the split explorer by adding the following line to your .vimrc</p>
 <pre><code>let NERDTreeHijackNetrw=1</code></pre>
 <p>Close your normal NERDTree with the <em>:NERDTreeToggle</em> command and type in <em>:e .</em> or create a mapping in your .vimrc. This is mine for example:</p>
@@ -66,15 +66,13 @@ nnoremap &lt;Leader&gt;s :sp .&lt;CR&gt;</code></pre>
 <p>I really like the split explorer approach, but for me netrw shows his weaknesses, if I want to do anything advanced. I think netrw is the perfect choice, if you only rely on navigation and opening files. If you want to do more, netrw falters. NERDTree also isn’t perfect to use with this approach, because every time it is opened, it is reset. This means that every opened directory is closed. So you have to navigate the whole way to a file again. Thats why NERDTree is only a good choice, if you want to stay with the project drawer approach. If you decided to stay with netrw and need further help, you can type in</p>
 <pre><code>:h netrw</code></pre>
 <p>This will show you the whole documentation of netrw, containing all it’s features and configuration possibilities. During the writing of this article I also am experimenting with vimfiler, which seems to combine the good things of both plugins and adds a whole bunch of configuration possibilities on top of it. I will probably cover this plugin in a later post, if it fulfills my needs.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

@@ -1,118 +1,178 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: A basic Routing approach with PHP</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>A basic Routing approach with PHP</h1>
-              <article>
-    <section class="header">
-        Posted on 2015-10-07
-    </section>
-    <hr class="section-head">
-    <section>
-        <p>Nice and readable URLs are the way to go in modern web applications. More and more people are abandoning the old style URLs, containing question marks and  equal signs, in favor of the slash separation for actions and parameters. Most frameworks are already supporting this new kind of URLs and encapsulate the logic inside of a routing class or module. Everyone is using it and everything is good so far. But even if these new URLs are all over the place, there is very little information on the net about how it is actually implemented. Because I’m currently working on a minimalistic PHP MVC Framework with a <a href="http://randy-schuett.de">friend</a>, I came across this problem. Beside of the source code of the big players in PHP Frameworks I found a small and easy to use snippet to get routes working pretty fast. In this post I want to present the key PHP feature, which allows us to realize it and how to build upon it. Everything starts of with the PHP super constant <a href="http://php.net/manual/en/reserved.variables.server.php">$_SERVER</a>. We are interested about the ‘REQUEST_URI’  key. If we type in the address of our webserver, followed by and <em>/index.php</em> and this file contains the following line of code.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb1-2" title="2"><span class="kw">echo</span> <span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">'REQUEST_URI'</span><span class="ot">];</span></a></code></pre></div>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2015-10-07" />
+  <title>snow-dev.com :: A basic Routing approach with PHP</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/index.html">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/index.html" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>A basic Routing approach with PHP</h1>
+    <article>
+<section class="header">
+    Posted on 2015-10-07
+</section>
+<hr class="section-head">
+<section>
+<p>Nice and readable URLs are the way to go in modern web applications. More and more people are abandoning the old style URLs, containing question marks and  equal signs, in favor of the slash separation for actions and parameters. Most frameworks are already supporting this new kind of URLs and encapsulate the logic inside of a routing class or module. Everyone is using it and everything is good so far. But even if these new URLs are all over the place, there is very little information on the net about how it is actually implemented. Because I’m currently working on a minimalistic PHP MVC Framework with a <a href="http://randy-schuett.de">friend</a>, I came across this problem. Beside of the source code of the big players in PHP Frameworks I found a small and easy to use snippet to get routes working pretty fast. In this post I want to present the key PHP feature, which allows us to realize it and how to build upon it. Everything starts of with the PHP super constant <a href="http://php.net/manual/en/reserved.variables.server.php">$_SERVER</a>. We are interested about the ‘REQUEST_URI’  key. If we type in the address of our webserver, followed by and <em>/index.php</em> and this file contains the following line of code.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">echo</span> <span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">&#39;REQUEST_URI&#39;</span><span class="ot">];</span></span></code></pre></div>
 <p>we probably would get back <em>/index.php</em>. This is exactly what we wanted to archive, because now we are able to read what the user typed into the address bar of his browser and now we can react to it. But with this approach comes a problem. If we would build our Router upon this feature, we are forced to place a file at each possible path, which we want to cover, containing the request of the super constant and reroute to the appropriate controller and action. A good way to solve this problem would be, that whatever the user types into the address bar, it would open up the same file everytime, like our <em>index.php</em>. Sadly there is no way to solve this in PHP. So this has to be done on the webserver level itself. Most webservers (like Apache)  support configurations written down to a <em>.htaccess</em> file, which is placed in the root directory of the webserver. We write the following content to the file.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb2-1" title="1">RewriteEngine On</a>
-<a class="sourceLine" id="cb2-2" title="2">RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span> - <span class="ot">[</span><span class="kw">E</span>=<span class="kw">BASE</span>:%<span class="dv">1</span><span class="ot">]</span></a>
-<a class="sourceLine" id="cb2-3" title="3">RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span>$ %{<span class="kw">ENV</span>:<span class="kw">BASE</span>}index.php <span class="ot">[</span><span class="kw">NC</span><span class="ot">,</span><span class="kw">L</span><span class="ot">]</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb2-1"><a href="#cb2-1"></a>RewriteEngine On</span>
+<span id="cb2-2"><a href="#cb2-2"></a>RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span> - <span class="ot">[</span><span class="kw">E</span>=<span class="kw">BASE</span>:%<span class="dv">1</span><span class="ot">]</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>RewriteRule ^<span class="ot">(</span>.*<span class="ot">)</span>$ %{<span class="kw">ENV</span>:<span class="kw">BASE</span>}index.php <span class="ot">[</span><span class="kw">NC</span><span class="ot">,</span><span class="kw">L</span><span class="ot">]</span></span></code></pre></div>
 <p>The first directive tells the webserver to turn on the rewrite engine. Afterwards we give him the rules to link everything to the <em>index.php</em> in the root directory. Now we can type in <em>/test/dir/index</em> for example and the <em>index.php</em> in the root directory is called, but with this output instead: <em>/test/dir/index</em>. Based on this behavior we can build our Router. For a minimalistic example we create a <em>Router.php</em> file which contains the following class.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb3-2" title="2"></a>
-<a class="sourceLine" id="cb3-3" title="3"><span class="kw">class</span> Router</a>
-<a class="sourceLine" id="cb3-4" title="4">{</a>
-<a class="sourceLine" id="cb3-5" title="5">    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></a>
-<a class="sourceLine" id="cb3-6" title="6">    {</a>
-<a class="sourceLine" id="cb3-7" title="7">        <span class="kw">echo</span> <span class="kw">$route</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb3-8" title="8">    }</a>
-<a class="sourceLine" id="cb3-9" title="9">}</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a></span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">class</span> Router</span>
+<span id="cb3-4"><a href="#cb3-4"></a>{</span>
+<span id="cb3-5"><a href="#cb3-5"></a>    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>    {</span>
+<span id="cb3-7"><a href="#cb3-7"></a>        <span class="kw">echo</span> <span class="kw">$route</span><span class="ot">;</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a>    }</span>
+<span id="cb3-9"><a href="#cb3-9"></a>}</span></code></pre></div>
 <p>and we change our <em>index.php</em>.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb4-2" title="2"></a>
-<a class="sourceLine" id="cb4-3" title="3"><span class="kw">require_once</span> <span class="st">'Router.php'</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb4-4" title="4"></a>
-<a class="sourceLine" id="cb4-5" title="5"><span class="kw">$r</span> = <span class="kw">new</span> Router<span class="ot">();</span></a>
-<a class="sourceLine" id="cb4-6" title="6"><span class="kw">$r</span>-&gt;route<span class="ot">(</span><span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">'REQUEST_URI'</span><span class="ot">]);</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">require_once</span> <span class="st">&#39;Router.php&#39;</span><span class="ot">;</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a></span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="kw">$r</span> = <span class="kw">new</span> Router<span class="ot">();</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a><span class="kw">$r</span>-&gt;route<span class="ot">(</span><span class="kw">$_SERVER</span><span class="ot">[</span><span class="st">&#39;REQUEST_URI&#39;</span><span class="ot">]);</span></span></code></pre></div>
 <p>So far we gained nothing except a new layer of abstraction. But now we are able to actually give our routing some behavior, similar to modern frameworks, which are based on controllers and actions. As an example we take the following path <em>/default/print_hello</em>. In theory this should instantiate a <em>DefaultController</em> class and call the <em>print_helloAction</em> method. As a place for our controllers we create a new directory called <em>controllers</em> and add a <em>DefaultController.php</em> file.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb5-2" title="2"></a>
-<a class="sourceLine" id="cb5-3" title="3"><span class="kw">class</span> DefaultController</a>
-<a class="sourceLine" id="cb5-4" title="4">{</a>
-<a class="sourceLine" id="cb5-5" title="5">    <span class="kw">public</span> <span class="kw">function</span> indexAction<span class="ot">()</span></a>
-<a class="sourceLine" id="cb5-6" title="6">    {</a>
-<a class="sourceLine" id="cb5-7" title="7">        <span class="kw">echo</span> <span class="st">'Index'</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb5-8" title="8">    }</a>
-<a class="sourceLine" id="cb5-9" title="9"></a>
-<a class="sourceLine" id="cb5-10" title="10">    <span class="kw">public</span> <span class="kw">function</span> print_helloAction<span class="ot">()</span></a>
-<a class="sourceLine" id="cb5-11" title="11">    {</a>
-<a class="sourceLine" id="cb5-12" title="12">        <span class="kw">echo</span> <span class="st">'Hello'</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb5-13" title="13">    }</a>
-<a class="sourceLine" id="cb5-14" title="14">}</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">class</span> DefaultController</span>
+<span id="cb5-4"><a href="#cb5-4"></a>{</span>
+<span id="cb5-5"><a href="#cb5-5"></a>    <span class="kw">public</span> <span class="kw">function</span> indexAction<span class="ot">()</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a>    {</span>
+<span id="cb5-7"><a href="#cb5-7"></a>        <span class="kw">echo</span> <span class="st">&#39;Index&#39;</span><span class="ot">;</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a>    }</span>
+<span id="cb5-9"><a href="#cb5-9"></a></span>
+<span id="cb5-10"><a href="#cb5-10"></a>    <span class="kw">public</span> <span class="kw">function</span> print_helloAction<span class="ot">()</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a>    {</span>
+<span id="cb5-12"><a href="#cb5-12"></a>        <span class="kw">echo</span> <span class="st">&#39;Hello&#39;</span><span class="ot">;</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a>    }</span>
+<span id="cb5-14"><a href="#cb5-14"></a>}</span></code></pre></div>
 <p>The last part of this post will be about how our Router class can actually instantiate the <em>DefaultController</em> and call the method based on the given route. One way to do it is to cut down the string at the slashes. Afterwards we got the controller and action name which we are now able to instantiate and call. The code for the route function could look like this.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">&lt;?php</span></a>
-<a class="sourceLine" id="cb6-2" title="2"></a>
-<a class="sourceLine" id="cb6-3" title="3"><span class="kw">class</span> Router</a>
-<a class="sourceLine" id="cb6-4" title="4">{</a>
-<a class="sourceLine" id="cb6-5" title="5">    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></a>
-<a class="sourceLine" id="cb6-6" title="6">    {</a>
-<a class="sourceLine" id="cb6-7" title="7">        <span class="kw">$parts</span> = <span class="fu">explode</span><span class="ot">(</span><span class="st">'/'</span><span class="ot">,</span> <span class="kw">$route</span><span class="ot">);</span></a>
-<a class="sourceLine" id="cb6-8" title="8">        <span class="co">//Index 0 is empty because the routes</span></a>
-<a class="sourceLine" id="cb6-9" title="9">        <span class="co">//always start with a preceding /</span></a>
-<a class="sourceLine" id="cb6-10" title="10">        <span class="kw">$controller</span> = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">1</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">1</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">''</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-11" title="11">        <span class="kw">$action</span>     = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">2</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">2</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">''</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-12" title="12"></a>
-<a class="sourceLine" id="cb6-13" title="13">        <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">))</span> {</a>
-<a class="sourceLine" id="cb6-14" title="14">            <span class="co">//upper case the first letter of the controller name and</span></a>
-<a class="sourceLine" id="cb6-15" title="15">            <span class="co">//append the Controller string to it</span></a>
-<a class="sourceLine" id="cb6-16" title="16">            <span class="kw">$controller</span> = <span class="fu">ucfirst</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">)</span> . <span class="st">'Controller'</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-17" title="17">            <span class="co">//Include the PHP file for the Controller</span></a>
-<a class="sourceLine" id="cb6-18" title="18">            <span class="kw">require_once</span> <span class="st">'controllers/'</span> . <span class="kw">$controller</span> . <span class="st">'.php'</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-19" title="19">            <span class="co">//instantiate the controller</span></a>
-<a class="sourceLine" id="cb6-20" title="20">            <span class="kw">$object</span> = <span class="kw">new</span> <span class="kw">$controller</span><span class="ot">;</span></a>
-<a class="sourceLine" id="cb6-21" title="21">            <span class="co">//call the action</span></a>
-<a class="sourceLine" id="cb6-22" title="22">            <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$action</span><span class="ot">))</span> {</a>
-<a class="sourceLine" id="cb6-23" title="23">                <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="kw">$action</span> . <span class="st">'Action'</span><span class="ot">]);</span></a>
-<a class="sourceLine" id="cb6-24" title="24">            }</a>
-<a class="sourceLine" id="cb6-25" title="25">            <span class="co">//call indexAction if no action is given</span></a>
-<a class="sourceLine" id="cb6-26" title="26">            <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="st">'indexAction'</span><span class="ot">]);</span></a>
-<a class="sourceLine" id="cb6-27" title="27">        }</a>
-<a class="sourceLine" id="cb6-28" title="28">    }</a>
-<a class="sourceLine" id="cb6-29" title="29">}</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode php"><code class="sourceCode php"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">&lt;?php</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="kw">class</span> Router</span>
+<span id="cb6-4"><a href="#cb6-4"></a>{</span>
+<span id="cb6-5"><a href="#cb6-5"></a>    <span class="kw">public</span> <span class="kw">function</span> route<span class="ot">(</span><span class="kw">$route</span><span class="ot">)</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a>    {</span>
+<span id="cb6-7"><a href="#cb6-7"></a>        <span class="kw">$parts</span> = <span class="fu">explode</span><span class="ot">(</span><span class="st">&#39;/&#39;</span><span class="ot">,</span> <span class="kw">$route</span><span class="ot">);</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>        <span class="co">//Index 0 is empty because the routes</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a>        <span class="co">//always start with a preceding /</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a>        <span class="kw">$controller</span> = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">1</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">1</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">&#39;&#39;</span><span class="ot">;</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a>        <span class="kw">$action</span>     = <span class="fu">array_key_exists</span><span class="ot">(</span><span class="dv">2</span><span class="ot">,</span> <span class="kw">$parts</span><span class="ot">)</span> <span class="ot">?</span> <span class="kw">$parts</span><span class="ot">[</span><span class="dv">2</span><span class="ot">]</span> <span class="ot">:</span> <span class="st">&#39;&#39;</span><span class="ot">;</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a></span>
+<span id="cb6-13"><a href="#cb6-13"></a>        <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">))</span> {</span>
+<span id="cb6-14"><a href="#cb6-14"></a>            <span class="co">//upper case the first letter of the controller name and</span></span>
+<span id="cb6-15"><a href="#cb6-15"></a>            <span class="co">//append the Controller string to it</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a>            <span class="kw">$controller</span> = <span class="fu">ucfirst</span><span class="ot">(</span><span class="kw">$controller</span><span class="ot">)</span> . <span class="st">&#39;Controller&#39;</span><span class="ot">;</span></span>
+<span id="cb6-17"><a href="#cb6-17"></a>            <span class="co">//Include the PHP file for the Controller</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a>            <span class="kw">require_once</span> <span class="st">&#39;controllers/&#39;</span> . <span class="kw">$controller</span> . <span class="st">&#39;.php&#39;</span><span class="ot">;</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a>            <span class="co">//instantiate the controller</span></span>
+<span id="cb6-20"><a href="#cb6-20"></a>            <span class="kw">$object</span> = <span class="kw">new</span> <span class="kw">$controller</span><span class="ot">;</span></span>
+<span id="cb6-21"><a href="#cb6-21"></a>            <span class="co">//call the action</span></span>
+<span id="cb6-22"><a href="#cb6-22"></a>            <span class="kw">if</span> <span class="ot">(</span><span class="fu">strlen</span><span class="ot">(</span><span class="kw">$action</span><span class="ot">))</span> {</span>
+<span id="cb6-23"><a href="#cb6-23"></a>                <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="kw">$action</span> . <span class="st">&#39;Action&#39;</span><span class="ot">]);</span></span>
+<span id="cb6-24"><a href="#cb6-24"></a>            }</span>
+<span id="cb6-25"><a href="#cb6-25"></a>            <span class="co">//call indexAction if no action is given</span></span>
+<span id="cb6-26"><a href="#cb6-26"></a>            <span class="kw">return</span> <span class="fu">call_user_func</span><span class="ot">([</span><span class="kw">$object</span><span class="ot">,</span> <span class="st">&#39;indexAction&#39;</span><span class="ot">]);</span></span>
+<span id="cb6-27"><a href="#cb6-27"></a>        }</span>
+<span id="cb6-28"><a href="#cb6-28"></a>    }</span>
+<span id="cb6-29"><a href="#cb6-29"></a>}</span></code></pre></div>
 <p>If we type in <em>/default/print_hello</em> we get back <em>Hello</em>. If no action is given, we automatically try to route to the index action. So <em>/default</em> would print <em>Index</em>. <a href="http://php.net/manual/en/function.call-user-func.php">call_user_func</a> also supports parameters. So it is very easy to extend the given Router with parameter handling. Also there should be more handling of special cases, like if no controller is given in the URL. It’s also simple to extend the given model to use real view files for showing a page, instead of just doing an echo. Nevertheless serves this basic concept  as a starting point and it should be straightforward to build upon it.</p>
-    </section>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

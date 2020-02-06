@@ -1,92 +1,152 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant: Bonus 1</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>Creating your own PHP dev-env in Vagrant: Bonus 1</h1>
-              <article>
-    <section class="header">
-        Posted on 2016-06-03
-    </section>
-    <hr class="section-head">
-    <section>
-        <h1 id="table-of-contents">Table of Contents</h1>
-<ul>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant.html">Part 1</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Part 3</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Bonus 2</a></li>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2016-06-03" />
+  <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant: Bonus 1</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/index.html">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/index.html" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>Creating your own PHP dev-env in Vagrant: Bonus 1</h1>
+    <article>
+<section class="header">
+    Posted on 2016-06-03
+</section>
+<hr class="section-head">
+<section>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul class="incremental">
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant.html">Part 1</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Part 3</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Bonus 2</a></li>
 <li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
 </ul>
 <p>In the previous posts we’ve successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it’s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called <em>mysite.dev</em>. So let’s get started! First we create a config file inside our <em>conf</em> directory with the following content:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode apache"><code class="sourceCode apache"><a class="sourceLine" id="cb1-1" title="1"><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb1-2" title="2">    DocumentRoot<span class="st"> &quot;/var/www/html&quot;</span></a>
-<a class="sourceLine" id="cb1-3" title="3">    ServerName<span class="st"> mysite.dev</span></a>
-<a class="sourceLine" id="cb1-4" title="4">    ServerAlias<span class="st"> www.mysite.dev</span></a>
-<a class="sourceLine" id="cb1-5" title="5">    ErrorLog<span class="st"> &quot;/var/log/apache2/mysite.dev-error_log&quot;</span></a>
-<a class="sourceLine" id="cb1-6" title="6">    CustomLog<span class="st"> &quot;/var/log/apache2/mysite.dev-access_log&quot; common</span></a>
-<a class="sourceLine" id="cb1-7" title="7">    <span class="fu">&lt;Directory</span><span class="at"> &quot;/var/www/html&quot;</span><span class="fu">&gt;</span></a>
-<a class="sourceLine" id="cb1-8" title="8">       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></a>
-<a class="sourceLine" id="cb1-9" title="9">       Allow<span class="st"> from all</span></a>
-<a class="sourceLine" id="cb1-10" title="10">       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></a>
-<a class="sourceLine" id="cb1-11" title="11">   <span class="fu">&lt;/Directory&gt;</span></a>
-<a class="sourceLine" id="cb1-12" title="12"><span class="fu">&lt;/VirtualHost&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode apache"><code class="sourceCode apache"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">&lt;VirtualHost</span><span class="at"> *:80</span><span class="fu">&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>    DocumentRoot<span class="st"> &quot;/var/www/html&quot;</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>    ServerName<span class="st"> mysite.dev</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>    ServerAlias<span class="st"> www.mysite.dev</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>    ErrorLog<span class="st"> &quot;/var/log/apache2/mysite.dev-error_log&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>    CustomLog<span class="st"> &quot;/var/log/apache2/mysite.dev-access_log&quot; common</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>    <span class="fu">&lt;Directory</span><span class="at"> &quot;/var/www/html&quot;</span><span class="fu">&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>       <span class="ex">Order</span><span class="ch"> </span><span class="kw">allow,deny</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>       Allow<span class="st"> from all</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a>       <span class="ex">AllowOverride</span><span class="ch"> </span><span class="kw">All</span></span>
+<span id="cb1-11"><a href="#cb1-11"></a>   <span class="fu">&lt;/Directory&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="fu">&lt;/VirtualHost&gt;</span></span></code></pre></div>
 <p>This is the virtual host definition. The first line says that it’s listening on port 80, which is the default port. The <em>DocumentRoot</em> is the path to our webspace, which was symlinked to the vagrant synced directory in an earlier post. <em>ServerName</em> is the address, how you can access the page and the <em>ServerAlias</em> is the alternative if the <em>ServerName</em> isn’t accessible. The following two lines are the paths to the access and error log of our virtual host. If anything bad happens, those two files are the place to start troubleshooting. The following lines are some directory options about what the web app is allowed to do and what not. Next we need a new shell script, which we call <em>mysite.sh</em>. Everything required to setup your project(composer update, migrations etc.) will be defined in this script. In this tutorial we won’t do all this, but only activating our virtual host address.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/mysite.conf<span class="bu"> ]</span>; <span class="kw">then</span></a>
-<a class="sourceLine" id="cb2-2" title="2">    <span class="fu">chown</span> <span class="va">$USER</span>:<span class="va">$USER</span> /var/www/html</a>
-<a class="sourceLine" id="cb2-3" title="3">    <span class="fu">mv</span> /vagrant/tmp/mysite.conf /etc/apache2/sites-available/mysite.conf</a>
-<a class="sourceLine" id="cb2-4" title="4">    <span class="ex">a2ensite</span> mysite.conf</a>
-<a class="sourceLine" id="cb2-5" title="5"><span class="kw">else</span></a>
-<a class="sourceLine" id="cb2-6" title="6">    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: mysite.conf not found&quot;</span></a>
-<a class="sourceLine" id="cb2-7" title="7"><span class="kw">fi</span></a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">if</span><span class="bu"> [</span> <span class="ot">-f</span> /vagrant/tmp/mysite.conf<span class="bu"> ]</span>; <span class="kw">then</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>    <span class="fu">chown</span> <span class="va">$USER</span>:<span class="va">$USER</span> /var/www/html</span>
+<span id="cb2-3"><a href="#cb2-3"></a>    <span class="fu">mv</span> /vagrant/tmp/mysite.conf /etc/apache2/sites-available/mysite.conf</span>
+<span id="cb2-4"><a href="#cb2-4"></a>    <span class="ex">a2ensite</span> mysite.conf</span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="kw">else</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>    <span class="op">&gt;&amp;2</span> <span class="bu">echo</span> <span class="st">&quot;Error: mysite.conf not found&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="kw">fi</span></span></code></pre></div>
 <h1 id="make-changes-effective">Make changes effective</h1>
 <pre><code>service apache2 restart</code></pre>
 <p>Most of this should be familiar to you from the previous chapters. First we check if the file exists in our temp directory. If it does, we create the directory for our project and set the owner of this directory. Afterwards we move the file to the <em>sites-available</em> directory of apache and enable it. To make sure all settings are active, we restart the apache demon. As you already know, we need to get the <em>mysite.conf</em> into the <em>tmp</em> directory. That’s why we add another file provisioner to our <em>Vagrantfile.</em></p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1">config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/mysite.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/mysite.conf&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb4-1"><a href="#cb4-1"></a>config.vm.provision <span class="st">&quot;file&quot;</span>, <span class="st">source: &quot;conf/mysite.conf&quot;</span>, <span class="st">destination: &quot;/vagrant/tmp/mysite.conf&quot;</span></span></code></pre></div>
 <p>To activate the new provision you either need to execute</p>
 <pre><code>vagrant reload --provision</code></pre>
 <p>Or <em>vagrant destroy</em> and <em>vagrant up</em> again. The last step is to make the virtual host known to your host system. For this, you need to add a line into your hosts file. On unix like systems you can find the file in the <em>/etc/</em> directory. The file should begin with the following</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb6-1" title="1"><span class="co">#</span></a>
-<a class="sourceLine" id="cb6-2" title="2"><span class="co"># /etc/hosts: static lookup table for host names</span></a>
-<a class="sourceLine" id="cb6-3" title="3"><span class="co">#</span></a>
-<a class="sourceLine" id="cb6-4" title="4"></a>
-<a class="sourceLine" id="cb6-5" title="5"><span class="co">#&lt;ip-address&gt;	&lt;hostname.domain.org&gt;	&lt;hostname&gt;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">#</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="co"># /etc/hosts: static lookup table for host names</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&lt;ip-address&gt;   &lt;hostname.domain.org&gt;   &lt;hostname&gt;</span></span></code></pre></div>
 <p>After this intro we add the following line</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><a class="sourceLine" id="cb7-1" title="1"><span class="dt">192.168.33.10 mysite.dev</span></a></code></pre></div>
-<p>Which maps the IP address of our private network hosted by vagrant to a domain name. Ok let’s check it out. Type in <em>mysite.dev</em> into the address bar of your browser. You should now see the php info page from the last tutorial. In the next post I want to cover the database access. I will show two ways to you, how you can interact with your database from your host system. The first way will be with MySQL Workbench via an SSH connection. The second is by installing PHPMyAdmin on the guest system and access it via the hosts web browser. <a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Go to Bonus 2</a></p>
-    </section>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb7-1"><a href="#cb7-1"></a><span class="dt">192.168.33.10 mysite.dev</span></span></code></pre></div>
+<p>Which maps the IP address of our private network hosted by vagrant to a domain name. Ok let’s check it out. Type in <em>mysite.dev</em> into the address bar of your browser. You should now see the php info page from the last tutorial. In the next post I want to cover the database access. I will show two ways to you, how you can interact with your database from your host system. The first way will be with MySQL Workbench via an SSH connection. The second is by installing PHPMyAdmin on the guest system and access it via the hosts web browser. <a href="/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Go to Bonus 2</a></p>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>

@@ -1,52 +1,114 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
-        <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant</title>
-        <link rel="stylesheet" href="../css/default.css" />
-        <link rel="stylesheet" href="../css/syntax.css" />
-        <link rel="stylesheet" href="../css/fontawesome.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-solid.min.css">
-        <link rel="stylesheet" href="../css/fontawesome-brands.min.css">
-    </head>
-    <body>
-        <header>
-            <div class="logo">
-                <a href="../">snow-dev.com</a>
-            </div>
-            <nav>
-                <a href="../" title="Home"><i class="fas fa-home"></i></a>
-                <a href="../about.html" title="About"><i class="fas fa-info"></i></a>
-                <a href="../archive.html" title="Archive"><i class="fas fa-archive"></i></a>
-                <a href="../atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
-                <a href="../rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
-                <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
-            </nav>
-        </header>
-          <main role="main">
-              <h1>Creating your own PHP dev-env in Vagrant</h1>
-              <article>
-    <section class="header">
-        Posted on 2016-06-03
-    </section>
-    <hr class="section-head">
-    <section>
-        <h1 id="table-of-contents">Table of Contents</h1>
-<ul>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Part 3</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html">Bonus 1</a></li>
-<li><a href="../posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Bonus 2</a></li>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="dcterms.date" content="2016-06-03" />
+  <title>snow-dev.com :: Creating your own PHP dev-env in Vagrant</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/index.html">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/index.html" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>Creating your own PHP dev-env in Vagrant</h1>
+    <article>
+<section class="header">
+    Posted on 2016-06-03
+</section>
+<hr class="section-head">
+<section>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul class="incremental">
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Part 2</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html">Part 3</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html">Bonus 1</a></li>
+<li><a href="/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html">Bonus 2</a></li>
 <li><a href="https://github.com/snowiow/vagrant-template">Full Code Base on GitHub</a></li>
 </ul>
 <p>In this series of posts we will be creating a development environment(dev-env) for PHP with the help of <a href="https://www.vagrantup.com">vagrant</a>. Vagrant is a thin wrapper around different <a href="https://en.wikipedia.org/wiki/Virtualization">virtualization software</a> projects like <a href="https://www.virtualbox.org">virtual box</a>, which we will be using in this tutorial. The so called wrapper of vagrant is a configuration file, written in the <a href="http://www.ruby-lang.org/en/">ruby programming language</a>. But don’t worry, you don’t need to be an expert ruby programmer to setup a dev-env in vagrant. Everything we use it for, are some variable assignments. In this configuration file we can tell the virtualization software, which operating system and software to install and how to configure everything. Our ultimate goal here is, if the environment is started, everything is setup already. Finally we want to get a fully configured LAMP stack with a running apache webserver, a mysql database and PHP. As always there are many different ways to glory. For example does vagrant offer different ready to use recipes via <a href="https://github.com/ShawnMcCool/vagrant-chef">chef</a>. There is also support for <a href="https://www.vagrantup.com/docs/provisioning/puppet_apply.html">Puppet</a>, a unified configuration language for different systems. We won’t use any of these plugins in this series. Everything we will work with, are some bash scripts and the vagrant file. I have chosen this path, because I want to keep the full control over everything. On the other hand it’s also more work, but I think it’s worth it. Before we go into the details, lets talk about the advantages of a vagrant based development environments.</p>
 <h1 id="benefits">Benefits</h1>
 <p>The most obvious benefit is that we will have one file, which handles the complete configuration. As soon as it is written, we can use it over and over again. We can upload the file to git and download it on other machines to get the same dev-env everywhere we work. We can share it with other programmers in a team, so everyone is working in the same environment. Sentences like “…but it works on my machine” lie in the past now. Best case scenario would be to replicate the environment of the production system. In this case, you are able to catch any environmental issues locally, before they go live. The second benefit is a PHP specific one. Languages like python have built-in features to run different versions of the language for different projects and also manage their respective packages(<a href="https://pypi.python.org/pypi/virtualenv">virtalenv</a>). In PHP it’s pretty difficult to comfortably run different versions on one system. There are however some approaches like <a href="https://github.com/phpbrew/phpbrew">phpbrew</a> to handle this problem. Vagrant is another option. Here you just start the vagrant machine with the respective version of PHP installed. The final benefit is that you interact with everything inside of vagrant from your physical machine. You can use your preferred IDE to code your app. You can reach the webserver via your normal webbrowser. You can view the database over a ssh connection and so on. In this domain your physical machine is called the host machine and the operating system inside vagrant is the guest. So lets list up our final goals, we want to archieve at the end of this tutorial.</p>
 <h1 id="goals">Goals</h1>
-<ul>
+<ul class="incremental">
 <li>Having a one line command to fire up the whole dev-env(vagrant up)</li>
 <li>Access the served sites via your preferred web browser on your host system</li>
 <li>Setup Virtual hosts to access the site via a pretty looking URL</li>
@@ -61,27 +123,25 @@
 <p>Afterwards we switch into that directory and initiate a new vagrant project.</p>
 <pre><code>cd vagrant &amp;&amp; vagrant init</code></pre>
 <p>This will create a file called <em>Vagrantfile</em> in your newly created directory. This is the configuration we talked about in the beginning of this post. If you open it, you see some ruby code, which consists of some assignments and many comments. We won’t cover anything in detail here, because we want to focus on our mission and get our goals done. If you want to know more about the other stuff in the <em>Vagrantfile</em>, you can head to the <a href="https://www.vagrantup.com/docs/getting-started/">official documentation</a> of vagrant, which is very well written. So let’s get into the first two lines of code.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" title="1"><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|</a>
-<a class="sourceLine" id="cb3-2" title="2">  config.vm.box = <span class="st">&quot;base&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb3-1"><a href="#cb3-1"></a><span class="dt">Vagrant</span>.configure(<span class="dv">2</span>) <span class="kw">do</span> |config|</span>
+<span id="cb3-2"><a href="#cb3-2"></a>  config.vm.box = <span class="st">&quot;base&quot;</span></span></code></pre></div>
 <p>The first line stays as it is. It tells vagrant on which version this config is based. The second line says what operating system image should be used. These are called boxes in the vagrant domain. We will use a basic ubuntu 14.04 installation as our basis. That’s why we change the second line to this:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1">config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb4-1"><a href="#cb4-1"></a>config.vm.box = <span class="st">&quot;ubuntu/trusty64&quot;</span></span></code></pre></div>
 <p>For a full list of available boxes have a look into <a href="https://atlas.hashicorp.com/boxes/search">this</a>. Here you can find all different kinds of boxes. Starting off with very basic ones, up to fully configured environments. The next line we are interested in is the following:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" title="1"><span class="co"># config.vm.synced_folder &quot;../data&quot;, &quot;/vagrant_data&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># config.vm.synced_folder &quot;../data&quot;, &quot;/vagrant_data&quot;</span></span></code></pre></div>
 <p>This line tells vagrant which directory of the host system should be mapped to a directory inside the guest system. These are called synced folders, because any operation happening in this directory is instantly visible on both systems. As you may noticed, this will be the location, where our code base will be placed. For the moment, we will edit this line of code to the following:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb6-1"><a href="#cb6-1"></a>config.vm.synced_folder <span class="st">&quot;../&quot;</span>, <span class="st">&quot;/vagrant/projects/&quot;</span></span></code></pre></div>
 <p>The first argument is the directory on the host system. The second argument is the path inside the guest system. It will be created automatically on startup of the vagrant machine. So we don’t need to do anything there for the moment. The last thing we uncomment for the moment is this one</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" title="1"><span class="co"># config.vm.network &quot;private_network&quot;, ip: &quot;192.168.33.10&quot;</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># config.vm.network &quot;private_network&quot;, ip: &quot;192.168.33.10&quot;</span></span></code></pre></div>
 <p>We don’t change anything except for deleting the hash tag at the beginning. As soon as this line is active, vagrant starts up a private network connection, which is only accessible by the host system. This will also be the IP address where our web application will be available later on. You can change the IP to anything you want, but remember to change the later occurrences, where we work with this particular IP as well. This is the end of our intro. In the following chapter we will write our first shell scripts to setup the apache webserver.<br />
-<a href="../posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Go to Part 2</a></p>
-    </section>
+<a href="/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html">Go to Part 2</a></p>
+</section>
 </article>
-
-          </main>
-          <footer>
-            <nav>
-                <a href="../impressum.html" title="Impressum">Impressum</a>
-                <a href="../datenschutz.html" title="Datenschutz">Datenschutz</a>
-            </nav>
-          </footer>
-    </body>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
 </html>
