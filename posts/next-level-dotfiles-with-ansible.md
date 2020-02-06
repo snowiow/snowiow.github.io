@@ -67,9 +67,9 @@ This will tell Ansible which hosts to provision.
 
 Now we need to talk about two important concepts of Ansible. The first one are
 playbooks. Playbooks are Ansible’s infrastructure as code so to say. They
-demonstrate the "want-to-be" state of a system and are described in a
-descriptive manner in form of YAML files. The Ansible docs describe playbooks
-as the instruction manual for configuration, deployment and orchestration.
+demonstrate the want to be state of a system and are described in a descriptive
+manner in form of YAML files. The Ansible docs describe playbooks as the
+instruction manual for configuration, deployment and orchestration.
 
 The second important concept are roles. Ansible roles are a form of structuring
 your playbooks and make them reproducible. We mainly use roles to structure our
