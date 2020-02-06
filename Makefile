@@ -8,9 +8,10 @@ POSTS        = $(shell find $(POSTS_DIR) -name '*.md' -printf '%f\n' | sed -E 's
 INFO_PAGES   = $(shell find $(INFO_DIR) -name '*.md' -printf '%f\n' | sed -E 's/(.*)\.md/$(OUTPUT)\/\1.html/g')
 CSS_FILES    = $(shell ls content/css/*.css)
 IMAGES       = $(shell find content/images -name '*.*' -printf '$(OUTPUT)/images/%f\n')
+META_FILES   = $(shell find content/metadata -name '*.xml' -printf '$(OUTPUT)/%f\n')
 TARGET_CSS   = $(OUTPUT)/css/style.css
 
-build: directories webfonts $(TARGET_CSS) $(IMAGES) $(POSTS) $(INFO_PAGES) $(OUTPUT)/index.html $(OUTPUT)/archive.html $(OUTPUT)/rss.xml
+build: directories webfonts $(TARGET_CSS) $(IMAGES) $(POSTS) $(INFO_PAGES) $(OUTPUT)/index.html $(OUTPUT)/archive.html $(META_FILES)
 
 directories: $(OUTPUT)/webfonts $(OUTPUT)/css $(OUTPUT)/images $(OUTPUT)/posts
 
@@ -72,11 +73,11 @@ $(OUTPUT)/archive.html: $(OUTPUT)/archive_metadata.yml
 $(OUTPUT)/archive_metadata.yml: $(CONTENT_DIR)/archive.md
 	@./gen-listing-meta.sh $@ 1000 $(POSTS_DIR)/*.md
 
-$(OUTPUT)/rss.xml: content/rss.xml
+$(OUTPUT)/%: content/metadata/%
 	@cp $< $@
 
 clean:
-	@rm -r $(OUTPUT)
+	@rm -r $(OUTPUT)/*
 
 serve:
 	@docker start snow-dev.com &> /dev/null || \
