@@ -8,7 +8,7 @@ POSTS        = $(shell find $(POSTS_DIR) -name '*.md' -printf '%f\n' | sed -E 's
 INFO_PAGES   = $(shell find $(INFO_DIR) -name '*.md' -printf '%f\n' | sed -E 's/(.*)\.md/$(OUTPUT)\/\1.html/g')
 CSS_FILES    = $(shell ls content/css/*.css)
 IMAGES       = $(shell find content/images -name '*.*' -printf '$(OUTPUT)/images/%f\n')
-META_FILES   = $(shell find content/metadata -name '*.xml' -printf '$(OUTPUT)/%f\n')
+META_FILES   = $(shell find content/metadata -name '*' -printf '$(OUTPUT)/%f\n' | tail +2)
 TARGET_CSS   = $(OUTPUT)/css/style.css
 
 build: directories webfonts $(TARGET_CSS) $(IMAGES) $(POSTS) $(INFO_PAGES) $(OUTPUT)/index.html $(OUTPUT)/archive.html $(META_FILES)
