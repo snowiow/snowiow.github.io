@@ -10,6 +10,7 @@ categories:
   - terraform
   - aws
 date: 2019-05-21
+description: Last week I came along a problem regarding the deployment of an ECS Service. I wanted to use the newly announced Blue/Green-Deployment powered by CodeDeploy, because for the time being I only needed one Fargate instance to run. The classic ECS Deployment destroyed one instance and started a new one in it's place. With one instance this would mean, we would have some downtime during the start of the new container.
 ---
 
 Last week I came along a problem regarding the deployment of an ECS Service.

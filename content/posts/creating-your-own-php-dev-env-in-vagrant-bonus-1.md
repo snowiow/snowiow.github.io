@@ -9,6 +9,7 @@ categories:
   - PHP
   - Vagrant
 date: 2016-06-03
+description: In the previous posts we've successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it's much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called mysite.dev. So let's get started! 
 ---
 
 # Table of Contents

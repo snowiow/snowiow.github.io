@@ -6,6 +6,7 @@ tags:
 categories:
   - Vagrant
 date: 2016-10-26
+description: Lately I came across a rather big problem of vagrant Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily.
 ---
 
 Lately I came across a rather big problem of vagrant: Increasing the disk

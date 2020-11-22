@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">
+  <title>snow-dev.com</title>
+  <id>https://snow-dev.com</id>
+  <updated>2020-11-22T20:23:47+01:00</updated>
+  <subtitle>A blog about linux, vim, devops and various other tech topics</subtitle>
+  <link href="https://snow-dev.com"></link>
+  <author>
+    <name>Marcel Patzwahl</name>
+    <email>marcel.patzwahl@posteo.de</email>
+  </author>
+  <entry>
+    <title>Build your own Git Server with a Raspberry Pi</title>
+    <updated>2017-06-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2017-06-03:/posts/build-your-own-git-server-with-a-raspberry-pi.html</id>
+    <link href="https://snow-dev.com/posts/build-your-own-git-server-with-a-raspberry-pi.html" rel="alternate"></link>
+    <summary type="html">In this post I want to go into a topic, which I did a few months ago. My goal was to get some of my data away from big cloud hosting platforms back into my own control. The initial spark was a news about a french artist, who had all his pictures on googles platform blogger. His blog was deleted out of no reason and his whole work was lost. You can read the whole storyhere. Scared of a similar scenario, I decided to setup my own cloud with seafile and my own Git server. In this post I will cover how to put up a simple Git server with a basic web fronted to view the repositories.</summary>
+    <author>
+      <name>Marcel Patzwahl</name>
+    </author>
+  </entry>
+  <entry>
+    <title>Creating your own PHP dev-env in Vagrant: Bonus 1</title>
+    <updated>2016-06-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-06-03:/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html</id>
+    <link href="https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html" rel="alternate"></link>
+    <summary type="html">In the previous posts we have successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it&#39;s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called mysite.dev. So lets get started!</summary>
+  </entry>
+  <entry>
+    <title>Creating your own PHP dev-env in Vagrant: Bonus 2</title>
+    <updated>2016-06-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-06-03:/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html</id>
+    <link href="https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-2.html" rel="alternate"></link>
+    <summary type="html">Slowly but surely we get to the end of this series. In this last post, I will write about database access from the host system, while your database is running on the guest machine. Therefore I will present two strategies to do so. Sure you also can</summary>
+  </entry>
+  <entry>
+    <title>Creating your own PHP dev-env in Vagrant: Part 2</title>
+    <updated>2016-06-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-06-03:/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html</id>
+    <link href="https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-part-2.html" rel="alternate"></link>
+    <summary type="html">In the last post we installed vagrant and enabled the vagrant settings we need in the Vagrantfile. We have set a base image of ubuntu 14.04, made a synced folder and enabled a private network connection between host and guest system. Now it&#39;s time to write our first shell scripts, which will configure our guest system to serve as a web server. Vagrant comes with a neat feature called provisioning. This can be shell scripts, which will be executed or files, which will be uploaded onto the guest system. Of course there are more provisioners to explore. For a full reference head over here. In this tutorial we will focus on these two provisioners.</summary>
+  </entry>
+  <entry>
+    <title>Creating your own PHP dev-env in Vagrant: Part 3</title>
+    <updated>2016-06-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-06-03:/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html</id>
+    <link href="https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-part-3.html" rel="alternate"></link>
+    <summary type="html">In the previous post we&#39;ve set up the apache web server successfully. Now it&#39;s time to add MySQL and PHP to finish the LAMP stack.</summary>
+  </entry>
+  <entry>
+    <title>Creating your own PHP dev-env in Vagrant</title>
+    <updated>2016-06-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-06-03:/posts/creating-your-own-php-dev-env-in-vagrant.html</id>
+    <link href="https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant.html" rel="alternate"></link>
+    <summary type="html">In this series of posts we will be creating a development environment(dev-env) for PHP with the help of vagrant. Vagrant is a thin wrapper around different virtualization software projects like virtual box, which we will be using in this tutorial. The so called wrapper of vagrant is a configuration file, written in the ruby programming language. But don&#39;t worry, you don&#39;t need to be an expert ruby programmer to setup a dev-env in vagrant. Everything we use it for, are some variable assignments. In this configuration file we can tell the virtualization software, which operating system and software to install and how to configure everything. Our ultimate goal here is, if the environment is started, everything is setup already. Finally we want to get a fully configured LAMP stack with a running apache webserver, a mysql database and PHP. As always there are many different ways to glory. For example does vagrant offer different ready to use recipes via chef. There is also support for Puppet, a unified configuration language for different systems. We won&#39;t use any of these plugins in this series. Everything we will work with, are some bash scripts and the vagrant file. I have chosen this path, because I want to keep the full control over everything. On the other hand it&#39;s also more work, but I think it&#39;s worth it. Before we go into the details, lets talk about the advantages of a vagrant based development environments.</summary>
+  </entry>
+  <entry>
+    <title>ECS CD with AWS CodePipeline in Terraform</title>
+    <updated>2019-05-21T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2019-05-21:/posts/ecs-cd-with-codepipeline-in-terraform.html</id>
+    <link href="https://snow-dev.com/posts/ecs-cd-with-codepipeline-in-terraform.html" rel="alternate"></link>
+    <summary type="html">Last week I came along a problem regarding the deployment of an ECS Service. I wanted to use the newly announced Blue/Green-Deployment powered by CodeDeploy, because for the time being I only needed one Fargate instance to run. The classic ECS Deployment destroyed one instance and started a new one in it&#39;s place. With one instance this would mean, we would have some downtime during the start of the new container.</summary>
+  </entry>
+  <entry>
+    <title>A basic Routing approach with PHP</title>
+    <updated>2015-10-07T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2015-10-07:/posts/how-modern-routing-works-in-php.html</id>
+    <link href="https://snow-dev.com/posts/how-modern-routing-works-in-php.html" rel="alternate"></link>
+    <summary type="html">Nice and readable URLs are the way to go in modern web applications. More and more people are abandoning the old style URLs, containing question marks and  equal signs, in favor of the slash separation for actions and parameters. Most frameworks are already supporting this new kind of URLs and encapsulate the logic inside of a routing class or module. Everyone is using it and everything is good so far. But even if these new URLs are all over the place, there is very little information on the net about how it is actually implemented. Because I&#39;m currently working on a minimalistic PHP MVC Framework with a friend, I came across this problem. Beside of the source code of the big players in PHP Frameworks I found a small and easy to use snippet to get routes working pretty fast. In this post I want to present the key PHP feature, which allows us to realize it and how to build upon it.</summary>
+  </entry>
+  <entry>
+    <title>Increase disk space of a vagrant machine</title>
+    <updated>2016-10-26T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-10-26:/posts/increase-disk-space-of-a-vagrant-machine.html</id>
+    <link href="https://snow-dev.com/posts/increase-disk-space-of-a-vagrant-machine.html" rel="alternate"></link>
+    <summary type="html">Lately I came across a rather big problem of vagrant Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily.</summary>
+  </entry>
+  <entry>
+    <title>Next level dotfiles with Ansible</title>
+    <updated>2019-10-11T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2019-10-11:/posts/next-level-dotfiles-with-ansible.html</id>
+    <link href="https://snow-dev.com/posts/next-level-dotfiles-with-ansible.html" rel="alternate"></link>
+    <summary type="html">In the life of every linux enthusiast comes the point, where he has a lot of individual configuration build up and wants to migrate these settings over to another machine as seamlessly as possible. At this point a whole philosophy of how to do this is coming into play. Today this philosophy is bundled under the name: dotfiles. Historically dotfiles are the config files, which lie in your home directory.</summary>
+  </entry>
+  <entry>
+    <title>The power of Vim Plugins: CtrlP</title>
+    <updated>2016-01-11T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-01-11:/posts/the-power-of-vim-plugins-ctrlp.html</id>
+    <link href="https://snow-dev.com/posts/the-power-of-vim-plugins-ctrlp.html" rel="alternate"></link>
+    <summary type="html">In this article we will discover one of the greatest and most widely used plugins in the vim world: CtrlP. It covers a similar area like NERDTree, because it helps you to find and open files very quickly. The magic behind this plugin is it&#39;s fuzzy search engine.</summary>
+  </entry>
+  <entry>
+    <title>The power of Vim Plugins: NERDTree</title>
+    <updated>2015-10-16T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2015-10-16:/posts/the-power-of-vim-plugins-nerdtree.html</id>
+    <link href="https://snow-dev.com/posts/the-power-of-vim-plugins-nerdtree.html" rel="alternate"></link>
+    <summary type="html">Hey everyone, this time we will cover a plugin called NERDTree. This is the kind of addition, which shows the file system with all it&#39;s files and sub folders. It is a great tool to keep an overview, when working on a project or a big set of files.</summary>
+  </entry>
+  <entry>
+    <title>The power of Vim Plugins: netrw</title>
+    <updated>2015-11-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2015-11-03:/posts/the-power-of-vim-plugins-netrw.html</id>
+    <link href="https://snow-dev.com/posts/the-power-of-vim-plugins-netrw.html" rel="alternate"></link>
+    <summary type="html">This time we look into an alternative for NERDTree, which is called netrw. Thanks to aguerosantiale, who put my attention onto it. Both plugins serve the same purpose, but they behave fundamentaly different in archiving this.</summary>
+  </entry>
+  <entry>
+    <title>The power of Vim Plugins: Vim-Plug</title>
+    <updated>2016-04-03T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2016-04-03:/posts/the-power-of-vim-plugins-vim-plug.html</id>
+    <link href="https://snow-dev.com/posts/the-power-of-vim-plugins-vim-plug.html" rel="alternate"></link>
+    <summary type="html">A few weeks after my Vundle post, I stumbled upon a plugin manager called vim-plug. It sounded very promising and I checked it out. Until today I didn&#39;t go back to Vundle. This is almost half a year ago and I think it&#39;s time to write something up about this amazing plugin manager.</summary>
+  </entry>
+  <entry>
+    <title>The power of Vim Plugins: Vundle</title>
+    <updated>2015-09-29T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2015-09-29:/posts/the-power-of-vim-plugins-vundle.html</id>
+    <link href="https://snow-dev.com/posts/the-power-of-vim-plugins-vundle.html" rel="alternate"></link>
+    <summary type="html">To start of this series properly, we need a plugin manager, to handle all our plugins and keep them up to date. Vundle is one common option, but there are some more to choose from. Two more big players in this business are NeoBundle and Pathogen.</summary>
+  </entry>
+  <entry>
+    <title>The power of Vim Plugins</title>
+    <updated>2015-09-16T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2015-09-16:/posts/the-power-of-vim-plugins.html</id>
+    <link href="https://snow-dev.com/posts/the-power-of-vim-plugins.html" rel="alternate"></link>
+    <summary type="html">In this post I want to introduce a new series, which will cover some of the most useful Vim plugins available.</summary>
+  </entry>
+  <entry>
+    <title>VPC Peering with MongoDB Atlas and AWS in Terraform</title>
+    <updated>2018-12-26T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2018-12-26:/posts/vpc-peering-with-mongodb-atlas-and-aws-in-terraform.html</id>
+    <link href="https://snow-dev.com/posts/vpc-peering-with-mongodb-atlas-and-aws-in-terraform.html" rel="alternate"></link>
+    <summary type="html">Lately I was doing a lot of &#34;Infrastructure as Code&#34; (IaC) in terraform at work. There was one application, which needed a MongoDB as the primary database. Sadly there is no managed MongoDB service in AWS so far.</summary>
+  </entry>
+</feed>

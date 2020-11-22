@@ -8,6 +8,7 @@ categories:
   - PHP
   - Vagrant
 date: 2016-06-03
+description: In this series of posts we will be creating a development environment(dev-env) for PHP with the help of vagrant. Vagrant is a thin wrapper around different virtualization software projects like virtual box, which we will be using in this tutorial. The so called wrapper of vagrant is a configuration file, written in the ruby programming language. But don't worry, you don't need to be an expert ruby programmer to setup a dev-env in vagrant. Everything we use it for, are some variable assignments. In this configuration file we can tell the virtualization software, which operating system and software to install and how to configure everything. Our ultimate goal here is, if the environment is started, everything is setup already. Finally we want to get a fully configured LAMP stack with a running apache webserver, a mysql database and PHP. As always there are many different ways to glory. For example does vagrant offer different ready to use recipes via chef. There is also support for Puppet, a unified configuration language for different systems. We won't use any of these plugins in this series. Everything we will work with, are some bash scripts and the vagrant file. I have chosen this path, because I want to keep the full control over everything. On the other hand it's also more work, but I think it's worth it. Before we go into the details, lets talk about the advantages of a vagrant based development environments. 
 ---
 
 # Table of Contents

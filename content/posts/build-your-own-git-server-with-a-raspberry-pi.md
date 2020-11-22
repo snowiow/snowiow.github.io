@@ -2,6 +2,7 @@
 title: Build your own Git Server with a Raspberry Pi
 author: Marcel Patzwahl
 date: 2017-06-03
+description: In this post I want to go into a topic, which I did a few months ago. My goal was to get some of my data away from big cloud hosting platforms back into my own control. The initial spark was a news about a french artist, who had all his pictures on googles platform blogger. His blog was deleted out of no reason and his whole work was lost. You can read the whole storyhere. Scared of a similar scenario, I decided to setup my own cloud with seafile and my own Git server. In this post I will cover how to put up a simple Git server with a basic web fronted to view the repositories.
 ---
 
 In this post I want to go into a topic, which I did a few months ago. My goal
