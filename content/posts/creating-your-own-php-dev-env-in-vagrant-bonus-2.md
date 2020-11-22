@@ -10,6 +10,7 @@ categories:
   - PHP
   - Vagrant
 date: 2016-06-03
+description: Slowly but surely we get to the end of this series. In this last post, I will write about database access from the host system, while your database is running on the guest machine. Therefore I will present two strategies to do so. Sure you also can
 ---
 
 # Table of Contents 

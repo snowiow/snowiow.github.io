@@ -8,6 +8,7 @@ categories:
   - PHP
   - Vagrant
 date: 2016-06-03
+description: In the previous post we've set up the apache web server successfully. Now it's time to add MySQL and PHP to finish the LAMP stack.
 ---
 
 # Table of Contents

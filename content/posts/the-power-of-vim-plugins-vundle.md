@@ -5,6 +5,7 @@ tags:
 categories:
   - The Power of Vim Plugins
 date: 2015-09-29
+description: To start of this series properly, we need a plugin manager, to handle all our plugins and keep them up to date. Vundle is one common option, but there are some more to choose from. Two more big players in this business are NeoBundle and Pathogen.
 ---
 
 To start of this series properly, we need a

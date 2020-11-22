@@ -7,6 +7,7 @@ tags:
 categories:
   - The Power of Vim Plugins
 date: 2015-11-03
+description: This time we look into an alternative for NERDTree, which is called netrw. Thanks to aguerosantiale, who put my attention onto it. Both plugins serve the same purpose, but they behave fundamentaly different in archiving this.
 ---
 
 This time we look into an alternative for NERDTree, which is called netrw.

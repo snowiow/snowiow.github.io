@@ -11,23 +11,32 @@ IMAGES       = $(shell find content/images -name '*.*' -printf '$(OUTPUT)/images
 META_FILES   = $(shell find content/metadata -name '*' -printf '$(OUTPUT)/%f\n' | tail +2)
 TARGET_CSS   = $(OUTPUT)/css/style.css
 
-build: directories webfonts $(TARGET_CSS) $(IMAGES) $(POSTS) $(INFO_PAGES) $(OUTPUT)/index.html $(OUTPUT)/archive.html $(META_FILES)
+build: directories webfonts $(TARGET_CSS) $(IMAGES) $(POSTS) $(INFO_PAGES) $(OUTPUT)/index.html $(OUTPUT)/archive.html $(META_FILES) generate-feeds
+
+generate-feeds:
+	@echo "generating feeds"
+	@feed
 
 directories: $(OUTPUT)/webfonts $(OUTPUT)/css $(OUTPUT)/images $(OUTPUT)/posts
 
 $(OUTPUT)/webfonts $(OUTPUT)/images $(OUTPUT)/css $(OUTPUT)/posts:
+	@echo "creating missing directories"
 	@mkdir -p $@
 
 $(OUTPUT)/images/%: content/images/%
+	@echo "copying missing images"
 	@cp $< $@
 
 webfonts:
+	@echo "copying webfonts"
 	@cp content/webfonts/*.woff* $(OUTPUT)/webfonts/
 
 $(TARGET_CSS): $(CSS_FILES)
+	@echo "creating CSS files"
 	@cat $(CSS_FILES) > $@
 
 $(OUTPUT)/posts/%.html: $(POSTS_DIR)/%.md
+	@echo "converting posts"
 	@pandoc \
 		--standalone \
 		--css=../css/style.css \
@@ -38,6 +47,7 @@ $(OUTPUT)/posts/%.html: $(POSTS_DIR)/%.md
 		-i $< -o $@
 
 $(OUTPUT)/%.html: $(INFO_DIR)/%.md
+	@echo "converting main pages"
 	@pandoc \
 		--standalone \
 		--css=css/style.css \
@@ -48,6 +58,7 @@ $(OUTPUT)/%.html: $(INFO_DIR)/%.md
 		-i $< -o $@
 
 $(OUTPUT)/index.html: $(OUTPUT)/index_metadata.yml
+	@echo "creating index.html"
 	@pandoc \
 		--standalone \
 		--css=css/style.css \
@@ -61,6 +72,7 @@ $(OUTPUT)/index_metadata.yml: $(CONTENT_DIR)/index.md
 	@./gen-listing-meta.sh $@ 10 $(POSTS_DIR)/*.md
 
 $(OUTPUT)/archive.html: $(OUTPUT)/archive_metadata.yml
+	@echo "generating archive"
 	@pandoc \
 		--standalone \
 		--css=css/style.css \
@@ -85,4 +97,8 @@ serve:
 		-v $$(pwd)/$(OUTPUT):/usr/share/nginx/html:ro \
 		-p 8088:80 \
 		-d nginx
-	@echo "server started at localhost:8088"
+	@echo "server started at http://localhost:8088"
+
+.PHONY: install-tools
+install-tools: tools/feed/%
+	cd tools/feed && go install ./

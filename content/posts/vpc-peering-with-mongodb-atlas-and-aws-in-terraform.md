@@ -10,6 +10,7 @@ categories:
   - terraform
   - aws
 date: 2018-12-26
+description: Lately I was doing a lot of "Infrastructure as Code" (IaC) in terraform at work. There was one application, which needed a MongoDB as the primary database. Sadly there is no managed MongoDB service in AWS so far.
 ---
 
 Lately I was doing a lot of "Infrastructure as Code" (IaC) in terraform at

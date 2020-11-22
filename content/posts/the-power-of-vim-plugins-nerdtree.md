@@ -7,6 +7,7 @@ tags:
 categories:
   - The Power of Vim Plugins
 date: 2015-10-16
+description: Hey everyone, this time we will cover a plugin called NERDTree. This is the kind of addition, which shows the file system with all it's files and sub folders. It is a great tool to keep an overview, when working on a project or a big set of files.
 ---
 
 Hey everyone, this time we will cover a plugin called

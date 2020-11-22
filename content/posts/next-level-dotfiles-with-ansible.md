@@ -2,6 +2,7 @@
 title: Next level dotfiles with Ansible
 author: Marcel Patzwahl
 date: 2019-10-11
+description: "In the life of every linux enthusiast comes the point, where he has a lot of individual configuration build up and wants to migrate these settings over to another machine as seamlessly as possible. At this point a whole philosophy of how to do this is coming into play. Today this philosophy is bundled under the name: dotfiles. Historically dotfiles are the config files, which lie in your home directory."
 ---
 
 In the life of every linux enthusiast comes the point, where he has a lot of
@@ -95,7 +96,7 @@ starting point of a role and will be called automatically, similar as the main
 function in various programming languages. Here we add the following
 instruction:
 
-~~~{.yaml}
+```yaml
 - name: install neovim on linux
   package:
     name:
@@ -103,7 +104,7 @@ instruction:
       - python-pynvim
     state: present
   become: yes
-~~~
+```
 
 Basically everything in playbooks is defined in these blocks. They follow a
 common structure starting with an optional name, which is printed during
@@ -334,5 +335,3 @@ today is still a very needed skill in the DevOps space.
 
 Thanks for reading. I'm happy to hear your approaches for your system setup or
 how you handle specific things with Ansible.
-
-

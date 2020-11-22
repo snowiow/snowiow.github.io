@@ -9,6 +9,7 @@ categories:
   - PHP
   - Vagrant
 date: 2016-06-03
+description: In the last post we installed vagrant and enabled the vagrant settings we need in the Vagrantfile. We have set a base image of ubuntu 14.04, made a synced folder and enabled a private network connection between host and guest system. Now it's time to write our first shell scripts, which will configure our guest system to serve as a web server. Vagrant comes with a neat feature called provisioning. This can be shell scripts, which will be executed or files, which will be uploaded onto the guest system. Of course there are more provisioners to explore. For a full reference head over here. In this tutorial we will focus on these two provisioners.
 ---
 
 # Table of Contents

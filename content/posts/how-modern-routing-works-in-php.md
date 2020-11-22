@@ -8,6 +8,7 @@ tags:
 categories:
   - PHP
 date: 2015-10-07
+description: Nice and readable URLs are the way to go in modern web applications. More and more people are abandoning the old style URLs, containing question marks and  equal signs, in favor of the slash separation for actions and parameters. Most frameworks are already supporting this new kind of URLs and encapsulate the logic inside of a routing class or module. Everyone is using it and everything is good so far. But even if these new URLs are all over the place, there is very little information on the net about how it is actually implemented. Because I'm currently working on a minimalistic PHP MVC Framework with a friend, I came across this problem. Beside of the source code of the big players in PHP Frameworks I found a small and easy to use snippet to get routes working pretty fast. In this post I want to present the key PHP feature, which allows us to realize it and how to build upon it.
 ---
 
 Nice and readable URLs are the way to go in modern web applications. More and

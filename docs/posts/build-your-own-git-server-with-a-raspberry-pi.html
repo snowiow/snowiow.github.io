@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
   <meta name="author" content="Marcel Patzwahl" />
   <meta name="dcterms.date" content="2017-06-03" />
   <title>snow-dev.com :: Build your own Git Server with a Raspberry Pi</title>
@@ -87,6 +88,7 @@
         <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
         <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
         <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="/atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
         <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
     </nav>
 </header>
@@ -131,35 +133,35 @@
 <p>Now we are the Git user and can do stuff in his name. First we need a place, where we want to place our repositories. A good place is the home directory of the Git user, but it can be anywhere else, where the Git user has write access. Now we create a new repository called <em>new-project</em>:</p>
 <pre><code>$ mkdir /home/git/new-project.git &amp;&amp; cd /home/git/new-project.git &amp;&amp; git init --bare</code></pre>
 <p>First we create a new directory with a <em>.git</em> ending. You don’t need the ending, but it’s a best practice, to let server side repositories end with <em>.git</em>. Afterwards we go into that directory and initiate it as a Git repository. The <em>bare</em> argument is somewhat optional again, but also a best practice. It just means this Git repository doesn’t have a working directory. The working directory is where you put your files. On the same level is a <em>.git</em> directory with the history and other things in it. The <em>bare</em> argument now says that you don’t need the working directory and the main directory can become the <em>.git</em> directory. So overall you can remember to use the <em>bare</em> argument on the server side of a repository and not on the client side. # Clone your repo Now we want to clone our newly created repository from the server. You should already  know the ip of your Raspberry, when you’ve set it up via ssh. If you don’t know the IP yet, you can run the command ifconfig as root, which should give you something like this as an output:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb5-1"><a href="#cb5-1"></a><span class="co">#ifconfig</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="dt">eth0: flags</span><span class="ot">=</span><span class="dv">4099</span><span class="st">&lt;UP,BROADCAST,MULTICAST&gt;  mtu </span><span class="dv">1500</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="dt">        ether b8:27:eb:8c:97:af  txqueuelen 1000  (Ethernet)</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="dt">        RX packets 0  bytes 0 (0.0 B)</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></span>
-<span id="cb5-6"><a href="#cb5-6"></a><span class="dt">        TX packets 0  bytes 0 (0.0 B)</span></span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></span>
-<span id="cb5-8"><a href="#cb5-8"></a></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="dt">lo: flags</span><span class="ot">=</span><span class="dv">73</span><span class="st">&lt;UP,LOOPBACK,RUNNING&gt;  mtu </span><span class="dv">65536</span></span>
-<span id="cb5-10"><a href="#cb5-10"></a><span class="dt">        inet 127.0.0.1  netmask 255.0.0.0</span></span>
-<span id="cb5-11"><a href="#cb5-11"></a><span class="dt">        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;</span></span>
-<span id="cb5-12"><a href="#cb5-12"></a><span class="dt">        loop  txqueuelen 1  (Local Loopback)</span></span>
-<span id="cb5-13"><a href="#cb5-13"></a><span class="dt">        RX packets 1004803  bytes 352750188 (336.4 MiB)</span></span>
-<span id="cb5-14"><a href="#cb5-14"></a><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></span>
-<span id="cb5-15"><a href="#cb5-15"></a><span class="dt">        TX packets 1004803  bytes 352750188 (336.4 MiB)</span></span>
-<span id="cb5-16"><a href="#cb5-16"></a><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></span>
-<span id="cb5-17"><a href="#cb5-17"></a></span>
-<span id="cb5-18"><a href="#cb5-18"></a><span class="dt">wlan0: flags</span><span class="ot">=</span><span class="dv">4163</span><span class="st">&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu </span><span class="dv">1500</span></span>
-<span id="cb5-19"><a href="#cb5-19"></a><span class="dt">        inet 192.168.178.48  netmask 255.255.255.0  broadcast 192.168.178.255</span></span>
-<span id="cb5-20"><a href="#cb5-20"></a><span class="dt">        inet6 fe80::ba27:ebff:fed9:c2fa  prefixlen 64  scopeid 0x20&lt;link&gt;</span></span>
-<span id="cb5-21"><a href="#cb5-21"></a><span class="dt">        ether b8:27:eb:d9:c2:fa  txqueuelen 1000  (Ethernet)</span></span>
-<span id="cb5-22"><a href="#cb5-22"></a><span class="dt">        RX packets 1727438  bytes 275330489 (262.5 MiB)</span></span>
-<span id="cb5-23"><a href="#cb5-23"></a><span class="dt">        RX errors 0  dropped 1561  overruns 0  frame 0</span></span>
-<span id="cb5-24"><a href="#cb5-24"></a><span class="dt">        TX packets 4660814  bytes 2524959215 (2.3 GiB)</span></span>
-<span id="cb5-25"><a href="#cb5-25"></a><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#ifconfig</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">eth0: flags</span><span class="ot">=</span><span class="dv">4099</span><span class="st">&lt;UP,BROADCAST,MULTICAST&gt;  mtu </span><span class="dv">1500</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">        ether b8:27:eb:8c:97:af  txqueuelen 1000  (Ethernet)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">        RX packets 0  bytes 0 (0.0 B)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="dt">        TX packets 0  bytes 0 (0.0 B)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="dt">lo: flags</span><span class="ot">=</span><span class="dv">73</span><span class="st">&lt;UP,LOOPBACK,RUNNING&gt;  mtu </span><span class="dv">65536</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="dt">        inet 127.0.0.1  netmask 255.0.0.0</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="dt">        inet6 ::1  prefixlen 128  scopeid 0x10&lt;host&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="dt">        loop  txqueuelen 1  (Local Loopback)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="dt">        RX packets 1004803  bytes 352750188 (336.4 MiB)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="dt">        RX errors 0  dropped 0  overruns 0  frame 0</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="dt">        TX packets 1004803  bytes 352750188 (336.4 MiB)</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="dt">wlan0: flags</span><span class="ot">=</span><span class="dv">4163</span><span class="st">&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu </span><span class="dv">1500</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="dt">        inet 192.168.178.48  netmask 255.255.255.0  broadcast 192.168.178.255</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="dt">        inet6 fe80::ba27:ebff:fed9:c2fa  prefixlen 64  scopeid 0x20&lt;link&gt;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="dt">        ether b8:27:eb:d9:c2:fa  txqueuelen 1000  (Ethernet)</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="dt">        RX packets 1727438  bytes 275330489 (262.5 MiB)</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="dt">        RX errors 0  dropped 1561  overruns 0  frame 0</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="dt">        TX packets 4660814  bytes 2524959215 (2.3 GiB)</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="dt">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span></span></code></pre></div>
 <p>As you can see in the output, I am connected via wifi. So the IP address of interest is under <em>inet</em> in the <em>wlan0</em> block. If you are connected via cable, there should be an <em>inet</em> entry in the <em>eth0</em> block. Now we know where to clone the repository from like this:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1"></a>$ <span class="fu">git</span> clone git@<span class="op">&lt;</span>your-inet-entry-here<span class="op">&gt;</span>:/home/git/new-project.git</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>$ <span class="fu">git</span> clone git@<span class="op">&lt;</span>your-inet-entry-here<span class="op">&gt;</span>:/home/git/new-project.git</span></code></pre></div>
 <p>In my case the command would look like this:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1"></a>$ <span class="fu">git</span> clone git@192.168.178.48:/home/git/new-project.git</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>$ <span class="fu">git</span> clone git@192.168.178.48:/home/git/new-project.git</span></code></pre></div>
 <h1 id="push-your-first-change">Push your first change</h1>
 <p>Let’s add a file with</p>
 <pre><code>$ touch test.txt</code></pre>
@@ -192,54 +194,54 @@
 <p>Now we start the nginx service via systemd</p>
 <pre><code># systemctl start nginx</code></pre>
 <p>You can check if the nginx server is running by looking up the ip address of your Raspberry Pi in your browser. In my case this would be navigating to <em>192.168.178.48</em>. You should see a success message, that the nginx server is running. Because gitweb comes preinstalled with Git, we can directly go into activating the gitweb cgi script. Therefor we need to edit the <em>/etc/nginx/nginx.conf</em></p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode apache"><code class="sourceCode apache"><span id="cb20-1"><a href="#cb20-1"></a>server {</span>
-<span id="cb20-2"><a href="#cb20-2"></a>    listen<span class="st">       80;</span></span>
-<span id="cb20-3"><a href="#cb20-3"></a>    server_name  localhost;</span>
-<span id="cb20-4"><a href="#cb20-4"></a></span>
-<span id="cb20-5"><a href="#cb20-5"></a>    <span class="co">#charset koi8-r;</span></span>
-<span id="cb20-6"><a href="#cb20-6"></a></span>
-<span id="cb20-7"><a href="#cb20-7"></a>    <span class="co">#access_log  logs/host.access.log  main;</span></span>
-<span id="cb20-8"><a href="#cb20-8"></a></span>
-<span id="cb20-9"><a href="#cb20-9"></a></span>
-<span id="cb20-10"><a href="#cb20-10"></a>    <span class="co">#error_page  404              /404.html;</span></span>
-<span id="cb20-11"><a href="#cb20-11"></a></span>
-<span id="cb20-12"><a href="#cb20-12"></a>    <span class="co"># redirect server error pages to the static page /50x.html</span></span>
-<span id="cb20-13"><a href="#cb20-13"></a>    <span class="co">#</span></span>
-<span id="cb20-14"><a href="#cb20-14"></a>    error_page   500 502 503 504  /50x.html;</span>
-<span id="cb20-15"><a href="#cb20-15"></a>    location = /50x.html {</span>
-<span id="cb20-16"><a href="#cb20-16"></a>        root   /usr/share/nginx/html;</span>
-<span id="cb20-17"><a href="#cb20-17"></a>    }</span>
-<span id="cb20-18"><a href="#cb20-18"></a></span>
-<span id="cb20-19"><a href="#cb20-19"></a>    location /gitweb.cgi {</span>
-<span id="cb20-20"><a href="#cb20-20"></a>            include<span class="st"> fastcgi_params;</span></span>
-<span id="cb20-21"><a href="#cb20-21"></a>            gzip off;</span>
-<span id="cb20-22"><a href="#cb20-22"></a>            fastcgi_param   SCRIPT_FILENAME  /usr/share/gitweb/gitweb.cgi;</span>
-<span id="cb20-23"><a href="#cb20-23"></a>            fastcgi_param   GITWEB_CONFIG  /etc/gitweb.conf;</span>
-<span id="cb20-24"><a href="#cb20-24"></a>            fastcgi_pass    unix:/var/run/fcgiwrap.sock;</span>
-<span id="cb20-25"><a href="#cb20-25"></a>    }</span>
-<span id="cb20-26"><a href="#cb20-26"></a></span>
-<span id="cb20-27"><a href="#cb20-27"></a>    location / {</span>
-<span id="cb20-28"><a href="#cb20-28"></a>        root /usr/share/gitweb;</span>
-<span id="cb20-29"><a href="#cb20-29"></a>        index gitweb.cgi;</span>
-<span id="cb20-30"><a href="#cb20-30"></a>    }</span>
-<span id="cb20-31"><a href="#cb20-31"></a>    ...</span>
-<span id="cb20-32"><a href="#cb20-32"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode apache"><code class="sourceCode apache"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>server {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    listen<span class="st">       80;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    server_name  localhost;</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">#charset koi8-r;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">#access_log  logs/host.access.log  main;</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">#error_page  404              /404.html;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># redirect server error pages to the static page /50x.html</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">#</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    error_page   500 502 503 504  /50x.html;</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    location = /50x.html {</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        root   /usr/share/nginx/html;</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    location /gitweb.cgi {</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>            include<span class="st"> fastcgi_params;</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>            gzip off;</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>            fastcgi_param   SCRIPT_FILENAME  /usr/share/gitweb/gitweb.cgi;</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>            fastcgi_param   GITWEB_CONFIG  /etc/gitweb.conf;</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>            fastcgi_pass    unix:/var/run/fcgiwrap.sock;</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    location / {</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>        root /usr/share/gitweb;</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>        index gitweb.cgi;</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>As you can see in the code snippet, you need to add the gitweb.cgi location into the server entity and tell nginx where to find the fastcgi_params and pass. You also need to override the default location to be gitweb.cgi. All changes you need to do, are highlighted in yellow. Now we need to install fcgiwrap. This is a cgi server, which runs our gitweb cgi app.</p>
 <pre><code># pacman -S fcgiwrap</code></pre>
 <p>Then we need to add a service config for fcgiwrap to be able to start it via systemctl. Create the following file _/usr/lib/systemd/system/fcgiwrap.service _with this content</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb22-1"><a href="#cb22-1"></a><span class="kw">[Unit]</span></span>
-<span id="cb22-2"><a href="#cb22-2"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Simple server for running CGI applications over FastCGI</span></span>
-<span id="cb22-3"><a href="#cb22-3"></a><span class="dt">After</span><span class="ot">=</span><span class="st">syslog.target network.target</span></span>
-<span id="cb22-4"><a href="#cb22-4"></a></span>
-<span id="cb22-5"><a href="#cb22-5"></a><span class="kw">[Service]</span></span>
-<span id="cb22-6"><a href="#cb22-6"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">forking</span></span>
-<span id="cb22-7"><a href="#cb22-7"></a><span class="dt">Restart</span><span class="ot">=</span><span class="kw">on</span><span class="st">-abort</span></span>
-<span id="cb22-8"><a href="#cb22-8"></a><span class="dt">PIDFile</span><span class="ot">=</span><span class="st">/var/run/fcgiwrap.pid</span></span>
-<span id="cb22-9"><a href="#cb22-9"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/spawn-fcgi -s /var/run/fcgiwrap.sock -P /var/run/fcgiwrap.pid -u http -g http -- /usr/sbin/fcgiwrap</span></span>
-<span id="cb22-10"><a href="#cb22-10"></a><span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/bin/kill </span><span class="dv">-15</span><span class="st"> $MAINPID</span></span>
-<span id="cb22-11"><a href="#cb22-11"></a></span>
-<span id="cb22-12"><a href="#cb22-12"></a><span class="kw">[Install]</span></span>
-<span id="cb22-13"><a href="#cb22-13"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode ini"><code class="sourceCode ini"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="dt">Description</span><span class="ot">=</span><span class="st">Simple server for running CGI applications over FastCGI</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">syslog.target network.target</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">[Service]</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="dt">Type</span><span class="ot">=</span><span class="st">forking</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="dt">Restart</span><span class="ot">=</span><span class="kw">on</span><span class="st">-abort</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="dt">PIDFile</span><span class="ot">=</span><span class="st">/var/run/fcgiwrap.pid</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStart</span><span class="ot">=</span><span class="st">/usr/bin/spawn-fcgi -s /var/run/fcgiwrap.sock -P /var/run/fcgiwrap.pid -u http -g http -- /usr/sbin/fcgiwrap</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="dt">ExecStop</span><span class="ot">=</span><span class="st">/usr/bin/kill -</span><span class="dv">15</span><span class="st"> $MAINPID</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="kw">[Install]</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="dt">WantedBy</span><span class="ot">=</span><span class="st">multi-user.target</span></span></code></pre></div>
 <p>Now we can enable and start the fcgiwrap server for nginx</p>
 <pre><code># systemctl enable nginx fcgiwrap
 # systemctl start nginx fcgiwrap</code></pre>

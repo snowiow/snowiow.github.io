@@ -3,6 +3,7 @@ title: 'The power of Vim Plugins: Vim-Plug'
 categories:
   - The Power of Vim Plugins
 date: 2016-04-03
+description: A few weeks after my Vundle post, I stumbled upon a plugin manager called vim-plug. It sounded very promising and I checked it out. Until today I didn't go back to Vundle. This is almost half a year ago and I think it's time to write something up about this amazing plugin manager.
 ---
 
 A few weeks after my

@@ -7,6 +7,7 @@ tags:
 categories:
   - The Power of Vim Plugins
 date: 2015-09-16
+description: In this post I want to introduce a new series, which will cover some of the most useful Vim plugins available.
 ---
 
 In this post I want to introduce a new series, which will cover some of the
