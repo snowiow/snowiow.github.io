@@ -4,7 +4,7 @@
     <link>https://snow-dev.com</link>
     <description>A blog about linux, vim, devops and various other tech topics</description>
     <managingEditor>marcel.patzwahl@posteo.de (Marcel Patzwahl)</managingEditor>
-    <pubDate>Sun, 22 Nov 2020 20:23:47 +0100</pubDate>
+    <pubDate>Sun, 22 Nov 2020 21:14:16 +0100</pubDate>
     <item>
       <title>Build your own Git Server with a Raspberry Pi</title>
       <link>https://snow-dev.com/posts/build-your-own-git-server-with-a-raspberry-pi.html</link>
@@ -15,7 +15,7 @@
     <item>
       <title>Creating your own PHP dev-env in Vagrant: Bonus 1</title>
       <link>https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html</link>
-      <description>In the previous posts we have successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it&#39;s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called mysite.dev. So lets get started!</description>
+      <description>In the previous posts we&#39;ve successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it&#39;s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called mysite.dev. So let&#39;s get started!</description>
       <pubDate>Fri, 03 Jun 2016 00:00:00 +0000</pubDate>
     </item>
     <item>
@@ -64,6 +64,7 @@
       <title>Next level dotfiles with Ansible</title>
       <link>https://snow-dev.com/posts/next-level-dotfiles-with-ansible.html</link>
       <description>In the life of every linux enthusiast comes the point, where he has a lot of individual configuration build up and wants to migrate these settings over to another machine as seamlessly as possible. At this point a whole philosophy of how to do this is coming into play. Today this philosophy is bundled under the name: dotfiles. Historically dotfiles are the config files, which lie in your home directory.</description>
+      <author>Marcel Patzwahl</author>
       <pubDate>Fri, 11 Oct 2019 00:00:00 +0000</pubDate>
     </item>
     <item>

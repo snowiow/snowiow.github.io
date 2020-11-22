@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">
   <title>snow-dev.com</title>
   <id>https://snow-dev.com</id>
-  <updated>2020-11-22T20:23:47+01:00</updated>
+  <updated>2020-11-22T21:14:16+01:00</updated>
   <subtitle>A blog about linux, vim, devops and various other tech topics</subtitle>
   <link href="https://snow-dev.com"></link>
   <author>
@@ -23,7 +23,7 @@
     <updated>2016-06-03T00:00:00Z</updated>
     <id>tag:snow-dev.com,2016-06-03:/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html</id>
     <link href="https://snow-dev.com/posts/creating-your-own-php-dev-env-in-vagrant-bonus-1.html" rel="alternate"></link>
-    <summary type="html">In the previous posts we have successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it&#39;s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called mysite.dev. So lets get started!</summary>
+    <summary type="html">In the previous posts we&#39;ve successfully set up a development environment for PHP. In the following posts I will present some bonus things, which you can do, to optimize your work with vagrant. In this post I will show you how to set a virtual host in apache inside your guest system. Because IP addresses can be forgotten quite easily, it&#39;s much more handy to have a short named address under which you can access your web app. In this project we will create a virtual host for our main project directory called mysite.dev. So let&#39;s get started!</summary>
   </entry>
   <entry>
     <title>Creating your own PHP dev-env in Vagrant: Bonus 2</title>
@@ -80,6 +80,9 @@
     <id>tag:snow-dev.com,2019-10-11:/posts/next-level-dotfiles-with-ansible.html</id>
     <link href="https://snow-dev.com/posts/next-level-dotfiles-with-ansible.html" rel="alternate"></link>
     <summary type="html">In the life of every linux enthusiast comes the point, where he has a lot of individual configuration build up and wants to migrate these settings over to another machine as seamlessly as possible. At this point a whole philosophy of how to do this is coming into play. Today this philosophy is bundled under the name: dotfiles. Historically dotfiles are the config files, which lie in your home directory.</summary>
+    <author>
+      <name>Marcel Patzwahl</name>
+    </author>
   </entry>
   <entry>
     <title>The power of Vim Plugins: CtrlP</title>

@@ -13,7 +13,7 @@ TARGET_CSS   = $(OUTPUT)/css/style.css
 
 build: directories webfonts $(TARGET_CSS) $(IMAGES) $(POSTS) $(INFO_PAGES) $(OUTPUT)/index.html $(OUTPUT)/archive.html $(META_FILES) generate-feeds
 
-generate-feeds:
+generate-feeds: install-tools
 	@echo "generating feeds"
 	@feed
 
@@ -99,6 +99,5 @@ serve:
 		-d nginx
 	@echo "server started at http://localhost:8088"
 
-.PHONY: install-tools
-install-tools: tools/feed/%
+install-tools: tools/feed
 	cd tools/feed && go install ./

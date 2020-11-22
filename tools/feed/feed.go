@@ -2,35 +2,35 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/feeds"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
-	"github.com/gorilla/feeds"
-	"gopkg.in/yaml.v2"
 )
 
 const DOMAIN = "https://snow-dev.com"
 
-func main()  {
+func main() {
 	now := time.Now()
 
 	feed := feeds.Feed{
-		Title: "snow-dev.com",
-		Link: &feeds.Link{Href: DOMAIN},
+		Title:       "snow-dev.com",
+		Link:        &feeds.Link{Href: DOMAIN},
 		Description: "A blog about linux, vim, devops and various other tech topics",
-		Author: &feeds.Author{Name: "Marcel Patzwahl", Email: "marcel.patzwahl@posteo.de"},
-		Created: now,
+		Author:      &feeds.Author{Name: "Marcel Patzwahl", Email: "marcel.patzwahl@posteo.de"},
+		Created:     now,
 	}
 
 	posts := getPosts()
 	for _, post := range posts {
 		url := fmt.Sprintf("%s/posts/%s.html", DOMAIN, post.Filename)
 		item := feeds.Item{
-			Title: post.Title,
-			Author: &feeds.Author{Name: post.Author},
-			Created: post.Date,
-			Link: &feeds.Link{Href: url},
+			Title:       post.Title,
+			Author:      &feeds.Author{Name: post.Author},
+			Created:     post.Date,
+			Link:        &feeds.Link{Href: url},
 			Description: post.Description,
 		}
 		feed.Items = append(feed.Items, &item)
@@ -57,9 +57,9 @@ func main()  {
 	}
 }
 
-func getPosts() []*Post  {
+func getPosts() []*Post {
 	dir := "./content/posts/"
-	fileInfo, err := ioutil.ReadDir(dir) 
+	fileInfo, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Printf("Couldn't read from directory %s\n", dir)
 		os.Exit(1)
@@ -67,17 +67,15 @@ func getPosts() []*Post  {
 	var posts []*Post
 	for _, info := range fileInfo {
 		filename := info.Name()
-		if !strings.HasPrefix(filename, "#") && !strings.HasSuffix(filename, "#") {
-			content, err := ioutil.ReadFile(dir + filename)
-			if err != nil {
-				fmt.Printf("Couldn't read file %s\n", dir + filename)
-				os.Exit(1)
-			}
-			post := Post{}
-			yaml.Unmarshal(content, &post)
-			post.Filename = strings.TrimSuffix(filename, ".md")
-			posts = append(posts, &post)
+		content, err := ioutil.ReadFile(dir + filename)
+		if err != nil {
+			fmt.Printf("Couldn't read file %s\n", dir+filename)
+			os.Exit(1)
 		}
+		post := Post{}
+		yaml.Unmarshal(content, &post)
+		post.Filename = strings.TrimSuffix(filename, ".md")
+		posts = append(posts, &post)
 	}
 	return posts
 }
