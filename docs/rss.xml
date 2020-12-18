@@ -4,7 +4,7 @@
     <link>https://snow-dev.com</link>
     <description>A blog about linux, vim, devops and various other tech topics</description>
     <managingEditor>marcel.patzwahl@posteo.de (Marcel Patzwahl)</managingEditor>
-    <pubDate>Sun, 22 Nov 2020 21:14:16 +0100</pubDate>
+    <pubDate>Fri, 18 Dec 2020 08:53:46 +0100</pubDate>
     <item>
       <title>Build your own Git Server with a Raspberry Pi</title>
       <link>https://snow-dev.com/posts/build-your-own-git-server-with-a-raspberry-pi.html</link>
@@ -59,6 +59,12 @@
       <link>https://snow-dev.com/posts/increase-disk-space-of-a-vagrant-machine.html</link>
       <description>Lately I came across a rather big problem of vagrant Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily.</description>
       <pubDate>Wed, 26 Oct 2016 00:00:00 +0000</pubDate>
+    </item>
+    <item>
+      <title>How to migrate from Serverless to CDK</title>
+      <link>https://snow-dev.com/posts/migrate-from-serverless-to-cdk.html</link>
+      <description>The Serverless Application Framework was the go to solution to deploy serverless application stacks, like AWS Lambda for quite a while. It offers a very easy to use YAML DSL to deploy common serverless patterns, like a Lambda function behind an API Gateway. However if serverless applications become more complex and consist of more than the default resources, you were back writing at CloudFormation again.</description>
+      <pubDate>Fri, 18 Dec 2020 00:00:00 +0000</pubDate>
     </item>
     <item>
       <title>Next level dotfiles with Ansible</title>

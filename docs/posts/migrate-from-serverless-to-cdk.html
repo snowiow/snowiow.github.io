@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="google-site-verification" content="LYZAMZyp5IGDHDRhRMjN0VoDglk1rEoj9nYv62BRxfQ" />
+  <meta name="dcterms.date" content="2020-12-18" />
+  <title>snow-dev.com :: How to migrate from Serverless to CDK</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<header>
+    <div class="logo">
+        <a href="/">snow-dev.com</a>
+    </div>
+    <nav>
+        <a href="/" title="Home"><i class="fas fa-home"></i></a>
+        <a href="/about.html" title="About"><i class="fas fa-info"></i></a>
+        <a href="/archive.html" title="Archive"><i class="fas fa-archive"></i></a>
+        <a href="/rss.xml" title="RSS Feed"><i class="fas fa-rss"></i></a>
+        <a href="/atom.xml" title="Atom Feed"><i class="fas fa-atom"></i></a>
+        <a href="https://github.com/snowiow" title="Github"><i class="fab fa-github"></i></a>
+    </nav>
+</header>
+    <h1>How to migrate from Serverless to CDK</h1>
+    <article>
+<section class="header">
+    Posted on 2020-12-18
+</section>
+<hr class="section-head">
+<section>
+<p>The Serverless Application Framework was the go to solution to deploy serverless application stacks, like AWS Lambda for quite a while. It offers a very easy to use YAML DSL to deploy common serverless patterns, like a Lambda function behind an API Gateway. However if serverless applications become more complex and consist of more than the default resources, you were back writing at CloudFormation again.</p>
+<p>I faced a scenario like this recently. The same Lambdas needed to be deployed behind two different API Gateways. One is hosted at the edge and the other one was deployed regionally. Realizing this with the Serverless Framework isn’t possible, because it only supports one API Gateway. The other one has to be configured and referenced manually in the CloudFormation part of your <code>serverless.yml</code>. This wasn’t the most comfortable way forward. Instead we decided to go with CDK from here.</p>
+<p>However it wasn’t possible to tear down the whole stack and rewrite the infrastructure in CDK, because we had resources holding important data (DynamoDB and Cognito Identity Pool). We didn’t want to have a downtime either, where we would dump the data back into the newly provisioned resources. So we needed to migrate over the existing stack and continue working on that via CDK. This wasn’t possible until of October 2020, when the CDK team announced the new <em>cloudformation-include</em> module.</p>
+<p>In this post I want to go over a simple Serverless example and how we are able to migrate this project with the help of this new CDK module.</p>
+<h1 id="the-serverless-example-application">The Serverless example application</h1>
+<p>As a starting point we take the <a href="https://www.serverless.com/examples/aws-node-rest-api-with-dynamodb/">Rest API with DynamoDB</a> example from the Serverless website. You can install it on your machine like this to go along:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">serverless</span> install -u https://github.com/serverless/examples/tree/master/aws-node-rest-api-with-dynamodb -n  aws-node-rest-api-with-dynamodb</span></code></pre></div>
+<p>We slightly cut down the example to have a reason to do a migration. Namely we remove the <em>iamRoleStatements</em> and environment variable from the <code>serverless.yml</code>. This will be the part we want to add to the CDK Code as a showcase how to add new infrastructure components to the existing stack. Now the <code>serverless.yml</code> should look like this:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">service</span><span class="kw">:</span><span class="at"> aws-node-rest-api-with-dynamodb</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">frameworkVersion</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;&gt;=1.1.0&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">provider</span><span class="kw">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">name</span><span class="kw">:</span><span class="at"> aws</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">runtime</span><span class="kw">:</span><span class="at"> nodejs10.x</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">functions</span><span class="kw">:</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">create</span><span class="kw">:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">handler</span><span class="kw">:</span><span class="at"> todos/create.create</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">http</span><span class="kw">:</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> todos</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">method</span><span class="kw">:</span><span class="at"> post</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">cors</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">list</span><span class="kw">:</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">handler</span><span class="kw">:</span><span class="at"> todos/list.list</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">http</span><span class="kw">:</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> todos</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">method</span><span class="kw">:</span><span class="at"> get</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">cors</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">get</span><span class="kw">:</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">handler</span><span class="kw">:</span><span class="at"> todos/get.get</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">http</span><span class="kw">:</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> todos/{id}</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">method</span><span class="kw">:</span><span class="at"> get</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">cors</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">update</span><span class="kw">:</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">handler</span><span class="kw">:</span><span class="at"> todos/update.update</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">http</span><span class="kw">:</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> todos/{id}</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">method</span><span class="kw">:</span><span class="at"> put</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">cors</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">delete</span><span class="kw">:</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">handler</span><span class="kw">:</span><span class="at"> todos/delete.delete</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">events</span><span class="kw">:</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">http</span><span class="kw">:</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">path</span><span class="kw">:</span><span class="at"> todos/{id}</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">method</span><span class="kw">:</span><span class="at"> delete</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="fu">cors</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="fu">resources</span><span class="kw">:</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">Resources</span><span class="kw">:</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">TodosDynamoDbTable</span><span class="kw">:</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Type</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;AWS::DynamoDB::Table&#39;</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">Properties</span><span class="kw">:</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">TableName</span><span class="kw">:</span><span class="at"> Todos</span></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">BillingMode</span><span class="kw">:</span><span class="at"> PAY_PER_REQUEST</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">AttributeDefinitions</span><span class="kw">:</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">AttributeName</span><span class="kw">:</span><span class="at"> id</span></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">AttributeType</span><span class="kw">:</span><span class="at"> S</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">KeySchema</span><span class="kw">:</span></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a><span class="at">          </span><span class="kw">-</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">AttributeName</span><span class="kw">:</span><span class="at"> id</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">KeyType</span><span class="kw">:</span><span class="at"> HASH</span></span></code></pre></div>
+<p>Let’s install the dependencies and deploy the application with:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install <span class="kw">&amp;&amp;</span> <span class="ex">serverless</span> deploy</span></code></pre></div>
+<p>We get an API Gateway with five Lambda Proxies, which will be triggered when you do a request to the respective endpoint with the right method. Also a DynamoDB will be deployed, but the Lambdas don’t have access so far and don’t know the name of the DynamoDB, because we currently don’t pass it via an environment variable.</p>
+<p>We can now try to create a todo. The output of serverless should have an output like this at the end:</p>
+<pre><code>Serverless: Stack update finished...
+Service Information
+service: aws-node-rest-api-with-dynamodb
+stage: dev
+region: eu-central-1
+stack: aws-node-rest-api-with-dynamodb-dev
+resources: 35
+api keys:
+  None
+endpoints:
+  POST - https://mhau9nhq75.execute-api.eu-central-1.amazonaws.com/dev/todos
+  GET - https://mhau9nhq75.execute-api.eu-central-1.amazonaws.com/dev/todos
+  GET - https://mhau9nhq75.execute-api.eu-central-1.amazonaws.com/dev/todos/{id}
+  PUT - https://mhau9nhq75.execute-api.eu-central-1.amazonaws.com/dev/todos/{id}
+  DELETE - https://mhau9nhq75.execute-api.eu-central-1.amazonaws.com/dev/todos/{id}
+functions:
+  create: aws-node-rest-api-with-dynamodb-dev-create
+  list: aws-node-rest-api-with-dynamodb-dev-list
+  get: aws-node-rest-api-with-dynamodb-dev-get
+  update: aws-node-rest-api-with-dynamodb-dev-update
+  delete: aws-node-rest-api-with-dynamodb-dev-delete
+layers:
+  None</code></pre>
+<p>Let’s try to create a todo by calling the <code>todos</code> endpoint via <code>POST</code> and giving a todo:</p>
+<pre class="shell"><code>$ curl -XPOST https://mhau9nhq75.execute-api.eu-central-1.amazonaws.com/dev/todos --data &#39;{&quot;text&quot;: &quot;Migrate to CDK&quot;}&#39;
+Couldn&#39;t create the todo item.</code></pre>
+<p>As expected we got an error, that we can’t create a todo item. If we go into the CloudWatch Logs for the <em>create</em> Lambda, we see an error message like this:</p>
+<pre><code>MissingRequiredParameter: Missing required key &#39;TableName&#39; in params at ParamValidator.</code></pre>
+<h1 id="introducing-cdk-into-an-existing-serverless-project">Introducing CDK into an existing Serverless project</h1>
+<p>We are now at the point, where we want to add new stuff to our infrastructure, but don’t want to do it via CloudFormation. Instead we want to move the existing stack to CDK, but don’t want to recreate everything from scratch and also keep the DynamoDB with all it’s data as is (Yes, we waited around two years between chapter one and two).</p>
+<p>To keep the new CDK code separated, we initiate the CDK project in a new subdirectory:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>$ <span class="fu">mkdir</span> cdk-infra <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> cdk-infra <span class="kw">&amp;&amp;</span> <span class="ex">cdk</span> init app --language=typescript</span></code></pre></div>
+<p>We also move everything specific to the Lambda Code in another subdirectory.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>$ <span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="fu">mkdir</span> code<span class="kw">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> todos package* node_modules/ code<span class="kw">;</span></span></code></pre></div>
+<h1 id="let-cdk-use-the-existing-cloudformation-stack">Let CDK use the existing CloudFormation stack</h1>
+<p>Now we want to import the existing stack into CDK. For this we use the new <em>cloudformation-include</em> module. We can install it in the <code>cdk-infra</code> subdirectory via npm:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install @aws-cdk/cloudformation-include</span></code></pre></div>
+<p>The module has a <code>CfnInclude</code> class, which works the same like the one from the <em>aws-core</em> module, but afterwards we can do a lot more, as you will see. Importing a CloudFormation Template is similar to the old <code>CfnInclude</code> class, where we need to pass a path to the CloudFormation Template, which represents the current stack.</p>
+<p>Since the <code>serverless.yml</code> is not an actual CloudFormation Template, we need to retrieve the finished, rendered version from for example the AWS UI. Navigating to the existing stack, which is called <em>aws-node-rest-api-with-dynamodb-dev</em>, shows us a <em>Template</em> tab in which we find the rendered CloudFormation template:</p>
+<p><img src="/images/serverless-to-cdk-template.png" alt="CloudFormation Template" title="CloudFormation Template" /></p>
+<p>We copy/paste the template to the file <code>cdk-infra/resources/template.json</code>.</p>
+<p>Under <code>lib/cdk-infra-stack</code> we edit the current code to create the <code>CfnInclude</code> class and use the saved CloudFormation Template:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> cdk from <span class="st">&#39;@aws-cdk/core&#39;</span><span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnInclude } from <span class="st">&#39;@aws-cdk/cloudformation-include&#39;</span><span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>export class CdkInfraStack extends cdk<span class="op">.</span><span class="at">Stack</span> {</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(scope<span class="op">:</span> cdk<span class="op">.</span><span class="at">Construct</span><span class="op">,</span> id<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> props<span class="op">?:</span> cdk<span class="op">.</span><span class="at">StackProps</span>) {</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">super</span>(scope<span class="op">,</span> id<span class="op">,</span> props)<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    const cfnInclude <span class="op">=</span> <span class="kw">new</span> <span class="fu">CfnInclude</span>(this<span class="op">,</span> <span class="st">&#39;Template&#39;</span><span class="op">,</span> {</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      templateFile<span class="op">:</span> <span class="st">&#39;resources/template.json&#39;</span><span class="op">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The last thing we need to do is to name the stack, which CDK wants to create, to the one which Serverless already deployed. For this we go to <code>bin/cdk-infra.ts</code> and edit the stack name:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env node</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="st">&#39;source-map-support/register&#39;</span><span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> cdk from <span class="st">&#39;@aws-cdk/core&#39;</span><span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CdkInfraStack } from <span class="st">&#39;../lib/cdk-infra-stack&#39;</span><span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>const app <span class="op">=</span> <span class="kw">new</span> cdk<span class="op">.</span><span class="fu">App</span>()<span class="op">;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="kw">new</span> <span class="fu">CdkInfraStack</span>(app<span class="op">,</span> <span class="st">&#39;aws-node-rest-api-with-dynamodb-dev&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>We are now able to execute all <code>cdk</code> commands from the <code>cdk-infra</code> subdirectory. Let’s try if we can retrieve a diff between the deployed stack and our code. When we try to get the difference between our CDK code and the deployed stack via:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cdk</span> diff</span></code></pre></div>
+<p>we get an error, which contains this message:</p>
+<pre><code>Error: Resolution error: Supplied properties not correct for &quot;CfnRestApiProps&quot;
+  policy: &quot;&quot; should be an &#39;object&#39;.</code></pre>
+<p>This is an inconsistency between CloudFormation and the CDK CloudFormation Reader. CDK always expects an object for the policy key, but the rendered CloudFormation Template has an empty string. To fix this we can remove it from the saved Template by searching for the term <code>,"Policy":""</code> and remove it.</p>
+<p>Now <code>cdk diff</code> should work and will give us the following output:</p>
+<pre><code>Stack aws-node-simple-http-endpoint-dev
+Conditions
+[+] Condition CDKMetadata/Condition CDKMetadataAvailable: {&quot;Fn::Or&quot;:[{&quot;Fn::Or&quot;:[{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ap-east-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ap-northeast-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ap-northeast-2&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ap-south-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ap-southeast-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ap-southeast-2&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;ca-central-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;cn-north-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;cn-northwest-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;eu-central-1&quot;]}]},{&quot;Fn::Or&quot;:[{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;eu-north-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;eu-west-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;eu-west-2&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;eu-west-3&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;me-south-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;sa-east-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;us-east-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;us-east-2&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;us-west-1&quot;]},{&quot;Fn::Equals&quot;:[{&quot;Ref&quot;:&quot;AWS::Region&quot;},&quot;us-west-2&quot;]}]}]}
+
+Resources
+[~] AWS::ApiGateway::RestApi Template/ApiGatewayRestApi ApiGatewayRestApi 
+ └─ [-] Policy
+     └─ </code></pre>
+<p>CDK always adds it’s Metadata to a stack and it wants to remove the empty policy. Beside of these differences the CDK project would preserve anything in the stack as it was before. We are now able to remove the <code>serverless.yml</code> and continue building our infrastructure in CDK. But before we continue, let’s deploy the changes:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cdk</span> deploy</span></code></pre></div>
+<h1 id="use-existing-resources-in-cdk">Use existing Resources in CDK</h1>
+<p>Now that we have imported the existing stack into our CDK project, we are able to use all resources, which are deployed as part of our stack. This is now possible thanks to the new <em>cloudformation_include</em> module.</p>
+<p>To show you what I mean by this, let’s give our Lambda Functions the Environment Variable with the DynamoDB name. First we need the DynamoDB and Lambda CDK packages. So let’s install these inside of the <code>cdk-infra</code> directory as well.</p>
+<pre><code>npm install @aws-cdk/aws-dynamodb @aws-cdk/aws-lambda</code></pre>
+<p>Now we can assign the DynamoDB table name as an environment variable to the lambda functions. Fist we retrieve the DynamoDB from <code>CfnInclude</code>s <code>getResource</code> method:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>const dynamoDB <span class="op">=</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(<span class="st">&#39;TodosDynamoDbTable&#39;</span>) <span class="im">as</span> CfnTable<span class="op">;</span></span></code></pre></div>
+<p><code>getResource</code> takes the logical ID of a resource as the parameter. The logical id can be found again in the AWS UI under the <em>Resources</em> tab for example.</p>
+<p><img src="/images/serverless-to-cdk-logicalid.png" alt="CloudFormation Resources
+Logical ID" title="CloudFormation Resources ID" /></p>
+<p>These resources will be imported as a generic type <code>CfnResource</code> and are castable to the respective <code>Cfn</code> sub type. In this case we cast it to <code>CfnTable</code>.</p>
+<p>Because you can emit the <code>TableName</code> it’s a conditional type and we extract the table name next:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">if</span> (<span class="op">!</span>dynamoDB<span class="op">.</span><span class="at">tableName</span>) {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  throw <span class="kw">new</span> <span class="fu">Error</span>(<span class="st">&quot;DynamoDB has no name&quot;</span>)<span class="op">;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>const dynamodbTable<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> dynamoDB<span class="op">.</span><span class="at">tableName</span><span class="op">;</span></span></code></pre></div>
+<p>If there would be no table name, we would throw an error. Now we can apply the same principle to get the <code>CfnFunction</code>s. For this we again need the logical ids. We save them in a <code>readonly</code> field of our class:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">readonly</span> lambdaLogicalNames <span class="op">=</span> [</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;CreateLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;DeleteLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;GetLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;UpdateLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;ListLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>]<span class="op">;</span></span></code></pre></div>
+<p>Now we can iterate over this array, get the <code>CfnFunctions</code> from these logical ids and iterate over these to set the environment variable <code>DYNAMODB_NAME</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>const cfnFunctions <span class="op">=</span> this<span class="op">.</span><span class="at">lambdaLogicalNames</span><span class="op">.</span><span class="fu">map</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  (logicalName) <span class="kw">=&gt;</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(logicalName) <span class="im">as</span> CfnFunction</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>cfnFunctions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span> f<span class="op">.</span><span class="at">environment</span> <span class="op">=</span> {</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  variables<span class="op">:</span> {</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;DYNAMODB_TABLE: dynamodbTable,</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span></code></pre></div>
+<p>Calling <code>cdk diff</code> again would give us the following changes:</p>
+<pre class="shell"><code>Stack aws-node-rest-api-with-dynamodb-dev
+Resources
+[~] AWS::Lambda::Function Template/CreateLambdaFunction CreateLambdaFunction 
+ └─ [+] Environment
+     └─ {&quot;Variables&quot;:{&quot;DYNAMODB_TABLE&quot;:&quot;Todos&quot;}}
+[~] AWS::Lambda::Function Template/ListLambdaFunction ListLambdaFunction 
+ └─ [+] Environment
+     └─ {&quot;Variables&quot;:{&quot;DYNAMODB_TABLE&quot;:&quot;Todos&quot;}}
+[~] AWS::Lambda::Function Template/GetLambdaFunction GetLambdaFunction 
+ └─ [+] Environment
+     └─ {&quot;Variables&quot;:{&quot;DYNAMODB_TABLE&quot;:&quot;Todos&quot;}}
+[~] AWS::Lambda::Function Template/UpdateLambdaFunction UpdateLambdaFunction 
+ └─ [+] Environment
+     └─ {&quot;Variables&quot;:{&quot;DYNAMODB_TABLE&quot;:&quot;Todos&quot;}}
+[~] AWS::Lambda::Function Template/DeleteLambdaFunction DeleteLambdaFunction 
+ └─ [+] Environment
+     └─ {&quot;Variables&quot;:{&quot;DYNAMODB_TABLE&quot;:&quot;Todos&quot;}}</code></pre>
+<p>Exactly what we want, let’s deploy it! Here is the complete code of the <code>lib/cdk-infra-stack.ts</code> class as of now:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> cdk from <span class="st">&#39;@aws-cdk/core&#39;</span><span class="op">;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnInclude } from <span class="st">&#39;@aws-cdk/cloudformation-include&#39;</span><span class="op">;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnFunction } from <span class="st">&#39;@aws-cdk/aws-lambda&#39;</span><span class="op">;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnTable } from <span class="st">&#39;@aws-cdk/aws-dynamodb&#39;</span><span class="op">;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>export class CdkInfraStack extends cdk<span class="op">.</span><span class="at">Stack</span> {</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> lambdaLogicalNames <span class="op">=</span> [</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;CreateLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;DeleteLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;GetLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;UpdateLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;ListLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">;</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(scope<span class="op">:</span> cdk<span class="op">.</span><span class="at">Construct</span><span class="op">,</span> id<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> props<span class="op">?:</span> cdk<span class="op">.</span><span class="at">StackProps</span>) {</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">super</span>(scope<span class="op">,</span> id<span class="op">,</span> props)<span class="op">;</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    const cfnInclude <span class="op">=</span> <span class="kw">new</span> <span class="fu">CfnInclude</span>(this<span class="op">,</span> <span class="st">&#39;Template&#39;</span><span class="op">,</span> {</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>      templateFile<span class="op">:</span> <span class="st">&#39;resources/template.json&#39;</span><span class="op">,</span></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>    const dynamoDB <span class="op">=</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(<span class="st">&#39;TodosDynamoDbTable&#39;</span>) <span class="im">as</span> CfnTable<span class="op">;</span></span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">if</span> (<span class="op">!</span>dynamoDB<span class="op">.</span><span class="at">tableName</span>) {</span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>      throw <span class="kw">new</span> <span class="fu">Error</span>(<span class="st">&quot;DynamoDB has no name&quot;</span>)<span class="op">;</span></span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>    const dynamodbTable<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> dynamoDB<span class="op">.</span><span class="at">tableName</span><span class="op">;</span></span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>    const cfnFunctions <span class="op">=</span> this<span class="op">.</span><span class="at">lambdaLogicalNames</span><span class="op">.</span><span class="fu">map</span>(</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>      (logicalName) <span class="kw">=&gt;</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(logicalName) <span class="im">as</span> CfnFunction</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>    cfnFunctions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span> f<span class="op">.</span><span class="at">environment</span> <span class="op">=</span> {</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>      variables<span class="op">:</span> {</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;DYNAMODB_TABLE: dynamodbTable,</span></span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>If we try the curl command again, we still get the same error though. While CloudWatch yields a message like this:</p>
+<pre><code>aws-node-rest-api-with-dynamodb-dev-create is not authorized to perform: dynamodb:PutItem on resource</code></pre>
+<p>Right, we didn’t gave it the correct permissions. Let’s change this! The easiest way to give a Lambda the necessary permissions is via the <code>grant*</code> methods. The problem with these <code>grant*</code> methods is, they are only available on higher constructs, but not for the <code>Cfn</code> variants. But this isn’t a big deal. We can just retrieve the higher constructs via the static <code>from*</code> methods, they provide. It looks like this for the DynamoDB table:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>const table <span class="op">=</span> Table<span class="op">.</span><span class="fu">fromTableArn</span>(this<span class="op">,</span> <span class="st">&#39;HigherTable&#39;</span><span class="op">,</span> dynamoDB<span class="op">.</span><span class="at">attrArn</span>)<span class="op">;</span></span></code></pre></div>
+<p>For the Lambda Functions we can’t do the same. Because the <code>grant*</code> methods modify the Lambda Execution Role, we need to provide it. If CDK is loading a Function via <code>fromFunctionArn</code> it doesn’t load the role as well and therefore can’t modify it. Instead we need to load the higher functions with the <code>fromFunctionAttributes</code> method. There we pass the role as well as the ARN. Now we can apply the same principles, we already discovered to get the role and pass it to <code>fromFunctionAttributes</code>. First we install the iam module:</p>
+<pre class="shell"><code>npm install @aws-cdk/aws-iam;</code></pre>
+<p>And this is the according code:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>const cfnRole <span class="op">=</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(<span class="st">&#39;IamRoleLambdaExecution&#39;</span>) <span class="im">as</span> CfnRole<span class="op">;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>const role <span class="op">=</span> Role<span class="op">.</span><span class="fu">fromRoleArn</span>(this<span class="op">,</span> <span class="st">&#39;HigherRole&#39;</span><span class="op">,</span> cfnRole<span class="op">.</span><span class="at">attrArn</span>)<span class="op">;</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>const functions <span class="op">=</span> cfnFunctions<span class="op">.</span><span class="fu">map</span>((f) <span class="kw">=&gt;</span> Function<span class="op">.</span><span class="fu">fromFunctionAttributes</span>(</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  this<span class="op">,</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;HigherFunction&#39;</span> <span class="op">+</span> f<span class="op">.</span><span class="at">functionName</span><span class="op">,</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  {</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    functionArn<span class="op">:</span> f<span class="op">.</span><span class="at">attrArn</span><span class="op">,</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    role<span class="op">:</span> role</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>))<span class="op">;</span></span></code></pre></div>
+<p>And finally we can grant read and write access to our functions:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>functions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span> table<span class="op">.</span><span class="fu">grantReadWriteData</span>(f))<span class="op">;</span></span></code></pre></div>
+<p>Executing the curl command again finally yields success:</p>
+<pre><code>{&quot;id&quot;:&quot;8b585470-40a7-11eb-9910-c977be42124e&quot;,&quot;text&quot;:&quot;Migrate to CDK&quot;,&quot;checked&quot;:false,&quot;createdAt&quot;:1608237390647,&quot;updatedAt&quot;:1608237390647}</code></pre>
+<h1 id="apply-code-updates-to-lambdas">Apply Code Updates to Lambdas</h1>
+<p>You may already noticed that there is still an open issue, which we didn’t solve so far. Serverless also packaged our Code into a zip file and pushed it to S3 to update our Lambdas with the latest changes. If we would do a Code change now, it wouldn’t deploy these changes. Let’s do an example. Currently an empty JSON object is returned when we delete a todo item. Let’s return a meaningful deletion message instead. We change the code for <code>todos/delete.js</code> like this:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co">// create a response</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> response <span class="op">=</span> {</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">statusCode</span><span class="op">:</span> <span class="dv">200</span><span class="op">,</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">body</span><span class="op">:</span> <span class="bu">JSON</span><span class="op">.</span><span class="fu">stringify</span>(<span class="st">&#39;TODO Item successfully deleted!&#39;</span>)<span class="op">,</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>}<span class="op">;</span></span></code></pre></div>
+<p><code>cdk deploy</code> only gives us this output</p>
+<pre><code>aws-node-rest-api-with-dynamodb-dev: deploying...
+
+ ✅  aws-node-rest-api-with-dynamodb-dev (no changes)
+</code></pre>
+<p>Which already says that nothing changed. If we delete the item, we still get the empty json object back:</p>
+<pre class="shell"><code>$ curl -XDELETE https://ztr40k0bf7.execute-api.eu-central-1.amazonaws.com/dev/todos/8b585470-40a7-11eb-9910-c977be42124e
+{}</code></pre>
+<p>Thankfully CDK also provides a solution to this problem. But let’s have a look at the deployment bucket of the Serverless Framework first. We see that Serverless is zipping up the whole project directory and uploads the zip file into the S3 Bucket under the following path: <code>serverless/aws-node-rest-api-with-dynamodb/dev/&lt;some-date-time-string&gt;/</code>.</p>
+<p>There is a new CDK module called <code>aws-s3-assets</code> which has an experimental Construct called <code>Asset</code>. With this construct we can achieve the same goal. Basically we can give the path to our code directory and CDK is packaging that directory into a S3 Bucket before the actual deployment. Afterwards we can access information like the bucket name or object name. With these information we can override the <code>code</code> attribute of our lambdas, so they get updated with the newly uploaded code:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>const asset <span class="op">=</span> <span class="kw">new</span> <span class="fu">Asset</span>(this<span class="op">,</span> <span class="st">&#39;LambdaCode&#39;</span><span class="op">,</span> {</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  path<span class="op">:</span> <span class="st">&#39;../code&#39;</span><span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>})<span class="op">;</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>cfnFunctions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  f<span class="op">.</span><span class="at">code</span> <span class="op">=</span> {</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    s3Bucket<span class="op">:</span> asset<span class="op">.</span><span class="at">s3BucketName</span><span class="op">,</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    s3Key<span class="op">:</span> asset<span class="op">.</span><span class="at">s3ObjectKey</span><span class="op">,</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>)<span class="op">;</span></span></code></pre></div>
+<p>If we create a new todo item and delete it afterwards, we get the new message and can be assured, that the newest version of our code was uploaded.</p>
+<pre class="shell"><code>$ curl -XPOST
+https://ztr40k0bf7.execute-api.eu-central-1.amazonaws.com/dev/todos --data &#39;{&quot;text&quot;: &quot;Migrate to CDK&quot;}&#39;
+{&quot;id&quot;:&quot;10150e20-40ac-11eb-9edf-0dd37a8498a2&quot;,&quot;text&quot;:&quot;Migrate to   CDK&quot;,&quot;checked&quot;:false,&quot;createdAt&quot;:1608239331330,&quot;updatedAt&quot;:1608239331330}
+
+$ curl -XDELETE https://ztr40k0bf7.execute-api.eu-central-1.amazonaws.com/dev/todos/10150e20-40ac-11eb-9edf-0dd37a8498a2
+&quot;TODO Item successfully deleted!&quot;</code></pre>
+<p>Here is the final state of our <code>lib/cdk-infra-stack.ts</code> class:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> <span class="op">*</span> <span class="im">as</span> cdk from <span class="st">&#39;@aws-cdk/core&#39;</span><span class="op">;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnInclude } from <span class="st">&#39;@aws-cdk/cloudformation-include&#39;</span><span class="op">;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnFunction<span class="op">,</span> Function } from <span class="st">&#39;@aws-cdk/aws-lambda&#39;</span><span class="op">;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnTable<span class="op">,</span> Table } from <span class="st">&#39;@aws-cdk/aws-dynamodb&#39;</span><span class="op">;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { CfnRole<span class="op">,</span> Role } from <span class="st">&#39;@aws-cdk/aws-iam&#39;</span><span class="op">;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { Asset } from <span class="st">&#39;@aws-cdk/aws-s3-assets&#39;</span><span class="op">;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>export class CdkInfraStack extends cdk<span class="op">.</span><span class="at">Stack</span> {</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">readonly</span> lambdaLogicalNames <span class="op">=</span> [</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;CreateLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;DeleteLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;GetLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;UpdateLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;ListLambdaFunction&#39;</span><span class="op">,</span></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>  ]<span class="op">;</span></span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">constructor</span>(scope<span class="op">:</span> cdk<span class="op">.</span><span class="at">Construct</span><span class="op">,</span> id<span class="op">:</span> <span class="dt">string</span><span class="op">,</span> props<span class="op">?:</span> cdk<span class="op">.</span><span class="at">StackProps</span>) {</span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">super</span>(scope<span class="op">,</span> id<span class="op">,</span> props)<span class="op">;</span></span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>    const cfnInclude <span class="op">=</span> <span class="kw">new</span> <span class="fu">CfnInclude</span>(this<span class="op">,</span> <span class="st">&#39;Template&#39;</span><span class="op">,</span> {</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>      templateFile<span class="op">:</span> <span class="st">&#39;resources/template.json&#39;</span><span class="op">,</span></span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>    const dynamoDB <span class="op">=</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(<span class="st">&#39;TodosDynamoDbTable&#39;</span>) <span class="im">as</span> CfnTable<span class="op">;</span></span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">if</span> (<span class="op">!</span>dynamoDB<span class="op">.</span><span class="at">tableName</span>) {</span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>      throw <span class="kw">new</span> <span class="fu">Error</span>(<span class="st">&quot;DynamoDB has no name&quot;</span>)<span class="op">;</span></span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>    const dynamodbTable<span class="op">:</span> <span class="dt">string</span> <span class="op">=</span> dynamoDB<span class="op">.</span><span class="at">tableName</span><span class="op">;</span></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>    const cfnFunctions <span class="op">=</span> this<span class="op">.</span><span class="at">lambdaLogicalNames</span><span class="op">.</span><span class="fu">map</span>(</span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>      (logicalName) <span class="kw">=&gt;</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(logicalName) <span class="im">as</span> CfnFunction</span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a>    cfnFunctions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span> f<span class="op">.</span><span class="at">environment</span> <span class="op">=</span> {</span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a>      variables<span class="op">:</span> {</span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;DYNAMODB_TABLE&#39;</span><span class="op">:</span> dynamodbTable<span class="op">,</span></span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a>    const table <span class="op">=</span> Table<span class="op">.</span><span class="fu">fromTableArn</span>(this<span class="op">,</span> <span class="st">&#39;HigherTable&#39;</span><span class="op">,</span> dynamoDB<span class="op">.</span><span class="at">attrArn</span>)<span class="op">;</span></span>
+<span id="cb34-39"><a href="#cb34-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-40"><a href="#cb34-40" aria-hidden="true" tabindex="-1"></a>    const cfnRole <span class="op">=</span> cfnInclude<span class="op">.</span><span class="fu">getResource</span>(<span class="st">&#39;IamRoleLambdaExecution&#39;</span>) <span class="im">as</span> CfnRole<span class="op">;</span></span>
+<span id="cb34-41"><a href="#cb34-41" aria-hidden="true" tabindex="-1"></a>    const role <span class="op">=</span> Role<span class="op">.</span><span class="fu">fromRoleArn</span>(this<span class="op">,</span> <span class="st">&#39;HigherRole&#39;</span><span class="op">,</span> cfnRole<span class="op">.</span><span class="at">attrArn</span>)<span class="op">;</span></span>
+<span id="cb34-42"><a href="#cb34-42" aria-hidden="true" tabindex="-1"></a>    const functions <span class="op">=</span> cfnFunctions<span class="op">.</span><span class="fu">map</span>((f) <span class="kw">=&gt;</span> Function<span class="op">.</span><span class="fu">fromFunctionAttributes</span>(</span>
+<span id="cb34-43"><a href="#cb34-43" aria-hidden="true" tabindex="-1"></a>      this<span class="op">,</span></span>
+<span id="cb34-44"><a href="#cb34-44" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;HigherFunction&#39;</span> <span class="op">+</span> f<span class="op">.</span><span class="at">functionName</span><span class="op">,</span></span>
+<span id="cb34-45"><a href="#cb34-45" aria-hidden="true" tabindex="-1"></a>      {</span>
+<span id="cb34-46"><a href="#cb34-46" aria-hidden="true" tabindex="-1"></a>        functionArn<span class="op">:</span> f<span class="op">.</span><span class="at">attrArn</span><span class="op">,</span></span>
+<span id="cb34-47"><a href="#cb34-47" aria-hidden="true" tabindex="-1"></a>        role<span class="op">:</span> role</span>
+<span id="cb34-48"><a href="#cb34-48" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb34-49"><a href="#cb34-49" aria-hidden="true" tabindex="-1"></a>    ))<span class="op">;</span></span>
+<span id="cb34-50"><a href="#cb34-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-51"><a href="#cb34-51" aria-hidden="true" tabindex="-1"></a>    functions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span> table<span class="op">.</span><span class="fu">grantReadWriteData</span>(f))<span class="op">;</span></span>
+<span id="cb34-52"><a href="#cb34-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-53"><a href="#cb34-53" aria-hidden="true" tabindex="-1"></a>    const asset <span class="op">=</span> <span class="kw">new</span> <span class="fu">Asset</span>(this<span class="op">,</span> <span class="st">&#39;LambdaCode&#39;</span><span class="op">,</span> {</span>
+<span id="cb34-54"><a href="#cb34-54" aria-hidden="true" tabindex="-1"></a>      path<span class="op">:</span> <span class="st">&#39;../code&#39;</span><span class="op">,</span></span>
+<span id="cb34-55"><a href="#cb34-55" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb34-56"><a href="#cb34-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-57"><a href="#cb34-57" aria-hidden="true" tabindex="-1"></a>    cfnFunctions<span class="op">.</span><span class="fu">forEach</span>((f) <span class="kw">=&gt;</span></span>
+<span id="cb34-58"><a href="#cb34-58" aria-hidden="true" tabindex="-1"></a>      f<span class="op">.</span><span class="at">code</span> <span class="op">=</span> {</span>
+<span id="cb34-59"><a href="#cb34-59" aria-hidden="true" tabindex="-1"></a>        s3Bucket<span class="op">:</span> asset<span class="op">.</span><span class="at">s3BucketName</span><span class="op">,</span></span>
+<span id="cb34-60"><a href="#cb34-60" aria-hidden="true" tabindex="-1"></a>        s3Key<span class="op">:</span> asset<span class="op">.</span><span class="at">s3ObjectKey</span><span class="op">,</span></span>
+<span id="cb34-61"><a href="#cb34-61" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb34-62"><a href="#cb34-62" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb34-63"><a href="#cb34-63" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h1 id="summary">Summary</h1>
+<p>Thanks to the new <code>cloudformation-include</code> module we were able to migrate the existing stack to CDK in no time. Afterwards it’s now possible to work with all the resources deployed in the stack. You can use them as a reference for new resources or extend/modify the existing resources. Lastly the updating of the code is very tricky, but <code>aws-s3-assets</code> helps in this case.</p>
+<p>If you want to go even further and rewrite parts of your infrastructure in CDK, like the API Gateway for example, you can do so. For this you can remove the respective part from <code>resources/template.json</code> and create the higher construct in CDK directly:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { RestApi } from <span class="st">&#39;@aws-cdk/aws-apigateway&#39;</span><span class="op">;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>const restApi <span class="op">=</span> <span class="kw">new</span> <span class="fu">RestApi</span>(this<span class="op">,</span> <span class="st">&#39;&lt;RestApiLogicalId&gt;&#39;</span><span class="op">,</span> {<span class="op">...</span>})<span class="op">;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>const cfnRestApi <span class="op">=</span> restApi<span class="op">.</span><span class="at">node</span><span class="op">.</span><span class="at">defaultChild</span> <span class="im">as</span> CfnRestApi<span class="op">;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>cfnRestApi<span class="op">.</span><span class="fu">overrideLogicalId</span>(<span class="st">&#39;&lt;pass the logical id of the existing rest api here&gt;&#39;</span>)<span class="op">;</span></span></code></pre></div>
+<p>The important part is, that you pass the logical id of the existing resource into the <code>Cfn</code> variant. If you now do <code>cdk diff</code> you see the differences between the <code>RestApi</code> in CDK and what’s deployed. You can now incrementally resolve all the differences until there are no left. Then you can deploy again and migrated the resource successfully from CloudFormation into CDK code. However we don’t go into detail here, because it doesn’t bring any functional benefits. However it’s an option if you have the time and patience and really want to get rid of the CloudFormation Template completely.</p>
+</section>
+</article>
+<footer>
+    <nav>
+        <a href="impressum.html" title="Impressum">Impressum</a>
+        <a href="datenschutz.html" title="Datenschutz">Datenschutz</a>
+    </nav>
+</footer>
+</body>
+</html>
