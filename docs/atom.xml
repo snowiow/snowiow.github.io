@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">
   <title>snow-dev.com</title>
   <id>https://snow-dev.com</id>
-  <updated>2020-11-22T21:14:16+01:00</updated>
+  <updated>2020-12-18T08:53:46+01:00</updated>
   <subtitle>A blog about linux, vim, devops and various other tech topics</subtitle>
   <link href="https://snow-dev.com"></link>
   <author>
@@ -73,6 +73,13 @@
     <id>tag:snow-dev.com,2016-10-26:/posts/increase-disk-space-of-a-vagrant-machine.html</id>
     <link href="https://snow-dev.com/posts/increase-disk-space-of-a-vagrant-machine.html" rel="alternate"></link>
     <summary type="html">Lately I came across a rather big problem of vagrant Increasing the disk space, because the normal 40GB were in use. There are options to increase RAM or CPU count easily.</summary>
+  </entry>
+  <entry>
+    <title>How to migrate from Serverless to CDK</title>
+    <updated>2020-12-18T00:00:00Z</updated>
+    <id>tag:snow-dev.com,2020-12-18:/posts/migrate-from-serverless-to-cdk.html</id>
+    <link href="https://snow-dev.com/posts/migrate-from-serverless-to-cdk.html" rel="alternate"></link>
+    <summary type="html">The Serverless Application Framework was the go to solution to deploy serverless application stacks, like AWS Lambda for quite a while. It offers a very easy to use YAML DSL to deploy common serverless patterns, like a Lambda function behind an API Gateway. However if serverless applications become more complex and consist of more than the default resources, you were back writing at CloudFormation again.</summary>
   </entry>
   <entry>
     <title>Next level dotfiles with Ansible</title>
