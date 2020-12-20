@@ -180,7 +180,7 @@ MissingRequiredParameter: Missing required key 'TableName' in params at ParamVal
 We are now at the point, where we want to add new stuff to our infrastructure,
 but don't want to do it via CloudFormation. Instead we want to move the existing
 stack to CDK, but don't want to recreate everything from scratch and also keep
-the DynamoDB with all it's data as is (Yes, we waited around two years between
+the DynamoDB with all its data as is (Yes, we waited around two years between
 chapter one and two).
 
 To keep the new CDK code separated, we initiate the CDK project in a new subdirectory:
@@ -288,7 +288,7 @@ Resources
      └─ 
 ```
 
-CDK always adds it's Metadata to a stack and it wants to remove the empty
+CDK always adds its Metadata to a stack and it wants to remove the empty
 policy. Beside of these differences the CDK project would preserve anything in
 the stack as it was before. We are now able to remove the `serverless.yml` and
 continue building our infrastructure in CDK. But before we continue, let's
@@ -325,8 +325,8 @@ logical id can be found again in the AWS UI under the _Resources_ tab for exampl
 <img src="/images/serverless-to-cdk-logicalid.png" alt="CloudFormation Resources
 Logical ID" title="CloudFormation Resources ID" />
 
-These resources will be imported as a generic type `CfnResource` and are
-castable to the respective `Cfn` sub type. In this case we cast it to
+These resources will be imported as a generic type `CfnResource` and can be
+casted to the respective `Cfn` sub type. In this case we cast it to
 `CfnTable`. 
 
 Because you can emit the `TableName` it's a conditional type and we extract the
@@ -636,7 +636,7 @@ export class CdkInfraStack extends cdk.Stack {
 Thanks to the new `cloudformation-include` module we were able to migrate the
 existing stack to CDK in no time. Afterwards it's now possible to work with all
 the resources deployed in the stack. You can use them as a reference for new
-resources or extend/modify the existing resources. Lastly the updating of the
+resources or extend/modify the existing ones. Lastly the updating of the
 code is very tricky, but `aws-s3-assets` helps in this case.
 
 If you want to go even further and rewrite parts of your infrastructure in CDK,
