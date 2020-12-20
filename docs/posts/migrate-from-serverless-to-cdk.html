@@ -202,7 +202,7 @@ Couldn&#39;t create the todo item.</code></pre>
 <p>As expected we got an error, that we can’t create a todo item. If we go into the CloudWatch Logs for the <em>create</em> Lambda, we see an error message like this:</p>
 <pre><code>MissingRequiredParameter: Missing required key &#39;TableName&#39; in params at ParamValidator.</code></pre>
 <h1 id="introducing-cdk-into-an-existing-serverless-project">Introducing CDK into an existing Serverless project</h1>
-<p>We are now at the point, where we want to add new stuff to our infrastructure, but don’t want to do it via CloudFormation. Instead we want to move the existing stack to CDK, but don’t want to recreate everything from scratch and also keep the DynamoDB with all it’s data as is (Yes, we waited around two years between chapter one and two).</p>
+<p>We are now at the point, where we want to add new stuff to our infrastructure, but don’t want to do it via CloudFormation. Instead we want to move the existing stack to CDK, but don’t want to recreate everything from scratch and also keep the DynamoDB with all its data as is (Yes, we waited around two years between chapter one and two).</p>
 <p>To keep the new CDK code separated, we initiate the CDK project in a new subdirectory:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>$ <span class="fu">mkdir</span> cdk-infra <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> cdk-infra <span class="kw">&amp;&amp;</span> <span class="ex">cdk</span> init app --language=typescript</span></code></pre></div>
 <p>We also move everything specific to the Lambda Code in another subdirectory.</p>
@@ -251,7 +251,7 @@ Resources
 [~] AWS::ApiGateway::RestApi Template/ApiGatewayRestApi ApiGatewayRestApi 
  └─ [-] Policy
      └─ </code></pre>
-<p>CDK always adds it’s Metadata to a stack and it wants to remove the empty policy. Beside of these differences the CDK project would preserve anything in the stack as it was before. We are now able to remove the <code>serverless.yml</code> and continue building our infrastructure in CDK. But before we continue, let’s deploy the changes:</p>
+<p>CDK always adds its Metadata to a stack and it wants to remove the empty policy. Beside of these differences the CDK project would preserve anything in the stack as it was before. We are now able to remove the <code>serverless.yml</code> and continue building our infrastructure in CDK. But before we continue, let’s deploy the changes:</p>
 <div class="sourceCode" id="cb15"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cdk</span> deploy</span></code></pre></div>
 <h1 id="use-existing-resources-in-cdk">Use existing Resources in CDK</h1>
 <p>Now that we have imported the existing stack into our CDK project, we are able to use all resources, which are deployed as part of our stack. This is now possible thanks to the new <em>cloudformation_include</em> module.</p>
@@ -262,7 +262,7 @@ Resources
 <p><code>getResource</code> takes the logical ID of a resource as the parameter. The logical id can be found again in the AWS UI under the <em>Resources</em> tab for example.</p>
 <p><img src="/images/serverless-to-cdk-logicalid.png" alt="CloudFormation Resources
 Logical ID" title="CloudFormation Resources ID" /></p>
-<p>These resources will be imported as a generic type <code>CfnResource</code> and are castable to the respective <code>Cfn</code> sub type. In this case we cast it to <code>CfnTable</code>.</p>
+<p>These resources will be imported as a generic type <code>CfnResource</code> and can be casted to the respective <code>Cfn</code> sub type. In this case we cast it to <code>CfnTable</code>.</p>
 <p>Because you can emit the <code>TableName</code> it’s a conditional type and we extract the table name next:</p>
 <div class="sourceCode" id="cb18"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">if</span> (<span class="op">!</span>dynamoDB<span class="op">.</span><span class="at">tableName</span>) {</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  throw <span class="kw">new</span> <span class="fu">Error</span>(<span class="st">&quot;DynamoDB has no name&quot;</span>)<span class="op">;</span></span>
@@ -464,7 +464,7 @@ $ curl -XDELETE https://ztr40k0bf7.execute-api.eu-central-1.amazonaws.com/dev/to
 <span id="cb34-62"><a href="#cb34-62" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb34-63"><a href="#cb34-63" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h1 id="summary">Summary</h1>
-<p>Thanks to the new <code>cloudformation-include</code> module we were able to migrate the existing stack to CDK in no time. Afterwards it’s now possible to work with all the resources deployed in the stack. You can use them as a reference for new resources or extend/modify the existing resources. Lastly the updating of the code is very tricky, but <code>aws-s3-assets</code> helps in this case.</p>
+<p>Thanks to the new <code>cloudformation-include</code> module we were able to migrate the existing stack to CDK in no time. Afterwards it’s now possible to work with all the resources deployed in the stack. You can use them as a reference for new resources or extend/modify the existing ones. Lastly the updating of the code is very tricky, but <code>aws-s3-assets</code> helps in this case.</p>
 <p>If you want to go even further and rewrite parts of your infrastructure in CDK, like the API Gateway for example, you can do so. For this you can remove the respective part from <code>resources/template.json</code> and create the higher construct in CDK directly:</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { RestApi } from <span class="st">&#39;@aws-cdk/aws-apigateway&#39;</span><span class="op">;</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span>
